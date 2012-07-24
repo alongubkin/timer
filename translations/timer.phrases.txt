@@ -1,0 +1,101 @@
+"Phrases"
+{
+	"Round Finish"
+	{
+		"#format"		"{1:s},{2:s},{3:d}"
+		"en"			"{1} has finished the map in {2}. He only jumped {3} times!"
+	}
+	
+	"Round Finish Difficulty"
+	{
+		"#format"		"{1:s},{2:s},{3:s},{4:d}"
+		"en"			"{1} has finished the map in {2} on {3}. He only jumped {4} times!"
+	}
+	
+	"Point Select Panel"
+	{
+		"#format"		"{1:s}"
+		"en"			"Please stand in the {1} point of the zone,\nand click your ATTACK2 mouse key."
+	}
+	
+	"Cancel"
+	{
+		"en"			"Cancel"
+	}
+	
+	"Map Zone Delete"
+	{
+		"en"			"Map zone deleted successfully."
+	}
+	
+	"Time"
+	{
+		"en"			"Time"
+	}
+	
+	"Jumps"
+	{
+		"en"			"Jumps"
+	}
+	
+	"HUD Speed"
+	{
+		"en"			"Speed"
+	}
+
+	"HUD Best Times"
+	{
+		"en"			"Best Times"
+	}
+	
+	"HUD Difficulty"
+	{
+		"en"			"Difficulty"
+	}
+	
+	"No target"
+	{
+		"en"			"No target found."
+	}
+	
+	"Physics Difficulty"
+	{
+		"en"			"Physics Difficulty"
+	}
+	
+	"World Record Menu Title"
+	{
+		"#format"		"{1:s}"
+		"en"			"World Records for {1}"
+	}
+	
+	"World Record Loading"
+	{
+		"en"			"World Record is still loading; try again in a few moments."
+	}
+	
+	"No Records"
+	{
+		"en"			"Sorry, there are no records."
+	}
+	
+	"No Difficulty Records"
+	{
+		"en"			"Sorry, there are no records in this difficulty."
+	}
+	
+	"Record Info"
+	{
+		"en"			"Record Info"
+	}
+	
+	"Player Name"
+	{
+		"en"			"Player Name"
+	}
+	
+	"Rank"
+	{
+		"en"			"Rank"
+	}
+}

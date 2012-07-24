@@ -5,21 +5,27 @@
 #include <smlib>
 #include <timer>
 
+#undef REQUIRE_PLUGIN
+#include <timer-physics>
+#include <updater>
+
+#define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-core.txt"
+
 /** 
  * Global Enums
  */
 enum Timer
 {
 	Enabled,
-	StartTime,
-	EndTime,
+	Float:StartTime,
+	Float:EndTime,
 	Jumps,
 	bool:IsPaused,
-	PauseStartTime,
+	Float:PauseStartTime,
 	Float:PauseLastOrigin[3],
 	Float:PauseLastVelocity[3],
 	Float:PauseLastAngles[3],
-	PauseTotalTime,
+	Float:PauseTotalTime,
 	FpsMax
 }
 
@@ -27,7 +33,7 @@ enum BestTimeCacheEntity
 {
 	IsCached,
 	Jumps,
-	Time
+	Float:Time
 }
 
 /**
@@ -45,6 +51,15 @@ new Handle:g_timerStartedForward;
 new Handle:g_timerStoppedForward;
 new Handle:g_timerRestartForward;
 
+new Handle:g_restartEnabledCvar;
+new Handle:g_stopEnabledCvar;
+new Handle:g_pauseResumeEnabledCvar;
+	
+new bool:g_restartEnabled = true;
+new bool:g_stopEnabled = true;
+new bool:g_pauseResumeEnabled = true;
+
+new bool:g_timerPhysics = false;
 new g_iVelocity;
 
 public Plugin:myinfo =
@@ -66,7 +81,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	CreateNative("Timer_GetBestRound", Native_GetBestRound);
 	// CreateNative("Timer_GetRoundById", Native_GetRoundById);
 	CreateNative("Timer_GetClientTimer", Native_GetClientTimer);
-	CreateNative("Timer_GetMapDifficulty", Native_GetMapDifficulty);
+	// CreateNative("Timer_GetMapDifficulty", Native_GetMapDifficulty);
 	CreateNative("Timer_FinishRound", Native_FinishRound);
 	CreateNative("Timer_ForceReloadBestRoundCache", Native_ForceReloadBestRoundCache);
 
@@ -75,26 +90,68 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 public OnPluginStart()
 {
+	CreateConVar("timer_version", PL_VERSION, "Timer Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
+	
 	g_timerStartedForward = CreateGlobalForward("OnTimerStarted", ET_Event, Param_Cell);
 	g_timerStoppedForward = CreateGlobalForward("OnTimerStopped", ET_Event, Param_Cell);
 	g_timerRestartForward = CreateGlobalForward("OnTimerRestart", ET_Event, Param_Cell);
 
 	g_iVelocity = FindSendPropInfo("CBasePlayer", "m_vecVelocity[0]");
-
+	g_timerPhysics = LibraryExists("timer-physics");
+	
+	LoadTranslations("timer.phrases");
+	
 	HookEvent("player_jump", Event_PlayerJump);
-
-	AddCommandListener(SayCommand, "say");
-	AddCommandListener(SayCommand, "say_team");	
+	HookEvent("player_death", Event_StopTimer);
+	HookEvent("player_team", Event_StopTimer);
+	HookEvent("player_spawn", Event_StopTimer);
+	HookEvent("player_disconnect", Event_StopTimer);
+	
+	RegConsoleCmd("sm_restart", Command_Restart);
+	RegConsoleCmd("sm_stop", Command_Stop);
+	RegConsoleCmd("sm_pause", Command_Pause);
+	RegConsoleCmd("sm_resume", Command_Resume);
+	
+	g_restartEnabledCvar = CreateConVar("timer_restart_enabled", "1", "Whether or not players can restart their timers.");
+	g_stopEnabledCvar = CreateConVar("timer_stop_enabled", "1", "Whether or not players can stop their timers.");
+	g_pauseResumeEnabledCvar = CreateConVar("timer_pauseresume_enabled", "1", "Whether or not players can resume or pause their timers.");
+	
+	AutoExecConfig(true, "timer-core");
+	
+	HookConVarChange(g_restartEnabledCvar, Action_OnSettingsChange);
+	HookConVarChange(g_stopEnabledCvar, Action_OnSettingsChange);	
+	HookConVarChange(g_pauseResumeEnabledCvar, Action_OnSettingsChange);
+	
+	if (LibraryExists("updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}	
 }
 
-public OnAllPluginsLoaded()
+public OnLibraryAdded(const String:name[])
 {
-	ConnectSQL();
-	// CreateAdminMenu();
+	if (StrEqual(name, "timer-physics"))
+	{
+		g_timerPhysics = true;
+	}
+	else if (StrEqual(name, "updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}
+}
+
+public OnLibraryRemoved(const String:name[])
+{
+	if (StrEqual(name, "timer-physics"))
+	{
+		g_timerPhysics = false;
+	}
 }
 
 public OnMapStart()
-{
+{	
+	ConnectSQL();
+	
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
 	ClearCache();
 }
@@ -104,64 +161,75 @@ public OnMapEnd()
 	ClearCache();
 }
 
+public OnPlayerConnect(client)
+{
+    StartTimer(client);
+}
+
 /**
  * Events
  */
-public Event_PlayerJump(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	if (g_timers[client][Enabled] && !g_timers[client][IsPaused])
 		g_timers[client][Jumps]++;
+	
+	return Plugin_Continue;
 }
 
-public Action:SayCommand(client, const String:command[], args)
+public Action:Event_StopTimer(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	decl String:buffer[128];
-	GetCmdArg(1, buffer, sizeof(buffer));
-
-	new bool:hidden = StrEqual(buffer, "/restart", true);
-	if (StrEqual(buffer, "!restart", true) || hidden)
-	{
-		RestartTimer(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/stop", true);
-	if (StrEqual(buffer, "!stop", true) || hidden)
-	{
-		StopTimer(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/pause", true);
-	if (StrEqual(buffer, "!pause", true) || hidden)
-	{
-		PauseTimer(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/resume", true);
-	if (StrEqual(buffer, "!resume", true) || hidden)
-	{
-		ResumeTimer(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
+	StopTimer(GetClientOfUserId(GetEventInt(event, "userid")));
 	return Plugin_Continue;
+}
+
+public Action:Command_Restart(client, args)
+{
+	if (g_restartEnabled)
+		RestartTimer(client);
+	
+	return Plugin_Handled;
+}
+
+public Action:Command_Stop(client, args)
+{
+	if (g_stopEnabled)
+		StopTimer(client);
+		
+	return Plugin_Handled;
+}
+
+public Action:Command_Pause(client, args)
+{
+	if (g_pauseResumeEnabled)
+		PauseTimer(client);
+		
+	return Plugin_Handled;
+}
+
+public Action:Command_Resume(client, args)
+{
+	if (g_pauseResumeEnabled)
+		ResumeTimer(client);
+		
+	return Plugin_Handled;
 }
 
 public FpsMaxCallback(QueryCookie:cookie, client, ConVarQueryResult:result, const String:cvarName[], const String:cvarValue[])
 {
 	g_timers[client][FpsMax] = StringToInt(cvarValue);
+}
+
+public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
+{
+	if (cvar == g_restartEnabledCvar)
+		g_restartEnabled = bool:StringToInt(newvalue);
+	else if (cvar == g_stopEnabledCvar)
+		g_stopEnabled = bool:StringToInt(newvalue);
+	else if (cvar == g_pauseResumeEnabledCvar)
+		g_pauseResumeEnabled = bool:StringToInt(newvalue);		
 }
 
 /**
@@ -173,12 +241,12 @@ bool:StartTimer(client)
 		return false;
 	
 	g_timers[client][Enabled] = true;
-	g_timers[client][StartTime] = GetTime();
-	g_timers[client][EndTime] = -1;
+	g_timers[client][StartTime] = GetGameTime();
+	g_timers[client][EndTime] = -1.0;
 	g_timers[client][Jumps] = 0;
 	g_timers[client][IsPaused] = false;
-	g_timers[client][PauseStartTime] = 0;
-	g_timers[client][PauseTotalTime] = 0;
+	g_timers[client][PauseStartTime] = 0.0;
+	g_timers[client][PauseTotalTime] = 0.0;
 
 	QueryClientConVar(client, "fps_max", FpsMaxCallback, client);
 
@@ -198,7 +266,7 @@ bool:StopTimer(client, bool:stopPaused = true)
 		return false;
 	
 	g_timers[client][Enabled] = false;
-	g_timers[client][EndTime] = GetTime();
+	g_timers[client][EndTime] = GetGameTime();
 
 	Call_StartForward(g_timerStoppedForward);
 	Call_PushCell(client);
@@ -224,7 +292,7 @@ bool:PauseTimer(client)
 		return false;
 	
 	g_timers[client][IsPaused] = true;
-	g_timers[client][PauseStartTime] = GetTime();
+	g_timers[client][PauseStartTime] = GetGameTime();
 	
 	new Float:origin[3];
 	GetClientAbsOrigin(client, origin);
@@ -247,7 +315,7 @@ bool:ResumeTimer(client)
 		return false;
 
 	g_timers[client][IsPaused] = false;
-	g_timers[client][PauseTotalTime] += GetTime() - g_timers[client][PauseStartTime];
+	g_timers[client][PauseTotalTime] += GetGameTime() - g_timers[client][PauseStartTime];
 
 	new Float:origin[3];
 	Array_Copy(g_timers[client][PauseLastOrigin], origin, 3);
@@ -263,7 +331,7 @@ bool:ResumeTimer(client)
 	return true;
 }
 
-bool:GetBestRound(client, String:map[], &time, &jumps)
+bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 {
 	if (IsValidPlayer(client))
 	{
@@ -295,7 +363,7 @@ bool:GetBestRound(client, String:map[], &time, &jumps)
 
 		if (SQL_FetchRow(hQuery))
 		{			
-			time = SQL_FetchInt(hQuery, 3);
+			time = SQL_FetchFloat(hQuery, 3);
 			jumps = SQL_FetchInt(hQuery, 4);
 			
 			g_bestTimeCache[client][IsCached] = true;
@@ -307,7 +375,7 @@ bool:GetBestRound(client, String:map[], &time, &jumps)
 		else
 		{
 			g_bestTimeCache[client][IsCached] = true;
-			g_bestTimeCache[client][Time] = 0;
+			g_bestTimeCache[client][Time] = 0.0;
 			g_bestTimeCache[client][Jumps] = 0;			
 			
 			CloseHandle(hQuery);
@@ -322,77 +390,63 @@ bool:GetBestRound(client, String:map[], &time, &jumps)
 
 ClearCache()
 {
-	for (new client = 1; client <= GetMaxClients(); client++)
-	{
-		g_bestTimeCache[client][IsCached] = false;
-		g_bestTimeCache[client][Jumps] = 0;
-		g_bestTimeCache[client][Time] = 0;
-	}
+	for (new client = 1; client <= MaxClients; client++)
+		ClearClientCache(client);
 }
 
-GetMapDifficulty(String:map[])
+ClearClientCache(client)
 {
-	decl String:query[128];
-	Format(query, sizeof(query), "SELECT difficulty FROM mapdifficulty WHERE map = '%s'", map);
-	
-	SQL_LockDatabase(g_hSQL);
-
-	new Handle:hQuery = SQL_Query(g_hSQL, query);
-	
-	if (hQuery == INVALID_HANDLE)
-	{
-		SQL_UnlockDatabase(g_hSQL);
-		return false;
-	}
-
-	SQL_UnlockDatabase(g_hSQL); 
-	
-	new difficulty = 0;
-
-	if (SQL_FetchRow(hQuery))
-		difficulty = SQL_FetchInt(hQuery, 0);
-
-	CloseHandle(hQuery);
-	return difficulty;
+	g_bestTimeCache[client][IsCached] = false;
+	g_bestTimeCache[client][Jumps] = 0;
+	g_bestTimeCache[client][Time] = 0.0;	
 }
 
-FinishRound(client, String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
+FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
 {
 	if (IsValidPlayer(client))
 	{
 		decl String:auth[32];
 		GetClientAuthString(client, auth, sizeof(auth));
 
-		decl String:name[32];
+		decl String:name[MAX_NAME_LENGTH];
 		GetClientName(client, name, sizeof(name));
-
+		
 		decl String:safeName[2 * strlen(name) + 1];
 		SQL_EscapeString(g_hSQL, name, safeName, 2 * strlen(name) + 1);
 
 		decl String:query[256];
-		Format(query, sizeof(query), "INSERT round (map, auth, time, jumps, physicsdifficulty, name, fpsmax) VALUES ('%s', '%s', %f, %d, %d, '%s', %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax);
+		Format(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax) VALUES ('%s', '%s', %f, %d, %d, '%s', %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax);
 		
 		SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_Normal);
 		
-		new String:buffer[32];
-		FormatTime(buffer, sizeof(buffer), "%T", RoundToNearest(time) - 2 * 3600);
-	
-		PrintToChatAll("%s has finished the map in %s!", name, buffer);
+		decl String:buffer[32];
+		Timer_SecondsToTime(time, buffer, sizeof(buffer), true);
+		
+		if (g_timerPhysics)
+		{
+			new String:difficulty[32];
+			Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
+			
+			PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty", name, buffer, difficulty, jumps);
+		}
+		else
+		{
+			PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish", name, buffer, jumps);		
+		}
 	}
 }
 
 public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
-	PrintToServer(error);
 	g_bestTimeCache[client][IsCached] = false;
 }
 
-CalculateTime(client)
+Float:CalculateTime(client)
 {
 	if (g_timers[client][Enabled] && g_timers[client][IsPaused])
 		return g_timers[client][PauseStartTime] - g_timers[client][StartTime] - g_timers[client][PauseTotalTime];
 	else
-		return (g_timers[client][Enabled] ? GetTime() : g_timers[client][EndTime]) - g_timers[client][StartTime] - g_timers[client][PauseTotalTime];	
+		return (g_timers[client][Enabled] ? GetGameTime() : g_timers[client][EndTime]) - g_timers[client][StartTime] - g_timers[client][PauseTotalTime];	
 }
 
 ConnectSQL()
@@ -414,37 +468,52 @@ ConnectSQL()
 
 public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
-    if (g_reconnectCounter >= 5)
-    {
-        LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
-        return -1;
-    }
+	if (g_reconnectCounter >= 5)
+	{
+		LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
+		return -1;
+	}
 
-    if (hndl == INVALID_HANDLE)
-    {
-        LogError("Connection to SQL database has failed, Reason: %s", error);
+	if (hndl == INVALID_HANDLE)
+	{
+		LogError("Connection to SQL database has failed, Reason: %s", error);
 		
+		g_reconnectCounter++;
+		ConnectSQL();
+		
+		return -1;
+	}
+
+	decl String:driver[16];
+	SQL_GetDriverIdent(owner, driver, sizeof(driver));
+
+	g_hSQL = CloneHandle(hndl);		
+	
+	if (StrEqual(driver, "mysql", false))
+	{
+		SQL_FastQuery(g_hSQL, "SET NAMES  'utf8'");
+		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` int(11) NOT NULL AUTO_INCREMENT, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` int(11) NOT NULL, `physicsdifficulty` int(11) NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` int(11) NOT NULL, PRIMARY KEY (`id`));");
+	}
+	else if (StrEqual(driver, "sqlite", false))
+	{
+		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` INTEGER PRIMARY KEY, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` INTEGER NOT NULL, `physicsdifficulty` INTEGER NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` INTEGER NOT NULL);");
+	}
+	
+	CloseHandle(hndl);
+	
+	g_reconnectCounter = 1;
+	return 1;
+}
+
+public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{	
+    if (owner == INVALID_HANDLE)
+    {
         g_reconnectCounter++;
         ConnectSQL();
 		
-        return -1;
+        return;
     }
-
-    decl String:driver[16];
-    SQL_GetDriverIdent(owner, driver, sizeof(driver));
-	
-    if (StrEqual(driver, "mysql", false))
-        SQL_FastQuery(hndl, "SET NAMES  'utf8'");
-
-    g_hSQL = CloneHandle(hndl);
-
-    if (g_reconnectCounter == 0)
-	{
-		// TODO: Add table cration here.
-	}
-	
-    g_reconnectCounter = 1;
-    return 1;
 }
 
 public Native_TimerStart(Handle:plugin, numParams)
@@ -467,7 +536,7 @@ public Native_GetBestRound(Handle:plugin, numParams)
 	decl String:map[32];
 	GetNativeString(2, map, sizeof(map));
 	
-	new time;
+	new Float:time;
 	new jumps;
 	
 	new bool:success = GetBestRound(GetNativeCell(1), map, time, jumps);
@@ -493,14 +562,6 @@ public Native_GetClientTimer(Handle:plugin, numParams)
 	SetNativeCellRef(5, g_timers[client][FpsMax]);	
 
 	return true;
-}
-
-public Native_GetMapDifficulty(Handle:plugin, numParams)
-{
-	decl String:map[32];
-	GetNativeString(1, map, sizeof(map));
-	
-	return GetMapDifficulty(map);
 }
 
 public Native_FinishRound(Handle:plugin, numParams)

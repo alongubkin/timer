@@ -2,18 +2,22 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <cstrike>
 #include <loghelper>
 #include <adminmenu>
 #include <smlib>
 #include <timer>
+
+#undef REQUIRE_PLUGIN
 #include <timer-physics>
 #include <timer-worldrecord>
-#include <cstrike>
+#include <updater>
+
+#define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-mapzones.txt"
 
 /**
  * Global Enums
  */
-
 enum MapZoneEditor
 {
 	Step,
@@ -25,6 +29,14 @@ enum MapZoneEditor
  * Global Variables
  */
 new Handle:g_hSQL;
+
+new Handle:g_startMapZoneColor = INVALID_HANDLE;
+new Handle:g_endMapZoneColor = INVALID_HANDLE;
+new Handle:g_resetTimerBeforeStart = INVALID_HANDLE;
+
+new g_startColor[4] = { 0, 255, 0, 255 };
+new g_endColor[4] = { 0, 0, 255, 255 };
+new bool:g_resetTimer = true;
 
 new String:g_currentMap[32];
 new g_reconnectCounter = 0;
@@ -39,6 +51,9 @@ new g_mapZoneEditors[MAXPLAYERS+1][MapZoneEditor];
 
 new precache_laser;
 
+new bool:g_timerPhysics = false;
+new bool:g_timerWorldRecord = false;
+
 public Plugin:myinfo =
 {
     name        = "[Timer] MapZones",
@@ -50,22 +65,56 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
-	ConnectSQL();
-
-	new Handle:topmenu;
+	g_timerPhysics = LibraryExists("timer-physics");
+	g_timerWorldRecord = LibraryExists("timer-worldrecord");
 	
+	g_startMapZoneColor = CreateConVar("timer_startcolor", "0 255 0 255", "The color of the start map zone.");
+	g_endMapZoneColor = CreateConVar("timer_endcolor", "0 0 255 255", "The color of the end map zone.");
+	g_resetTimerBeforeStart = CreateConVar("timer_resetbeforestart", "0", "Whether or not the timer is restarted in the start zone.");
+	AutoExecConfig(true, "timer-mapzones");
+	
+	HookConVarChange(g_startMapZoneColor, Action_OnSettingsChange);
+	HookConVarChange(g_endMapZoneColor, Action_OnSettingsChange);	
+	HookConVarChange(g_resetTimerBeforeStart, Action_OnSettingsChange);	
+	
+	LoadTranslations("timer.phrases");
+	
+	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
 	{
 		OnAdminMenuReady(topmenu);
 	}
+	
+	if (LibraryExists("updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}	
 }
 
 public OnMapStart()
 {
-	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
-	precache_laser = PrecacheModel("materials/sprites/laserbeam.vmt");
-
 	ConnectSQL();
+	
+	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
+	g_timerPhysics = LibraryExists("timer-physics");
+	
+	precache_laser = PrecacheModel("materials/sprites/laserbeam.vmt");
+}
+
+public OnLibraryAdded(const String:name[])
+{
+	if (StrEqual(name, "timer-physics"))
+	{
+		g_timerPhysics = true;
+	}
+	else if (StrEqual(name, "timer-worldrecord"))
+	{
+		g_timerWorldRecord = true;
+	}
+	else if (StrEqual(name, "updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}	
 }
 
 public OnLibraryRemoved(const String:name[])
@@ -74,11 +123,24 @@ public OnLibraryRemoved(const String:name[])
 	{
 		hTopMenu = INVALID_HANDLE;
 	}
+	else if (StrEqual(name, "timer-physics"))
+	{
+		g_timerPhysics = false;
+	}
+	else if (StrEqual(name, "timer-worldrecord"))
+	{
+		g_timerWorldRecord = false;
+	}	
 }
 
-public OnAllPluginsLoaded()
+public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
-
+	if (cvar == g_startMapZoneColor)
+		ParseColor(newvalue, g_startColor);
+	else if (cvar == g_endMapZoneColor)
+		ParseColor(newvalue, g_endColor);
+	else if (cvar == g_resetTimerBeforeStart)
+		g_resetTimer = bool:StringToInt(newvalue);
 }
 
 public OnAdminMenuReady(Handle:topmenu)
@@ -90,13 +152,16 @@ public OnAdminMenuReady(Handle:topmenu)
  
 	// Save the Handle
 	hTopMenu = topmenu;
-		
-	oMapZoneMenu = AddToTopMenu(hTopMenu,
-		"Map Zones Management",
-		TopMenuObject_Category,
-		AdminMenu_CategoryHandler,
-		INVALID_TOPMENUOBJECT);
-		
+	
+	if ((oMapZoneMenu = FindTopMenuCategory(topmenu, "Timer Management")) == INVALID_TOPMENUOBJECT)
+	{
+		oMapZoneMenu = AddToTopMenu(hTopMenu,
+			"Timer Management",
+			TopMenuObject_Category,
+			AdminMenu_CategoryHandler,
+			INVALID_TOPMENUOBJECT);
+	}
+	
 	AddToTopMenu(hTopMenu, 
 		"timer_mapzones_add",
 		TopMenuObject_Item,
@@ -112,14 +177,6 @@ public OnAdminMenuReady(Handle:topmenu)
 		oMapZoneMenu,
 		"timer_mapzones_remove",
 		ADMFLAG_RCON);
-		
-	AddToTopMenu(hTopMenu, 
-		"timer_mapzones_setmapdifficulty",
-		TopMenuObject_Item,
-		AdminMenu_SetMapDifficulty,
-		oMapZoneMenu,
-		"timer_mapzones_setmapdifficulty",
-		ADMFLAG_RCON);
 }
 
 AddMapZone(String:map[], MapZoneType:type, Float:point1[3], Float:point2[3])
@@ -134,14 +191,14 @@ AddMapZone(String:map[], MapZoneType:type, Float:point1[3], Float:point2[3])
 		SQL_TQuery(g_hSQL, AddMapZoneCallback, deleteQuery, _, DBPrio_High);	
 	}
 
-	Format(query, sizeof(query), "INSERT mapzone (map, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z) VALUES ('%s', '%d', %f, %f, %f, %f, %f, %f);", map, type, point1[0], point1[1], point1[2], point2[0], point2[1], point2[2]);
+	Format(query, sizeof(query), "INSERT INTO mapzone (map, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z) VALUES ('%s', '%d', %f, %f, %f, %f, %f, %f);", map, type, point1[0], point1[1], point1[2], point2[0], point2[1], point2[2]);
 
 	SQL_TQuery(g_hSQL, AddMapZoneCallback, query, _, DBPrio_Normal);	
 }
 
 public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
-	
+	PrintToServer(error);
 }
 
 LoadMapZones()
@@ -175,7 +232,7 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 	}
 
 	CreateTimer(2.0, DrawZones, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	CreateTimer(0.2, PlayerTracker, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(0.1, PlayerTracker, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public OnTimerRestart(client)
@@ -186,10 +243,12 @@ public OnTimerRestart(client)
 		{
 			new Float:zero[3];
 			
-			new Float:point2[3];
-			Array_Copy(g_mapZones[mapZone][Point2], point2, 3);
-					
-			TeleportEntity(client, point2, zero, zero);
+			new Float:center[3];
+			center[0] = (g_mapZones[mapZone][Point1][0] + g_mapZones[mapZone][Point2][0]) / 2.0;
+			center[1] = (g_mapZones[mapZone][Point1][1] + g_mapZones[mapZone][Point2][1]) / 2.0;
+			center[2] = (g_mapZones[mapZone][Point1][2] + g_mapZones[mapZone][Point2][2]) / 2.0;
+			
+			TeleportEntity(client, center, zero, zero);
 
 			break;
 		}
@@ -233,21 +292,35 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 
 	decl String:driver[16];
 	SQL_GetDriverIdent(owner, driver, sizeof(driver));
-	
-	if (StrEqual(driver, "mysql", false))
-		SQL_FastQuery(hndl, "SET NAMES  'utf8'");
 
 	g_hSQL = CloneHandle(hndl);
-
-	if (g_reconnectCounter == 0)
+	
+	if (StrEqual(driver, "mysql", false))
 	{
-		// TODO: Add table cration here.
+		SQL_FastQuery(hndl, "SET NAMES  'utf8'");
+		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `mapzone` (`id` int(11) NOT NULL AUTO_INCREMENT, `type` int(11) NOT NULL, `point1_x` float NOT NULL, `point1_y` float NOT NULL, `point1_z` float NOT NULL, `point2_x` float NOT NULL, `point2_y` float NOT NULL, `point2_z` float NOT NULL, `map` varchar(32) NOT NULL, PRIMARY KEY (`id`));");
+	}
+	else if (StrEqual(driver, "sqlite", false))
+	{
+		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `mapzone` (`id` INTEGER PRIMARY KEY, `type` INTEGER NOT NULL, `point1_x` float NOT NULL, `point1_y` float NOT NULL, `point1_z` float NOT NULL, `point2_x` float NOT NULL, `point2_y` float NOT NULL, `point2_z` float NOT NULL, `map` varchar(32) NOT NULL);");
+	}
+	
+	CloseHandle(hndl);
+	g_reconnectCounter = 1;
+	return 1;
+}
+
+public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{
+	if (owner == INVALID_HANDLE)
+	{
+		g_reconnectCounter++;
+		ConnectSQL();
+		
+		return;
 	}
 	
 	LoadMapZones();
-	
-	g_reconnectCounter = 1;
-	return 1;
 }
 
 public AdminMenu_CategoryHandler(Handle:topmenu, 
@@ -258,9 +331,9 @@ public AdminMenu_CategoryHandler(Handle:topmenu,
 			maxlength)
 {
 	if (action == TopMenuAction_DisplayTitle) {
-		Format(buffer, maxlength, "Map Zones Management");
+		Format(buffer, maxlength, "Timer Management");
 	} else if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Map Zones Management");
+		Format(buffer, maxlength, "Timer Management");
 	}
 }
 
@@ -288,39 +361,10 @@ public AdminMenu_RemoveMapZone(Handle:topmenu,
 			maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Delete this map zone");
+		Format(buffer, maxlength, "Delete Map Zone");
 	} else if (action == TopMenuAction_SelectOption) {
 		DeleteMapZone(param);
 	}
-}
-
-public AdminMenu_SetMapDifficulty(Handle:topmenu, 
-			TopMenuAction:action,
-			TopMenuObject:object_id,
-			param,
-			String:buffer[],
-			maxlength)
-{
-	if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Set Map Difficulty");
-	} else if (action == TopMenuAction_SelectOption) {
-		SetMapDifficultyMenu(param);
-	}
-}
-
-SetMapDifficultyMenu(client)
-{
-	new Handle:menu = CreateMenu(MapDifficultySelect);
-	SetMenuTitle(menu, "Select map difficulty:");
-
-	// This is ugly
-	AddMenuItem(menu, "0", "Easy");
-	AddMenuItem(menu, "1", "Medium");
-	AddMenuItem(menu, "2", "Hard");
-	AddMenuItem(menu, "3", "Extreme");
-	
-	SetMenuExitButton(menu, true);
-	DisplayMenu(menu, client, 360);	
 }
 
 RestartMapZoneEditor(client)
@@ -355,20 +399,24 @@ DeleteMapZone(client)
 public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
 	LoadMapZones();
-	PrintToChat(data, "Map zone deleted successfully.");
+	
+	if (IsValidPlayer(data))
+		PrintToChat(data, "%t", "Map Zone Delete");
 }
 
 DisplaySelectPointMenu(client, n)
 {
+
+	
 	new Handle:panel = CreatePanel();
 
- 	decl String:message[64];
- 	Format(message, sizeof(message), "Please stand in the %s point of the zone,", (n == 1) ? "FIRST" : "SECOND");
+ 	decl String:message[255];
+ 	Format(message, sizeof(message), "%t", "Point Select Panel", (n == 1) ? "FIRST" : "SECOND");
 
  	DrawPanelItem(panel, message, ITEMDRAW_RAWLINE);
- 	DrawPanelItem(panel, "and click on your ATTACK2 mouse key.\n ", ITEMDRAW_RAWLINE);
 
- 	DrawPanelItem(panel, "Cancel");
+	Format(message, sizeof(message), "%t", "Cancel");
+ 	DrawPanelItem(panel, message);
 
 	SendPanelToClient(panel, client, PointSelect, 540);
 	CloseHandle(panel);
@@ -413,7 +461,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 
 			DisplayPleaseWaitMenu(client);
 
-			CreateTimer(1.0, ChangeStep, client);
+			CreateTimer(1.0, ChangeStep, GetClientSerial(client));
 			return Plugin_Handled;
 		}
 		else if (g_mapZoneEditors[client][Step] == 2)
@@ -433,10 +481,12 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	return Plugin_Continue;
 }
 
-public Action:ChangeStep(Handle:timer, any:client)
+public Action:ChangeStep(Handle:timer, any:serial)
 {
+	new client = GetClientFromSerial(serial);
+	
 	g_mapZoneEditors[client][Step] = 2;
-	CreateTimer(0.1, DrawAdminBox, client, TIMER_REPEAT);
+	CreateTimer(0.1, DrawAdminBox, GetClientSerial(client), TIMER_REPEAT);
 
 	DisplaySelectPointMenu(client, 2);
 }
@@ -449,9 +499,9 @@ DisplaySelectZoneTypeMenu(client)
 	// This is ugly
 	AddMenuItem(menu, "0", "Start");
 	AddMenuItem(menu, "1", "End");
-	AddMenuItem(menu, "2", "Glitch1");
-	AddMenuItem(menu, "3", "Glitch2");
-	AddMenuItem(menu, "4", "Glitch3");
+	AddMenuItem(menu, "2", "Glitch1 - Stop Timer");
+	AddMenuItem(menu, "3", "Glitch2 - Restart Timer");
+	AddMenuItem(menu, "4", "Glitch3 - Respawn Player");
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 360);
@@ -489,29 +539,10 @@ public ZoneTypeSelect(Handle:menu, MenuAction:action, param1, param2)
 	}
 }
 
-public MapDifficultySelect(Handle:menu, MenuAction:action, param1, param2)
+public Action:DrawAdminBox(Handle:timer, any:serial)
 {
-	if (action == MenuAction_End) 
-	{
-		CloseHandle(menu);
-		RestartMapZoneEditor(param1);
-	} 
-	else if (action == MenuAction_Select) 
-	{
-		decl String:query[128];
-		Format(query, sizeof(query), "INSERT INTO mapdifficulty (map, difficulty) VALUES('%s', %d) ON DUPLICATE KEY UPDATE difficulty = %d", g_currentMap, param2, param2);
-
-		SQL_TQuery(g_hSQL, MapDifficultyCallback, query, param1, DBPrio_High);		
-	}
-}
-
-public MapDifficultyCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
-{
-	PrintToChat(data, "Map difficulty has been changed.");
-}
-
-public Action:DrawAdminBox(Handle:timer, any:client)
-{
+	new client = GetClientFromSerial(serial);
+	
 	if (g_mapZoneEditors[client][Step] == 0)
 	{
 		return Plugin_Stop;
@@ -550,16 +581,10 @@ public Action:DrawZones(Handle:timer)
 			else
 				point1[2] = point2[2];
 
-			// Again, ugly.
-			new color[4];
-			
 			if (g_mapZones[zone][Type] == Start)
-				color = { 0, 255, 0, 255 };
+				DrawBox(point1, point2, 2.0, g_startColor, true);
 			else if (g_mapZones[zone][Type] == End)
-				color = { 0, 0, 255, 255 };
-
-			// Effect_DrawBeamBoxToAll(point1, point2, precache_laser, 0, _, _, 2.0, 3.0, 3.0, _, _, color);					
-			DrawBox(point1, point2, 2.0, color, true);
+				DrawBox(point1, point2, 2.0, g_endColor, true);
 		}
 	}
 
@@ -570,7 +595,7 @@ public Action:PlayerTracker(Handle:timer)
 {
 	for (new client = 1; client <= MaxClients; client++)
 	{
-		if (IsValidPlayer(client))
+		if (IsValidPlayer(client) && IsPlayerAlive(client) && !IsClientObserver(client))
 		{
 			new Float:vec[3];
 			GetClientAbsOrigin(client, vec);
@@ -581,6 +606,9 @@ public Action:PlayerTracker(Handle:timer)
 				{
 					if (g_mapZones[zone][Type] == Start)
 					{
+						if (g_resetTimer)
+							Timer_Stop(client, false);
+							
 						Timer_Start(client);							
 					}
 					else if (g_mapZones[zone][Type] == End)
@@ -589,13 +617,19 @@ public Action:PlayerTracker(Handle:timer)
 						{
 							new bool:enabled = false;
 							new jumps = 0;
-							new time;
+							new Float:time;
 							new fpsmax;
 
-							if (/*time >= 10 && jumps >= 10 && */Timer_GetClientTimer(client, enabled, time, jumps, fpsmax))
+							if (Timer_GetClientTimer(client, enabled, time, jumps, fpsmax))
 							{
-								Timer_FinishRound(client, g_currentMap, float(time), jumps, Timer_GetClientDifficulty(client), fpsmax);
-								Timer_ForceReloadWorldCache();
+								new difficulty = 0;
+								if (g_timerPhysics)
+									difficulty = Timer_GetClientDifficulty(client);
+
+								Timer_FinishRound(client, g_currentMap, time, jumps, difficulty, fpsmax);
+								
+								if (g_timerWorldRecord)
+									Timer_ForceReloadWorldRecordCache();
 							}
 						}
 					}
@@ -621,37 +655,34 @@ public Action:PlayerTracker(Handle:timer)
 	return Plugin_Continue;
 }
 
-
-public IsInsideBox(Float:fPCords[3], Float:fbsx, Float:fbsy, Float:fbsz, Float:fbex, Float:fbey, Float:fbez){
-	new Float:fpx=fPCords[0];
-	new Float:fpy=fPCords[1];
-	// new Float:fpz=fPCords[2];
+IsInsideBox(Float:fPCords[3], Float:fbsx, Float:fbsy, Float:fbsz, Float:fbex, Float:fbey, Float:fbez){
+	new Float:fpx = fPCords[0];
+	new Float:fpy = fPCords[1];
+	new Float:fpz = fPCords[2];
 	
-	new bool:bX=false;
-	new bool:bY=false;
-	//new bool:bZ=false;
+	new bool:bX = false;
+	new bool:bY = false;
+	new bool:bZ = false;
+
+	if (fbsx > fbex && fpx <= fbsx && fpx >= fbex)
+		bX = true;
+	else if (fbsx < fbex && fpx >= fbsx && fpx <= fbex)
+		bX = true;
 		
-	//check all possibilities
-	if(fbsx>fbex && fpx<=fbsx && fpx>=fbex)
-		bX=true;
-	else if(fbsx<fbex && fpx>=fbsx && fpx<=fbex)
-		bX=true;
+	if (fbsy > fbey && fpy <= fbsy && fpy >= fbey)
+		bY = true;
+	else if (fbsy < fbey && fpy >= fbsy && fpy <= fbey)
+		bY = true;
+	
+	if (fbsz > fbez && fpz <= fbsz && fpz >= fbez)
+		bZ = true;
+	else if (fbsz < fbez && fpz >= fbsz && fpz <= fbez)
+		bZ = true;
 		
-	if(fbsy>fbey && fpy<=fbsy && fpy>=fbey)
-		bY=true;
-	else if(fbsy<fbey && fpy>=fbsy && fpy<=fbey)
-		bY=true;
-	/*	
-	if(fbsz>fbez && fpz <= fbsz && fpz>=fbez)
-		bZ=true;
-	else if(fbsz<fbez && fpz>=fbsz && fpz<=fbez)
-		bZ=true;*/
-		
-	if(bX&&bY)
+	if (bX && bY && bZ)
 		return true;
 	
 	return false;
-	
 }
 
 public Native_AddMapZone(Handle:plugin, numParams)
@@ -670,7 +701,8 @@ public Native_AddMapZone(Handle:plugin, numParams)
 	AddMapZone(map, type, point1, point2);
 }
 
-public DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat){
+DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
+{
 	//initialize tempoary variables bottom front
 	decl Float:fLeftBottomFront[3];
 	fLeftBottomFront[0] = fFrom[0];
@@ -753,4 +785,13 @@ public DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat){
 	
 	TE_SetupBeamPoints(fRightBottomFront,righttopfront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 	TE_SetupBeamPoints(fLeftBottomBack,fLeftTopBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+}
+
+ParseColor(const String:color[], result[])
+{
+	decl String:buffers[4][4];
+	ExplodeString(color, " ", buffers, sizeof(buffers), sizeof(buffers[]));
+	
+	for (new i = 0; i < sizeof(buffers); i++)
+		result[i] = StringToInt(buffers[i]);
 }

@@ -6,7 +6,14 @@
 #include <timer>
 #include <timer-physics>
 
+#undef REQUIRE_PLUGIN
+#include <updater>
+
+#define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-physics.txt"
+
 new Handle:g_cookie;
+
+new Handle:g_joinTeamDifficulty = INVALID_HANDLE;
 
 new g_difficulties[32][PhysicsDifficulty];
 new g_difficultyCount = 0;
@@ -16,6 +23,7 @@ new Float:g_stamina[MAXPLAYERS+1];
 new g_clientDifficulty[MAXPLAYERS+1];
 
 new bool:g_prevent[MAXPLAYERS+1];
+new bool:g_auto[MAXPLAYERS+1];
 
 public Plugin:myinfo =
 {
@@ -44,9 +52,16 @@ public OnPluginStart()
 	
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("player_jump", Event_PlayerJump);
-
-	AddCommandListener(SayCommand, "say");
-	AddCommandListener(SayCommand, "say_team");	
+	HookEvent("player_team", Event_PlayerTeam);
+	
+	RegConsoleCmd("sm_difficulty", Command_Difficulty);
+	
+	g_joinTeamDifficulty = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
+	
+	if (LibraryExists("updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}		
 }
 
 public OnPluginStop()
@@ -54,9 +69,12 @@ public OnPluginStop()
 	CloseHandle(g_cookie);	
 }
 
-public OnMapStart()
+public OnLibraryAdded(const String:name[])
 {
-	LoadDifficulties();
+	if (StrEqual(name, "updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}	
 }
 
 public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
@@ -86,22 +104,20 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 	return Plugin_Continue;
 }
 
-public Action:SayCommand(client, const String:command[], args)
+public Action:Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	decl String:buffer[128];
-	GetCmdArg(1, buffer, sizeof(buffer));
-
-	new bool:hidden = StrEqual(buffer, "/difficulty", true);
-
-	if (StrEqual(buffer, "!difficulty", true) || hidden)
+	if (GetConVarBool(g_joinTeamDifficulty))
 	{
-		CreateDifficultyMenu(client);
-
-		if (hidden)
-			return Plugin_Handled;
+		CreateDifficultyMenu(GetClientOfUserId(GetEventInt(event, "userid")));
 	}
 
 	return Plugin_Continue;
+}
+
+public Action:Command_Difficulty(client, args)
+{
+	CreateDifficultyMenu(client);
+	return Plugin_Handled;
 }
 
 LoadDifficulties()
@@ -110,12 +126,19 @@ LoadDifficulties()
 	BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "configs/timer/difficulties.cfg");
 
 	new Handle:kv = CreateKeyValues("difficulties");
-	FileToKeyValues(kv, path);
-
+	if (!FileToKeyValues(kv, path))
+	{
+		CloseHandle(kv);
+		return;
+	}
+	
 	g_difficultyCount = 0;
 
 	if (!KvGotoFirstSubKey(kv))
+	{
+		CloseHandle(kv);
 		return;
+	}
 	
 	do 
 	{
@@ -128,9 +151,10 @@ LoadDifficulties()
 		g_difficulties[g_difficultyCount][Stamina] = KvGetFloat(kv, "stamina", -1.0);
 		g_difficulties[g_difficultyCount][Gravity] = KvGetFloat(kv, "gravity", 1.0);
 		g_difficulties[g_difficultyCount][PreventAD] = bool:KvGetNum(kv, "prevent_ad", 0);
-		
+		g_difficulties[g_difficultyCount][Auto] = bool:KvGetNum(kv, "auto", 0);
+        
 		if (g_difficulties[g_difficultyCount][IsDefault])
-			g_defaultDifficulty = g_difficultyCount;
+			g_defaultDifficulty = g_difficulties[g_difficultyCount][Id];
 		
 		g_difficultyCount++;
 	} while (KvGotoNextKey(kv));
@@ -148,7 +172,7 @@ CreateDifficultyMenu(client)
 	for (new difficulty = 0; difficulty < g_difficultyCount; difficulty++)
 	{
 		decl String:id[5];
-		IntToString(difficulty, id, sizeof(id));
+		IntToString(g_difficulties[difficulty][Id], id, sizeof(id));
 			
 		AddMenuItem(menu, id, g_difficulties[difficulty][Name]);
 	}
@@ -179,22 +203,38 @@ ApplyDifficulty(client)
 {
 	if (!IsValidPlayer(client))
 		return;
-	
-	if (g_clientDifficulty[client] < 0 || g_clientDifficulty[client] >= g_difficultyCount)
-		return;
+		
+	new difficulty = 0;
+	for (; difficulty < g_difficultyCount; difficulty++)
+	{
+		if (g_difficulties[difficulty][Id] == g_clientDifficulty[client])
+			break;
+	}
 
-	SetEntityGravity(client, g_difficulties[g_clientDifficulty[client]][Gravity]);
-	g_stamina[client] = g_difficulties[g_clientDifficulty[client]][Stamina];
-	g_prevent[client] = g_difficulties[g_clientDifficulty[client]][PreventAD];
+	SetEntityGravity(client, g_difficulties[difficulty][Gravity]);
+	g_stamina[client] = g_difficulties[difficulty][Stamina];
+	g_prevent[client] = g_difficulties[difficulty][PreventAD];
+	g_auto[client] = g_difficulties[difficulty][Auto];
 }
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
-{
-	if (!g_prevent[client])
-		return Plugin_Continue;
+{	
+	if (g_prevent[client])
+    {
+        if (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT)
+            return Plugin_Handled;   
+    }
 	
-	if (buttons & IN_MOVELEFT  || buttons & IN_MOVERIGHT)
-		return Plugin_Handled;
+	if (IsPlayerAlive(client) && GetEntityMoveType(client) != MOVETYPE_LADDER && g_auto[client])
+    {
+		if (buttons & IN_JUMP)
+		{
+			if (!(GetEntityFlags(client) & FL_ONGROUND))
+			{
+				buttons &= ~IN_JUMP;
+			}
+		}
+    }
 	
 	return Plugin_Continue;
 }
@@ -210,9 +250,13 @@ public Native_GetDifficultyName(Handle:plugin, numParams)
 	new difficulty = GetNativeCell(1);
 	new maxlength = GetNativeCell(3);
 
-	if (difficulty < 0 || difficulty >= g_difficultyCount)
-		return false;
+	new t = 0;
+	for (; t < g_difficultyCount; t++)
+	{
+		if (g_difficulties[t][Id] == difficulty)
+			break;
+	}
 
-	SetNativeString(2, g_difficulties[difficulty][Name], maxlength);
+	SetNativeString(2, g_difficulties[t][Name], maxlength);
 	return true;
 }

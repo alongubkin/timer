@@ -2,14 +2,19 @@
 
 #include <sourcemod>
 #include <loghelper>
+#include <adminmenu>
 #include <timer>
-#include <timer-physics>
 #include <timer-worldrecord>
+
+#undef REQUIRE_PLUGIN
+#include <timer-physics>
+#include <updater>
+
+#define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-worldrecord.txt"
 
 /**
  * Global Enums
  */
-
 enum RecordCache
 {
 	Id,
@@ -31,9 +36,16 @@ new g_reconnectCounter = 0;
 new g_difficulties[32][PhysicsDifficulty];
 new g_difficultyCount = 0;
 
+new Handle:hTopMenu = INVALID_HANDLE;
+new TopMenuObject:oMapZoneMenu;
+
 new g_cache[100][RecordCache];
 new g_cacheCount = 0;
 new bool:g_cacheLoaded = false;
+
+new bool:g_timerPhysics = false;
+
+new g_deleteMenuSelection[MAXPLAYERS+1];
 
 public Plugin:myinfo =
 {
@@ -48,23 +60,63 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
 	RegPluginLibrary("timer-worldrecord");
 	
-	CreateNative("Timer_ForceReloadWorldCache", Native_ForceReloadWorldCache);
+	CreateNative("Timer_ForceReloadWorldRecordCache", Native_ForceReloadWorldRecordCache);
 
 	return APLRes_Success;
 }
 
 public OnPluginStart()
 {
-	ConnectSQL(false);
+	ConnectSQL(true);
+	
+	g_timerPhysics = LibraryExists("timer-physics");
+	
+	LoadTranslations("timer.phrases");
+	
+	RegConsoleCmd("sm_wr", Command_WorldRecord);
+	RegConsoleCmd("sm_delete", Command_Delete);
+	RegConsoleCmd("sm_record", Command_PersonalRecord);
+	RegConsoleCmd("sm_reloadcache", Command_ReloadCache);
+	
+	new Handle:topmenu;
+	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
+	{
+		OnAdminMenuReady(topmenu);
+	}
+	
+	if (LibraryExists("updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}		
+}
 
-	AddCommandListener(SayCommand, "say");
-	AddCommandListener(SayCommand, "say_team");
+public OnLibraryAdded(const String:name[])
+{
+	if (StrEqual(name, "timer-physics"))
+	{
+		g_timerPhysics = true;
+	}
+	else if (StrEqual(name, "updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}		
+}
+
+public OnLibraryRemoved(const String:name[])
+{	
+	if (StrEqual(name, "timer-physics"))
+	{
+		g_timerPhysics = false;
+	}
+	else if (StrEqual(name, "adminmenu"))
+	{
+		hTopMenu = INVALID_HANDLE;
+	}	
 }
 
 public OnMapStart()
 {
-	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
-	RefreshCache();	
+	GetCurrentMap(g_currentMap, sizeof(g_currentMap));	
 }
 
 public Action:OnClientCommand(client, args)
@@ -72,12 +124,7 @@ public Action:OnClientCommand(client, args)
 	new String:cmd[16];
 	GetCmdArg(0, cmd, sizeof(cmd));
 
-	if (StrEqual(cmd, "sm_wr", true))
-	{
-		CreateDifficultyMenu(client);
-		return Plugin_Handled;
-	}
-	else if (StrEqual(cmd, "wr"))
+	if (StrEqual(cmd, "wr"))
 	{
 		ConsoleWR(client, 0);
 		return Plugin_Handled;
@@ -86,76 +133,79 @@ public Action:OnClientCommand(client, args)
 	return Plugin_Continue;
 }
 
-public Action:SayCommand(client, const String:command[], args)
+public Action:Command_WorldRecord(client, args)
 {
-	decl String:buffer[128];
-	GetCmdArg(1, buffer, sizeof(buffer));
-
-	new bool:hidden = StrEqual(buffer, "/wr", true);
-	if (StrEqual(buffer, "!wr", true) || hidden)
-	{
+	/*
+	decl String:map[32];
+	
+	if (args == 0)
+		GetCurrentMap(map, sizeof(map));
+	else if (args == 1)
+		GetCmdArg(1, map, sizeof(map));
+	*/
+	
+	if (g_timerPhysics)
 		CreateDifficultyMenu(client);
+	else
+		CreateWRMenu(client, -1);
+	
+	return Plugin_Handled;
+}
 
-		if (hidden)
-			return Plugin_Handled;
-	}
+public Action:Command_Delete(client, args)
+{
+	CreateDeleteMenu(client, client);
+	return Plugin_Handled;
+}
 
-	hidden = StrEqual(buffer, "/delete", true);
-	if (StrEqual(buffer, "!delete", true) || hidden)
+public Action:Command_PersonalRecord(client, args)
+{
+	new argsCount = GetCmdArgs();
+	new target = -1;
+
+	if (argsCount == 0)
 	{
-		CreateDeleteMenu(client);
-
-		if (hidden)
-			return Plugin_Handled;
+		target = client;
 	}
-
-	hidden = StrEqual(buffer, "/record", true);
-	if (StrEqual(buffer, "!record", true) || hidden)
+	else if (argsCount == 1)
 	{
-		new argsCount = GetCmdArgs();
-		new target = -1;
-
-		if (argsCount == 1)
-		{
-			target = client;
-		}
-		else if (argsCount == 2)
-		{
-			decl String:name[64];
-			GetCmdArg(2, name, sizeof(name));
-			
-			new targets[2];
-			decl String:targetName[32];
-			new bool:ml = false;
-
-			if (ProcessTargetString(name, 0, targets, sizeof(targets), COMMAND_FILTER_NO_BOTS|COMMAND_FILTER_NO_IMMUNITY, targetName, sizeof(targetName), ml) > 0)
-				target = targets[0];
-		}
-
-		if (target == -1)
-		{
-			PrintToChat(client, "Couldn't find target...");
-		}
-		else
-		{
-			decl String:auth[32];
-			GetClientAuthString(client, auth, sizeof(auth));
-
-			for (new t = 0; t < g_cacheCount; t++)
-			{
-				if (StrEqual(g_cache[t][Auth], auth))
-				{
-					CreatePlayerInfoMenu(client, g_cache[t][Id]);
-					break;
-				}
-			}		
-		}
-
-		if (hidden)
-			return Plugin_Handled;
-	}
+		decl String:name[64];
+		GetCmdArg(1, name, sizeof(name));
 		
-	return Plugin_Continue;
+		new targets[2];
+		decl String:targetName[32];
+		new bool:ml = false;
+
+		if (ProcessTargetString(name, 0, targets, sizeof(targets), COMMAND_FILTER_NO_BOTS|COMMAND_FILTER_NO_IMMUNITY, targetName, sizeof(targetName), ml) > 0)
+			target = targets[0];
+	}
+
+	if (target == -1)
+	{
+		PrintToChat(client, "%s%t", PLUGIN_PREFIX, "No target");
+	}
+	else
+	{
+		decl String:auth[32];
+		GetClientAuthString(client, auth, sizeof(auth));
+
+		for (new t = 0; t < g_cacheCount; t++)
+		{
+			if (StrEqual(g_cache[t][Auth], auth))
+			{
+				CreatePlayerInfoMenu(client, g_cache[t][Id], false);
+				break;
+			}
+		}		
+	}
+	
+	return Plugin_Handled;
+}
+
+public Action:Command_ReloadCache(client, args)
+{
+	RefreshCache();
+	return Plugin_Handled;
 }
 
 LoadDifficulties()
@@ -170,6 +220,7 @@ LoadDifficulties()
 
 	if (!KvGotoFirstSubKey(kv))
 	{
+		CloseHandle(kv);
 		return;
 	}
 	
@@ -177,7 +228,7 @@ LoadDifficulties()
 	{
 		decl String:sectionName[32];
 		KvGetSectionName(kv, sectionName, sizeof(sectionName));
-
+		
 		g_difficulties[g_difficultyCount][Id] = StringToInt(sectionName);
 
 		KvGetString(kv, "name", g_difficulties[g_difficultyCount][Name], 32);
@@ -187,6 +238,139 @@ LoadDifficulties()
 	} while (KvGotoNextKey(kv));
 	
 	CloseHandle(kv);	
+}
+
+public OnAdminMenuReady(Handle:topmenu)
+{
+	// Block this from being called twice
+	if (topmenu == hTopMenu) {
+		return;
+	}
+ 
+	// Save the Handle
+	hTopMenu = topmenu;
+		
+	if ((oMapZoneMenu = FindTopMenuCategory(topmenu, "Timer Management")) == INVALID_TOPMENUOBJECT)
+	{
+		oMapZoneMenu = AddToTopMenu(hTopMenu,
+			"Timer Management",
+			TopMenuObject_Category,
+			AdminMenu_CategoryHandler,
+			INVALID_TOPMENUOBJECT);
+	}
+		
+	AddToTopMenu(hTopMenu, 
+		"timer_delete",
+		TopMenuObject_Item,
+		AdminMenu_DeleteRecord,
+		oMapZoneMenu,
+		"timer_delete",
+		ADMFLAG_RCON);
+		
+	AddToTopMenu(hTopMenu, 
+		"timer_deletemaprecords",
+		TopMenuObject_Item,
+		AdminMenu_DeleteMapRecords,
+		oMapZoneMenu,
+		"timer_deletemaprecords",
+		ADMFLAG_RCON);		
+}
+
+public AdminMenu_CategoryHandler(Handle:topmenu, 
+			TopMenuAction:action,
+			TopMenuObject:object_id,
+			param,
+			String:buffer[],
+			maxlength)
+{
+	if (action == TopMenuAction_DisplayTitle) {
+		Format(buffer, maxlength, "Timer Management");
+	} else if (action == TopMenuAction_DisplayOption) {
+		Format(buffer, maxlength, "Timer Management");
+	}
+}
+
+public AdminMenu_DeleteMapRecords(Handle:topmenu, 
+			TopMenuAction:action,
+			TopMenuObject:object_id,
+			param,
+			String:buffer[],
+			maxlength)
+{
+	if (action == TopMenuAction_DisplayOption) {
+		Format(buffer, maxlength, "Delete Map Records");
+	} else if (action == TopMenuAction_SelectOption) {
+		decl String:map[32];
+		GetCurrentMap(map, sizeof(map));
+		
+		DeleteMapRecords(map);
+	}
+}
+
+public AdminMenu_DeleteRecord(Handle:topmenu, 
+			TopMenuAction:action,
+			TopMenuObject:object_id,
+			param,
+			String:buffer[],
+			maxlength)
+{
+	if (action == TopMenuAction_DisplayOption) {
+		Format(buffer, maxlength, "Delete Player Record");
+	} else if (action == TopMenuAction_SelectOption) {
+		DisplaySelectPlayerMenu(param);
+	}
+}
+
+DisplaySelectPlayerMenu(client)
+{
+	new Handle:menu = CreateMenu(MenuHandler_SelectPlayer);
+
+	SetMenuTitle(menu, "Choose Player\n \n");
+	SetMenuExitButton(menu, true);
+	
+	for (new i = 1; i < MaxClients; i++)
+	{
+		if (IsClientInGame(i))
+		{
+			decl String:name[MAX_NAME_LENGTH];
+			GetClientName(i, name, sizeof(name));
+			
+			decl String:info[10];
+			IntToString(i, info, sizeof(info));
+			
+			AddMenuItem(menu, info, name);
+		}
+	}
+	
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+}
+
+public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction_End) 
+	{
+		CloseHandle(menu);
+	}
+	else if (action == MenuAction_Select) 
+	{
+		decl String:info[32];		
+		GetMenuItem(menu, param2, info, sizeof(info));
+		
+		CreateDeleteMenu(param1, StringToInt(info));
+	}
+}
+
+DeleteMapRecords(const String:map[]) 
+{
+	decl String:query[384];
+	Format(query, sizeof(query), "DELETE FROM `round` WHERE map = '%s'", map);	
+
+	SQL_TQuery(g_hSQL, DeleteMapRecordsCallback, query, _, DBPrio_Normal);
+}
+
+public DeleteMapRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{
+	RefreshCache();
 }
 
 RefreshCache()
@@ -201,14 +385,16 @@ RefreshCache()
 	else
 	{	
 		decl String:query[384];
-		Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth", g_currentMap, g_currentMap);	
-
+		Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
+		// PrintToServer(query);
 		SQL_TQuery(g_hSQL, RefreshCacheCallback, query, _, DBPrio_Normal);
 	}
 }
 
 public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
+	PrintToServer(error);
+	
 	g_cacheCount = 0;
 
 	if (hndl == INVALID_HANDLE)
@@ -218,11 +404,11 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 	{
 		g_cache[g_cacheCount][Id] = SQL_FetchInt(hndl, 0);
 		SQL_FetchString(hndl, 1, g_cache[g_cacheCount][Auth], 32);
-		FormatTime(g_cache[g_cacheCount][TimeString], 16, "%T", SQL_FetchInt(hndl, 2) - 2 * 3600);
+		Timer_SecondsToTime(SQL_FetchFloat(hndl, 2), g_cache[g_cacheCount][TimeString], 16, true);
 		g_cache[g_cacheCount][Jumps] = SQL_FetchInt(hndl, 3);
 		g_cache[g_cacheCount][RecordPhysicsDifficulty] = SQL_FetchInt(hndl, 4);
 		SQL_FetchString(hndl, 5, g_cache[g_cacheCount][Name], 32);
-		
+			
 		g_cacheCount++;
 	}
 
@@ -272,14 +458,15 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
         SQL_FastQuery(hndl, "SET NAMES 'utf8'");
 
     g_hSQL = CloneHandle(hndl);
+    CloseHandle(hndl);
 	
     g_reconnectCounter = 1;
 
     if (data)
     {
     	RefreshCache();	
-    }
-
+    }	
+	
     return 1;
 }
 
@@ -287,20 +474,20 @@ CreateDifficultyMenu(client)
 {
 	if (!g_cacheLoaded)
 	{
-		PrintToChat(client, "[Timer] World Record is still loading; try again in a few moments.");
+		PrintToChat(client, "%s%t", PLUGIN_PREFIX, "World Record Loading");
 		return;	
 	}
 
 	new Handle:menu = CreateMenu(MenuHandler_Difficulty);
 
-	SetMenuTitle(menu, "Physics Difficulty");
+	SetMenuTitle(menu, "%T", "Physics Difficulty", client);
 	SetMenuExitButton(menu, true);
 
 	for (new difficulty = 0; difficulty < g_difficultyCount; difficulty++)
 	{
 		decl String:id[5];
 		IntToString(g_difficulties[difficulty][Id], id, sizeof(id));
-
+		
 		AddMenuItem(menu, id, g_difficulties[difficulty][Name]);
 	}
 
@@ -326,20 +513,26 @@ CreateWRMenu(client, difficulty)
 {
 	new Handle:menu = CreateMenu(MenuHandler_WR);
 
-	SetMenuTitle(menu, "World Records for %s", g_currentMap);
-	SetMenuExitBackButton(menu, true);
-
+	SetMenuTitle(menu, "%T", "World Record Menu Title", client, g_currentMap);
+	
+	if (g_timerPhysics)
+		SetMenuExitBackButton(menu, true);
+	else
+		SetMenuExitButton(menu, true);
+		
 	new items = 0; 
 
 	for (new cache = 0; cache < g_cacheCount; cache++)
 	{
-		if (g_cache[cache][RecordPhysicsDifficulty] == difficulty)
+		// PrintToChatAll("%d", g_cache[cache][RecordPhysicsDifficulty]);
+		
+		if (difficulty == -1 || g_cache[cache][RecordPhysicsDifficulty] == difficulty)
 		{
 			decl String:id[5];
 			IntToString(g_cache[cache][Id], id, sizeof(id));
 			
 			decl String:text[92];
-			Format(text, sizeof(text), "%s (%s)", g_cache[cache][Name], g_cache[cache][TimeString]);
+			Format(text, sizeof(text), "%s - %s (%d Jumps)", g_cache[cache][Name], g_cache[cache][TimeString], g_cache[cache][Jumps]);
 
 			AddMenuItem(menu, id, text);
 			items++;
@@ -349,8 +542,13 @@ CreateWRMenu(client, difficulty)
 	if (items == 0)
 	{
 		CloseHandle(menu);
-		PrintToChat(client, "Sorry, there are no records in this difficulty.");
+		
+		if (difficulty == -1)
+			PrintToChat(client, "%s%t", PLUGIN_PREFIX, "No Records");	
+		else
+			PrintToChat(client, "%s%t", PLUGIN_PREFIX, "No Difficulty Records");
 	}
+	
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);	
 }
 
@@ -364,7 +562,8 @@ public MenuHandler_WR(Handle:menu, MenuAction:action, param1, param2)
 	{
 		if (param2 == MenuCancel_ExitBack) 
 		{
-			CreateDifficultyMenu(param1);
+			if (g_timerPhysics)
+				CreateDifficultyMenu(param1);
 		}
 	} 
 	else if (action == MenuAction_Select) 
@@ -372,11 +571,11 @@ public MenuHandler_WR(Handle:menu, MenuAction:action, param1, param2)
 		decl String:info[32];		
 		GetMenuItem(menu, param2, info, sizeof(info));
 			
-		CreatePlayerInfoMenu(param1, StringToInt(info));
+		CreatePlayerInfoMenu(param1, StringToInt(info), true);
 	}
 }
 
-CreatePlayerInfoMenu(client, id)
+CreatePlayerInfoMenu(client, id, bool:back)
 {
 	new Handle:menu = CreateMenu(MenuHandler_Difficulty);
 
@@ -391,24 +590,31 @@ CreatePlayerInfoMenu(client, id)
 					
 			decl String:text[92];
 
-			SetMenuTitle(menu, "Record Info\n \n");
+			SetMenuTitle(menu, "%T\n \n", "Record Info", client);
 
-			Format(text, sizeof(text), "Player Name: %s (%s)", g_cache[cache][Name], g_cache[cache][Auth]);
+			Format(text, sizeof(text), "%T: %s (%s)", "Player Name", client, g_cache[cache][Name], g_cache[cache][Auth]);
 			AddMenuItem(menu, difficulty, text);
 
-			Format(text, sizeof(text), "Rank: #%d on %s", cache + 1, g_currentMap);
+			Format(text, sizeof(text), "%T: #%d on %s", "Rank", client, cache + 1, g_currentMap);
 			AddMenuItem(menu, difficulty, text);
 
-			Format(text, sizeof(text), "Time: %s", g_cache[cache][TimeString]);
+			Format(text, sizeof(text), "%T: %s", "Time", client, g_cache[cache][TimeString]);
 			AddMenuItem(menu, difficulty, text);
 
-			Format(text, sizeof(text), "Jumps: %d", g_cache[cache][Jumps]);
+			Format(text, sizeof(text), "%T: %d", "Jumps", client, g_cache[cache][Jumps]);
 			AddMenuItem(menu, difficulty, text);
-
-			Format(text, sizeof(text), "Physics Difficulty: %s", g_difficulties[g_cache[cache][RecordPhysicsDifficulty]][Name]);
-			AddMenuItem(menu, difficulty, text);									
-
-			AddMenuItem(menu, difficulty, "Back");			
+			
+			if (g_timerPhysics)
+			{
+				decl String:difficultyName[32];
+				Timer_GetDifficultyName(g_cache[cache][RecordPhysicsDifficulty], difficultyName, sizeof(difficultyName));
+				
+				Format(text, sizeof(text), "%T: %s", "Physics Difficulty", client, difficultyName);
+				AddMenuItem(menu, difficulty, text);
+			}
+	
+			if (back)
+				AddMenuItem(menu, difficulty, "Back");			
 
 			break;
 		}
@@ -420,14 +626,16 @@ CreatePlayerInfoMenu(client, id)
 
 ConsoleWR(client, difficulty)
 {
-	PrintToConsole(client, "difficulty: %s", g_difficulties[difficulty][Name]);
+	if (g_timerPhysics)
+		PrintToConsole(client, "difficulty: %s", g_difficulties[difficulty][Name]);
+	
 	PrintToConsole(client, "map       : %s\n", g_currentMap);
 
 	PrintToConsole(client, "# rank\tname\t\t\tsteamid\t\t\ttime\t\tjumps");
 
 	for (new cache = 0; cache < g_cacheCount; cache++)
 	{
-		if (g_cache[cache][RecordPhysicsDifficulty] == difficulty)
+		if (!g_timerPhysics || g_cache[cache][RecordPhysicsDifficulty] == difficulty)
 		{
 			PrintToConsole(client, "# %d\t%s\t%s\t%s\t%d",
 				cache + 1,
@@ -439,8 +647,8 @@ ConsoleWR(client, difficulty)
 	}	
 }
 
-CreateDeleteMenu(client)
-{
+CreateDeleteMenu(client, target)
+{	
 	if (g_hSQL == INVALID_HANDLE)
 	{
 		ConnectSQL(false);
@@ -448,19 +656,18 @@ CreateDeleteMenu(client)
 	else
 	{
 		decl String:auth[32];
-		GetClientAuthString(client, auth, sizeof(auth));
+		GetClientAuthString(target, auth, sizeof(auth));
 			
 		decl String:query[384];
-		Format(query, sizeof(query), "SELECT id, time, jumps, physicsdifficulty FROM `round` WHERE map = '%s' AND auth = '%s' ORDER BY physicsdifficulty, time, jumps", g_currentMap, auth);	
-
+		Format(query, sizeof(query), "SELECT id, time, jumps, physicsdifficulty, auth FROM `round` WHERE map = '%s' AND auth = '%s' ORDER BY physicsdifficulty, time, jumps", g_currentMap, auth);	
+		
+		g_deleteMenuSelection[client] = target;
 		SQL_TQuery(g_hSQL, CreateDeleteMenuCallback, query, client, DBPrio_Normal);
 	}	
 }
 
 public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
-{
-	PrintToChat(client, error);
-
+{	
 	if (hndl == INVALID_HANDLE)
 		return 0;
 
@@ -469,19 +676,34 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 	SetMenuTitle(menu, "Delete Record\n \n");
 	SetMenuExitButton(menu, true);
 	
+	decl String:auth[32];
+	GetClientAuthString(client, auth, sizeof(auth));
+			
 	while (SQL_FetchRow(hndl))
 	{
+		decl String:steamid[32];
+		SQL_FetchString(hndl, 4, steamid, sizeof(steamid));
+		
+		PrintToChatAll("%s %s", steamid, auth);
+		if (!StrEqual(steamid, auth))
+		{
+			CloseHandle(menu);
+			return 0;
+		}
+		
 		decl String:id[10];
 		IntToString(SQL_FetchInt(hndl, 0), id, sizeof(id));
 
 		decl String:time[16];
-		FormatTime(time, 16, "%T", SQL_FetchInt(hndl, 1)- 2 * 3600);
-
-		decl String:difficulty[32];
-		Timer_GetDifficultyName(SQL_FetchInt(hndl, 3), difficulty, sizeof(difficulty));
+		Timer_SecondsToTime(SQL_FetchFloat(hndl, 1), time, sizeof(time));
 		
+		new String:difficulty[32];	
+		
+		if (g_timerPhysics)
+			Timer_GetDifficultyName(SQL_FetchInt(hndl, 3), difficulty, sizeof(difficulty));
+
 		decl String:value[92];
-		Format(value, sizeof(value), "%s %s, Jumps: %d", time, difficulty, SQL_FetchInt(hndl, 2));
+		Format(value, sizeof(value), "%s %s, %T: %d", time, difficulty, "Jumps", client, SQL_FetchInt(hndl, 2));
 
 		AddMenuItem(menu, id, value);
 	}
@@ -505,17 +727,15 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 		Format(query, sizeof(query), "DELETE FROM `round` WHERE id = %s", info);	
 
 		SQL_TQuery(g_hSQL, DeleteRecordCallback, query, param1, DBPrio_Normal);
-
 	}
 }
 
 public DeleteRecordCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
-	Timer_ForceReloadBestRoundCache();
-	CreateDeleteMenu(client);
+	CreateDeleteMenu(client, g_deleteMenuSelection[client]);
 }
 
-public Native_ForceReloadWorldCache(Handle:plugin, numParams)
+public Native_ForceReloadWorldRecordCache(Handle:plugin, numParams)
 {
 	RefreshCache();
 }

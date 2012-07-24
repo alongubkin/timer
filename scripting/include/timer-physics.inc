@@ -3,7 +3,33 @@
 #endif
 #define _timer_physics_included
 
+enum PhysicsDifficulty
+{
+    Id,
+    String:Name[32],
+    bool:IsDefault,
+    Float:Stamina,
+    Float:Gravity,
+    bool:PreventAD,
+    bool:Auto
+}
+
+/**
+ * Gets the client difficulty.
+ *
+ * @param client    	The client to get the difficulty for.
+ *
+ * @return The difficulty of the client.
+ */
 native Timer_GetClientDifficulty(client);
+
+/**
+ * Gets the name of a difficulty.
+ *
+ * @param client    	The client to get the difficulty for.
+ *
+ * @return The difficulty of the client.
+ */
 native Timer_GetDifficultyName(difficulty, String:name[], maxlength);
 
 public SharedPlugin:__pl_timer_physics = 
