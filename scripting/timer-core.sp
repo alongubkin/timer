@@ -191,7 +191,7 @@ public Action:Event_StopTimer(Handle:event, const String:name[], bool:dontBroadc
 
 public Action:Command_Restart(client, args)
 {
-	if (g_restartEnabled)
+	if (g_restartEnabled && IsPlayerAlive(client))
 		RestartTimer(client);
 	
 	return Plugin_Handled;
@@ -199,7 +199,7 @@ public Action:Command_Restart(client, args)
 
 public Action:Command_Stop(client, args)
 {
-	if (g_stopEnabled)
+	if (g_stopEnabled && IsPlayerAlive(client))
 		StopTimer(client);
 		
 	return Plugin_Handled;
@@ -207,7 +207,7 @@ public Action:Command_Stop(client, args)
 
 public Action:Command_Pause(client, args)
 {
-	if (g_pauseResumeEnabled)
+	if (g_pauseResumeEnabled && IsPlayerAlive(client))
 		PauseTimer(client);
 		
 	return Plugin_Handled;
@@ -215,7 +215,7 @@ public Action:Command_Pause(client, args)
 
 public Action:Command_Resume(client, args)
 {
-	if (g_pauseResumeEnabled)
+	if (g_pauseResumeEnabled && IsPlayerAlive(client))
 		ResumeTimer(client);
 		
 	return Plugin_Handled;
