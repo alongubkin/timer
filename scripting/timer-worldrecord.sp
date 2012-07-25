@@ -116,7 +116,8 @@ public OnLibraryRemoved(const String:name[])
 
 public OnMapStart()
 {
-	GetCurrentMap(g_currentMap, sizeof(g_currentMap));	
+	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
+	RefreshCache();
 }
 
 public Action:OnClientCommand(client, args)
