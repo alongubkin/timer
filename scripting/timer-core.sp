@@ -407,7 +407,7 @@ ClearClientCache(client)
 
 FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
 {
-	if (IsValidPlayer(client))
+	if (IsValidPlayer(client) && jumps > 0)
 	{
 		decl String:auth[32];
 		GetClientAuthString(client, auth, sizeof(auth));
