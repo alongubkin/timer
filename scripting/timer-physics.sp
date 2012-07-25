@@ -53,7 +53,7 @@ public OnPluginStart()
 	
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("player_jump", Event_PlayerJump);
-	HookEvent("player_team", Event_PlayerTeam);
+	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 	
 	RegConsoleCmd("sm_difficulty", Command_Difficulty);
 	
@@ -118,7 +118,8 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 
 public Action:Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (g_joinTeamDifficulty)
+	new team = GetEventInt(event, "team");
+	if (g_joinTeamDifficulty && team > 1)
 	{
 		CreateDifficultyMenu(GetClientOfUserId(GetEventInt(event, "userid")));
 	}
