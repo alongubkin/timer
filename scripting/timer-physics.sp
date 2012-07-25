@@ -29,10 +29,10 @@ new bool:g_auto[MAXPLAYERS+1];
 public Plugin:myinfo =
 {
     name        = "[Timer] Physics",
-    author      = "alongub",
+    author      = "alongub | Glite",
     description = "Physics component for [Timer]",
     version     = PL_VERSION,
-    url         = "http://steamcommunity.com/id/alon"
+    url         = "https://github.com/alongubkin/timer"
 };
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)

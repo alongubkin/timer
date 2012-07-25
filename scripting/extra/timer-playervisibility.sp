@@ -11,10 +11,10 @@ new bool:g_hide[MAXPLAYERS+1];
 public Plugin:myinfo =
 {
     name        = "[Timer] Player Visibility",
-    author      = "alongub",
+    author      = "alongub | Glite",
     description = "Player visibility component for [Timer]",
     version     = PL_VERSION,
-    url         = "http://steamcommunity.com/id/alon"
+    url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()

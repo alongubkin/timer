@@ -32,10 +32,10 @@ new g_currentCheckpoint[MAXPLAYERS+1];
 public Plugin:myinfo =
 {
     name        = "[Timer] Checkpoints",
-    author      = "alongub",
+    author      = "alongub | Glite",
     description = "Checkpoints component for [Timer]",
     version     = PL_VERSION,
-    url         = "http://steamcommunity.com/id/alon"
+    url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()

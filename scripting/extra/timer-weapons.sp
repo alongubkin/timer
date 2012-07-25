@@ -15,10 +15,10 @@ new g_awp[MAXPLAYERS+1];
 public Plugin:myinfo =
 {
     name        = "[Timer] Weapons",
-    author      = "alongub",
+    author      = "alongub | Glite",
     description = "Weapons component for [Timer]",
     version     = PL_VERSION,
-    url         = "http://steamcommunity.com/id/alon"
+    url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()

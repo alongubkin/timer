@@ -65,10 +65,10 @@ new g_iVelocity;
 public Plugin:myinfo =
 {
     name        = "[Timer] Core",
-    author      = "alongub",
+    author      = "alongub | Glite",
     description = "Core component for [Timer]",
     version     = PL_VERSION,
-    url         = "http://steamcommunity.com/id/alon"
+    url         = "https://github.com/alongubkin/timer"
 };
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)

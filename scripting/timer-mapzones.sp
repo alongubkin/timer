@@ -57,10 +57,10 @@ new bool:g_timerWorldRecord = false;
 public Plugin:myinfo =
 {
     name        = "[Timer] MapZones",
-    author      = "alongub",
+    author      = "alongub | Glite",
     description = "Map Zones component for [Timer]",
     version     = PL_VERSION,
-    url         = "http://steamcommunity.com/id/alon"
+    url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()
