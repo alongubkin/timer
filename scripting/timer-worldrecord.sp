@@ -717,6 +717,7 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 {
 	if (action == MenuAction_End) 
 	{
+		RefreshCache();
 		CloseHandle(menu);
 	}
 	else if (action == MenuAction_Select) 
