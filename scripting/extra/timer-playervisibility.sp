@@ -20,6 +20,8 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
+	LoadTranslations("timer.phrases");
+	
 	Array_Fill(g_hide, sizeof(g_hide), false, 0);
 	AddCommandListener(HideCommand, "sm_hide");	
 }
@@ -89,12 +91,7 @@ public Action:Hook_SetTransmitWeapon(entity, client)
 
 public Action:HideCommand(client, const String:command[], args)
 {
-	ToggleVisibility(client);
-	return Plugin_Handled;
-}
-
-ToggleVisibility(client)
-{
 	g_hide[client] = !g_hide[client];
-	PrintToChat(client, "Toggled player visibility.");
+	PrintToChat(client, "%s%t", PLUGIN_PREFIX, "Toggle visibilty");
+	return Plugin_Handled;
 }

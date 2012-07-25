@@ -98,4 +98,8 @@
 	{
 		"en"			"Rank"
 	}
+	"Toggle visibilty"
+	{
+		"en"			"Toggled player visibility."
+	}
 }
