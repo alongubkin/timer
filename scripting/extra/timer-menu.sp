@@ -16,10 +16,10 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
-	AddCommandListener(MenuCommand, "sm_menu");	
+	RegConsoleCmd("sm_menu", MenuCommand);
 }
 
-public Action:MenuCommand(client, const String:command[], args)
+public Action:MenuCommand(client, args)
 {
 	OpenMenu(client);
 	return Plugin_Handled;

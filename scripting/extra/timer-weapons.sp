@@ -23,9 +23,9 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
-	AddCommandListener(ScoutCommand, "sm_scout");
-	AddCommandListener(USPCommand, "sm_usp");
-	AddCommandListener(AWPCommand, "sm_awp");
+	RegConsoleCmd("sm_scout", ScoutCommand);
+	RegConsoleCmd("sm_usp", USPCommand);
+	RegConsoleCmd("sm_awp", AWPCommand);
 }
 
 public OnMapStart()
@@ -42,7 +42,7 @@ public OnClientPutInServer(client)
 	g_awp[client] = 0;	
 }
 
-public Action:ScoutCommand(client, const String:command[], args)
+public Action:ScoutCommand(client, args)
 {
 	if (g_scout[client] < 7)
 	{
@@ -56,7 +56,7 @@ public Action:ScoutCommand(client, const String:command[], args)
 	return Plugin_Handled;
 }
 
-public Action:USPCommand(client, const String:command[], args)
+public Action:USPCommand(client, args)
 {
 	if (g_usp[client] < 7)
 	{
@@ -70,7 +70,7 @@ public Action:USPCommand(client, const String:command[], args)
 	return Plugin_Handled;
 }
 
-public Action:AWPCommand(client, const String:command[], args)
+public Action:AWPCommand(client, args)
 {
 	if (g_awp[client] < 7)
 	{

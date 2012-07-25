@@ -42,15 +42,13 @@ public OnPluginStart()
 {
 	ConnectSQL(true);
 
-	HookEvent("player_connect", Event_PlayerConnect);
-
-	AddCommandListener(ClearCommand, "sm_clear");
-	AddCommandListener(NextCommand, "sm_next");
-	AddCommandListener(PrevCommand, "sm_prev");
-	AddCommandListener(SaveCommand, "sm_save");
-	AddCommandListener(SaveCommand, "sm_s");
-	AddCommandListener(TeleCommand, "sm_tele");
-	AddCommandListener(TeleCommand, "sm_t");
+	RegConsoleCmd("sm_clear", ClearCommand);
+	RegConsoleCmd("sm_next", NextCommand);
+	RegConsoleCmd("sm_prev", PrevCommand);
+	RegConsoleCmd("sm_save", SaveCommand);
+	RegConsoleCmd("sm_s", SaveCommand);
+	RegConsoleCmd("sm_tele", TeleCommand);
+	RegConsoleCmd("sm_t", TeleCommand);
 
 	Array_Fill(g_currentCheckpoint, sizeof(g_currentCheckpoint), 0, 0);
 }
@@ -63,37 +61,36 @@ public OnMapStart()
 	Array_Fill(g_currentCheckpoint, sizeof(g_currentCheckpoint), 0, 0);
 }
 
-public Action:Event_PlayerConnect(Handle:event, const String:name[], bool:dontBroadcast)
+public OnClientPutInServer(client)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	g_currentCheckpoint[client] = 0;
 }
 
-public Action:ClearCommand(client, const String:command[], args)
+public Action:ClearCommand(client, args)
 {
 	ClearCheckpoints(client);
 	return Plugin_Handled;
 }
 
-public Action:NextCommand(client, const String:command[], args)
+public Action:NextCommand(client, args)
 {
 	GoToCheckpoint(client, g_currentCheckpoint[client] + 1);
 	return Plugin_Handled;
 }
 
-public Action:PrevCommand(client, const String:command[], args)
+public Action:PrevCommand(client, args)
 {
 	GoToCheckpoint(client, g_currentCheckpoint[client] - 1);
 	return Plugin_Handled;
 }
 
-public Action:SaveCommand(client, const String:command[], args)
+public Action:SaveCommand(client, args)
 {
 	SaveCheckpoint(client);
 	return Plugin_Handled;
 }
 
-public Action:TeleCommand(client, const String:command[], args)
+public Action:TeleCommand(client, args)
 {
 	TeleportToLastCheckpoint(client);
 	return Plugin_Handled;

@@ -23,7 +23,7 @@ public OnPluginStart()
 	LoadTranslations("timer.phrases");
 	
 	Array_Fill(g_hide, sizeof(g_hide), false, 0);
-	AddCommandListener(HideCommand, "sm_hide");	
+	RegConsoleCmd("sm_hide", HideCommand);
 }
 
 public OnMapStart()
@@ -89,7 +89,7 @@ public Action:Hook_SetTransmitWeapon(entity, client)
     return Plugin_Continue; 
 }
 
-public Action:HideCommand(client, const String:command[], args)
+public Action:HideCommand(client, args)
 {
 	g_hide[client] = !g_hide[client];
 	PrintToChat(client, "%s%t", PLUGIN_PREFIX, "Toggle visibilty");
