@@ -13,7 +13,8 @@
 
 new Handle:g_cookie;
 
-new Handle:g_joinTeamDifficulty = INVALID_HANDLE;
+new Handle:g_joinTeamDifficultyCvar = INVALID_HANDLE;
+new bool:g_joinTeamDifficulty = false;
 
 new g_difficulties[32][PhysicsDifficulty];
 new g_difficultyCount = 0;
@@ -56,7 +57,10 @@ public OnPluginStart()
 	
 	RegConsoleCmd("sm_difficulty", Command_Difficulty);
 	
-	g_joinTeamDifficulty = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
+	g_joinTeamDifficultyCvar = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
+	
+	AutoExecConfig(true, "timer-physics");
+	HookConVarChange(g_joinTeamDifficultyCvar, Action_OnSettingsChange);
 	
 	if (LibraryExists("updater"))
 	{
@@ -75,6 +79,12 @@ public OnLibraryAdded(const String:name[])
 	{
 		Updater_AddPlugin(UPDATE_URL);
 	}	
+}
+
+public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
+{
+	if (cvar == g_joinTeamDifficultyCvar)
+		g_joinTeamDifficulty = bool:StringToInt(newvalue);
 }
 
 public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
@@ -106,7 +116,7 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 
 public Action:Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (GetConVarBool(g_joinTeamDifficulty))
+	if (g_joinTeamDifficulty)
 	{
 		CreateDifficultyMenu(GetClientOfUserId(GetEventInt(event, "userid")));
 	}
