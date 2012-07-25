@@ -119,9 +119,10 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 public Action:Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new team = GetEventInt(event, "team");
-	if (g_joinTeamDifficulty && team > 1)
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if (g_joinTeamDifficulty && team > 1 && client > 0)
 	{
-		CreateDifficultyMenu(GetClientOfUserId(GetEventInt(event, "userid")));
+		CreateDifficultyMenu(client);
 	}
 
 	return Plugin_Continue;
