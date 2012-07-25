@@ -549,8 +549,10 @@ CreateWRMenu(client, difficulty)
 		else
 			PrintToChat(client, "%s%t", PLUGIN_PREFIX, "No Difficulty Records");
 	}
-	
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);	
+	else
+	{
+		DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	}
 }
 
 public MenuHandler_WR(Handle:menu, MenuAction:action, param1, param2)
