@@ -7,6 +7,7 @@
 #include <timer>
 
 new bool:g_hide[MAXPLAYERS+1];
+new g_iWeaponOwner[2048];
 
 public Plugin:myinfo =
 {
@@ -30,13 +31,57 @@ public OnMapStart()
 
 public OnClientPutInServer(client) 
 { 
-    g_hide[client] = false; 
-    SDKHook(client, SDKHook_SetTransmit, Hook_SetTransmit); 
+	g_hide[client] = false; 
+	SDKHook(client, SDKHook_SetTransmit, Hook_SetTransmit);
+	SDKHook(client, SDKHook_WeaponEquip, Hook_WeaponEquip);
+	SDKHook(client, SDKHook_WeaponDrop, Hook_WeaponDrop);
+}
+
+public OnEntityCreated(entity, const String:classname[])
+{
+	if (entity > MaxClients && entity < 2048)
+	{
+		g_iWeaponOwner[entity] = 0;
+	}
+}
+
+public OnEntityDestroyed(entity)
+{
+	if (entity > MaxClients && entity < 2048)
+	{
+		g_iWeaponOwner[entity] = 0;
+	}
+}
+
+public Hook_WeaponEquip(client, weapon)
+{
+	if (weapon > MaxClients && weapon < 2048)
+	{
+		g_iWeaponOwner[weapon] = client;
+		SDKHook(weapon, SDKHook_SetTransmit, Hook_SetTransmitWeapon);
+	}
+}
+
+public Hook_WeaponDrop(client, weapon)
+{
+	if (weapon > MaxClients && weapon < 2048)
+	{
+		g_iWeaponOwner[weapon] = 0;
+		SDKUnhook(weapon, SDKHook_SetTransmit, Hook_SetTransmitWeapon);
+	}
 }
 
 public Action:Hook_SetTransmit(entity, client) 
 { 
     if (client != entity && (0 < entity <= MaxClients) && g_hide[client]) 
+        return Plugin_Handled; 
+     
+    return Plugin_Continue; 
+}
+
+public Action:Hook_SetTransmitWeapon(entity, client) 
+{ 
+    if (g_iWeaponOwner[entity] && g_iWeaponOwner[entity] != client && g_hide[client])
         return Plugin_Handled; 
      
     return Plugin_Continue; 
