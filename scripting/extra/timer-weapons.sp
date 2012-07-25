@@ -23,8 +23,6 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
-	HookEvent("player_connect", Event_PlayerConnect);
-
 	AddCommandListener(ScoutCommand, "sm_scout");
 	AddCommandListener(USPCommand, "sm_usp");
 	AddCommandListener(AWPCommand, "sm_awp");
@@ -37,33 +35,14 @@ public OnMapStart()
 	Array_Fill(g_awp, sizeof(g_awp), 0, 0);	
 }
 
-public Action:Event_PlayerConnect(Handle:event, const String:name[], bool:dontBroadcast)
+public OnClientPutInServer(client)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	g_scout[client] = 0;
 	g_usp[client] = 0;	
 	g_awp[client] = 0;	
 }
 
 public Action:ScoutCommand(client, const String:command[], args)
-{
-	Scout(client);
-	return Plugin_Handled;
-}
-
-public Action:USPCommand(client, const String:command[], args)
-{
-	USP(client);
-	return Plugin_Handled;
-}
-
-public Action:AWPCommand(client, const String:command[], args)
-{
-	AWP(client);
-	return Plugin_Handled;
-}
-
-Scout(client)
 {
 	if (g_scout[client] < 7)
 	{
@@ -74,9 +53,10 @@ Scout(client)
 	{
 		PrintToChat(client, "You have already took 7 scouts.");
 	}
+	return Plugin_Handled;
 }
 
-USP(client)
+public Action:USPCommand(client, const String:command[], args)
 {
 	if (g_usp[client] < 7)
 	{
@@ -87,9 +67,10 @@ USP(client)
 	{
 		PrintToChat(client, "You have already took 7 USPs.");
 	}
+	return Plugin_Handled;
 }
 
-AWP(client)
+public Action:AWPCommand(client, const String:command[], args)
 {
 	if (g_awp[client] < 7)
 	{
@@ -100,4 +81,5 @@ AWP(client)
 	{
 		PrintToChat(client, "You have already took 7 AWPs.");
 	}
+	return Plugin_Handled;
 }
