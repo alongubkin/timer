@@ -3,13 +3,13 @@
 	"Round Finish"
 	{
 		"#format"		"{1:s},{2:s},{3:d}"
-		"en"			"{1} has finished the map in {2}. He only jumped {3} times!"
+		"en"			"{1} has finished the map in {2} in {3}."
 	}
 	
 	"Round Finish Difficulty"
 	{
 		"#format"		"{1:s},{2:s},{3:s},{4:d}"
-		"en"			"{1} has finished the map in {2} on {3}. He only jumped {4} times!"
+		"en"			 "{1} has finished the map in {2} in {4} on {3}."
 	}
 	
 	"Point Select Panel"
