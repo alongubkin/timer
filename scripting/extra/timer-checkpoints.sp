@@ -141,7 +141,9 @@ public LoadCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[], 
 	
 		g_checkpointCount++;
 	}
-
+	
+	CloseHandle(hndl);
+	
 	g_loadingCheckpoints = false;
 	return 1;
 }
@@ -225,6 +227,9 @@ public ClearCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[],
 	PrintToChat(client, "All checkpoints for this map removed successfully.");
 
 	LoadCheckpoints();
+	
+	CloseHandle(hndl);
+	
 	g_currentCheckpoint[client] = 0;
 
 	return 1;
@@ -270,6 +275,8 @@ public SaveCheckpointCallback(Handle:owner, Handle:hndl, const String:error[], a
 	
 	PrintToChat(client, "Checkpoint saved successfully.");
 	LoadCheckpoints();
+	
+	CloseHandle(hndl);
 
 	return 1;
 }

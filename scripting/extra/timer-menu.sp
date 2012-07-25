@@ -40,7 +40,7 @@ OpenMenu(client)
 	AddMenuItem(menu, "sm_hide", "!hide - Toogles player visibility");
 	AddMenuItem(menu, "sm_scout", "!scout - Spawns a scout");
 	AddMenuItem(menu, "sm_usp", "!usp - Spawns a usp");
-	AddMenuItem(menu, "sm_awp", "!awp - Spawns a usp ");	
+	AddMenuItem(menu, "sm_awp", "!awp - Spawns a awp");
 		
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
