@@ -51,10 +51,10 @@ new Handle:g_timerStartedForward;
 new Handle:g_timerStoppedForward;
 new Handle:g_timerRestartForward;
 
-new Handle:g_restartEnabledCvar;
-new Handle:g_stopEnabledCvar;
-new Handle:g_pauseResumeEnabledCvar;
-	
+new Handle:g_restartEnabledCvar = INVALID_HANDLE;
+new Handle:g_stopEnabledCvar = INVALID_HANDLE;
+new Handle:g_pauseResumeEnabledCvar = INVALID_HANDLE;
+
 new bool:g_restartEnabled = true;
 new bool:g_stopEnabled = true;
 new bool:g_pauseResumeEnabled = true;
@@ -121,6 +121,10 @@ public OnPluginStart()
 	HookConVarChange(g_restartEnabledCvar, Action_OnSettingsChange);
 	HookConVarChange(g_stopEnabledCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_pauseResumeEnabledCvar, Action_OnSettingsChange);
+	
+	g_restartEnabled     = GetConVarBool(g_restartEnabledCvar);
+	g_stopEnabled        = GetConVarBool(g_stopEnabledCvar);
+	g_pauseResumeEnabled = GetConVarBool(g_pauseResumeEnabledCvar);
 	
 	if (LibraryExists("updater"))
 	{

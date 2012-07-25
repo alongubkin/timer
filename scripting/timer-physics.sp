@@ -62,6 +62,8 @@ public OnPluginStart()
 	AutoExecConfig(true, "timer-physics");
 	HookConVarChange(g_joinTeamDifficultyCvar, Action_OnSettingsChange);
 	
+	g_joinTeamDifficulty = GetConVarBool(g_joinTeamDifficultyCvar);
+	
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);

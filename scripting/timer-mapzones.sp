@@ -84,7 +84,6 @@ public OnPluginStart()
 	g_resetTimer =   GetConVarBool(g_resetTimerBeforeStart);
 	g_stopPrespeed = GetConVarBool(g_startStopPrespeed);
 	
-	
 	LoadTranslations("timer.phrases");
 	
 	new Handle:topmenu;

@@ -64,6 +64,14 @@ public OnPluginStart()
 	HookConVarChange(g_fragsCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_jumpsDeathCvar, Action_OnSettingsChange);
 	
+	g_showSpeed      = GetConVarBool(g_showSpeedCvar);
+	g_showJumps      = GetConVarBool(g_showJumpsCvar);
+	g_showTime       = GetConVarBool(g_showTimeCvar);
+	g_showDifficulty = GetConVarBool(g_showDifficultyCvar);
+	g_showBestTimes  = GetConVarBool(g_showBestTimesCvar);
+	g_frags          = GetConVarBool(g_fragsCvar);
+	g_jumpsDeath     = GetConVarBool(g_jumpsDeathCvar);
+	
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
