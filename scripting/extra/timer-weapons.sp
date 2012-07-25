@@ -25,12 +25,9 @@ public OnPluginStart()
 {
 	HookEvent("player_connect", Event_PlayerConnect);
 
-	AddCommandListener(SayCommand, "say");
-	AddCommandListener(SayCommand, "say_team");	
-
 	AddCommandListener(ScoutCommand, "sm_scout");
 	AddCommandListener(USPCommand, "sm_usp");
-	AddCommandListener(AWPCommand, "sm_usp");
+	AddCommandListener(AWPCommand, "sm_awp");
 }
 
 public OnMapStart()
@@ -46,41 +43,6 @@ public Action:Event_PlayerConnect(Handle:event, const String:name[], bool:dontBr
 	g_scout[client] = 0;
 	g_usp[client] = 0;	
 	g_awp[client] = 0;	
-}
-
-public Action:SayCommand(client, const String:command[], args)
-{
-	decl String:buffer[128];
-	GetCmdArg(1, buffer, sizeof(buffer));
-
-	new bool:hidden = StrEqual(buffer, "/scout", true);
-	if (StrEqual(buffer, "!scout", true) || hidden)
-	{
-		Scout(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/usp", true);
-	if (StrEqual(buffer, "!usp", true) || hidden)
-	{
-		USP(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/awp", true);
-	if (StrEqual(buffer, "!awp", true) || hidden)
-	{
-		AWP(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
 }
 
 public Action:ScoutCommand(client, const String:command[], args)

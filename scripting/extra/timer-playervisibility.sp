@@ -20,9 +20,6 @@ public Plugin:myinfo =
 public OnPluginStart()
 {
 	Array_Fill(g_hide, sizeof(g_hide), false, 0);
-
-	AddCommandListener(SayCommand, "say");
-	AddCommandListener(SayCommand, "say_team");	
 	AddCommandListener(HideCommand, "sm_hide");	
 }
 
@@ -43,23 +40,6 @@ public Action:Hook_SetTransmit(entity, client)
         return Plugin_Handled; 
      
     return Plugin_Continue; 
-}
-
-public Action:SayCommand(client, const String:command[], args)
-{
-	decl String:buffer[128];
-	GetCmdArg(1, buffer, sizeof(buffer));
-
-	new bool:hidden = StrEqual(buffer, "/hide", true);
-	if (StrEqual(buffer, "!hide", true) || hidden)
-	{
-		ToggleVisibility(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
 }
 
 public Action:HideCommand(client, const String:command[], args)

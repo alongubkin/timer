@@ -43,15 +43,14 @@ public OnPluginStart()
 	ConnectSQL(true);
 
 	HookEvent("player_connect", Event_PlayerConnect);
-		
-	AddCommandListener(SayCommand, "say");
-	AddCommandListener(SayCommand, "say_team");	
 
 	AddCommandListener(ClearCommand, "sm_clear");
 	AddCommandListener(NextCommand, "sm_next");
 	AddCommandListener(PrevCommand, "sm_prev");
 	AddCommandListener(SaveCommand, "sm_save");
+	AddCommandListener(SaveCommand, "sm_s");
 	AddCommandListener(TeleCommand, "sm_tele");
+	AddCommandListener(TeleCommand, "sm_t");
 
 	Array_Fill(g_currentCheckpoint, sizeof(g_currentCheckpoint), 0, 0);
 }
@@ -68,79 +67,6 @@ public Action:Event_PlayerConnect(Handle:event, const String:name[], bool:dontBr
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	g_currentCheckpoint[client] = 0;
-}
-
-public Action:SayCommand(client, const String:command[], args)
-{
-	decl String:buffer[128];
-	GetCmdArg(1, buffer, sizeof(buffer));
-
-	new bool:hidden = StrEqual(buffer, "/clear", true);
-	if (StrEqual(buffer, "!clear", true) || hidden)
-	{
-		ClearCheckpoints(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/next", true);
-	if (StrEqual(buffer, "!next", true) || hidden)
-	{
-		GoToCheckpoint(client, g_currentCheckpoint[client] + 1);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/prev", true);
-	if (StrEqual(buffer, "!prev", true) || hidden)
-	{
-		GoToCheckpoint(client, g_currentCheckpoint[client] - 1);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/save", true);
-
-	if (StrEqual(buffer, "!save", true) || hidden)
-	{
-		SaveCheckpoint(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/s", true);
-	
-	if (StrEqual(buffer, "!s", true) || hidden)
-	{
-		SaveCheckpoint(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/tele", true);
-	if (StrEqual(buffer, "!tele", true) || hidden)
-	{
-		TeleportToLastCheckpoint(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	hidden = StrEqual(buffer, "/t", true);
-	if (StrEqual(buffer, "!t", true) || hidden)
-	{
-		TeleportToLastCheckpoint(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	return Plugin_Continue;
 }
 
 public Action:ClearCommand(client, const String:command[], args)

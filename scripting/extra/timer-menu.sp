@@ -16,26 +16,7 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
-	AddCommandListener(SayCommand, "say");
-	AddCommandListener(SayCommand, "say_team");	
 	AddCommandListener(MenuCommand, "sm_menu");	
-}
-
-public Action:SayCommand(client, const String:command[], args)
-{
-	decl String:buffer[128];
-	GetCmdArg(1, buffer, sizeof(buffer));
-
-	new bool:hidden = StrEqual(buffer, "/menu", true);
-	if (StrEqual(buffer, "!menu", true) || hidden)
-	{
-		OpenMenu(client);
-
-		if (hidden)
-			return Plugin_Handled;
-	}
-
-	return Plugin_Continue;	
 }
 
 public Action:MenuCommand(client, const String:command[], args)
