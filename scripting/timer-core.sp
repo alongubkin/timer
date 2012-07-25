@@ -518,6 +518,8 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 		
         return;
     }
+	
+	CloseHandle(hndl);
 }
 
 public Native_TimerStart(Handle:plugin, numParams)

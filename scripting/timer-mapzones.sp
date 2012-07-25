@@ -208,6 +208,7 @@ AddMapZone(String:map[], MapZoneType:type, Float:point1[3], Float:point2[3])
 public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
 	PrintToServer(error);
+	CloseHandle(hndl);
 }
 
 LoadMapZones()
@@ -242,6 +243,8 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 
 	CreateTimer(2.0, DrawZones, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.1, PlayerTracker, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	
+	CloseHandle(hndl);
 }
 
 public OnTimerRestart(client)
@@ -315,6 +318,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	}
 	
 	CloseHandle(hndl);
+	
 	g_reconnectCounter = 1;
 	return 1;
 }
@@ -330,6 +334,8 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	}
 	
 	LoadMapZones();
+	
+	CloseHandle(hndl);
 }
 
 public AdminMenu_CategoryHandler(Handle:topmenu, 
@@ -411,12 +417,12 @@ public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], an
 	
 	if (IsValidPlayer(data))
 		PrintToChat(data, "%t", "Map Zone Delete");
+		
+	CloseHandle(hndl);
 }
 
 DisplaySelectPointMenu(client, n)
 {
-
-	
 	new Handle:panel = CreatePanel();
 
  	decl String:message[255];

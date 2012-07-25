@@ -372,6 +372,7 @@ DeleteMapRecords(const String:map[])
 public DeleteMapRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
 	RefreshCache();
+	CloseHandle(hndl);
 }
 
 RefreshCache()
@@ -412,7 +413,9 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 			
 		g_cacheCount++;
 	}
-
+	
+	CloseHandle(hndl);
+	
 	g_cacheLoaded = true;
 	return 1;
 }
@@ -687,7 +690,6 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 		decl String:steamid[32];
 		SQL_FetchString(hndl, 4, steamid, sizeof(steamid));
 		
-		PrintToChatAll("%s %s", steamid, auth);
 		if (!StrEqual(steamid, auth))
 		{
 			CloseHandle(menu);
@@ -712,6 +714,9 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 	}
 
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	
+	CloseHandle(hndl);
+	
 	return 1;
 }
 
@@ -737,6 +742,7 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 public DeleteRecordCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
 	CreateDeleteMenu(client, g_deleteMenuSelection[client]);
+	CloseHandle(hndl);
 }
 
 public Native_ForceReloadWorldRecordCache(Handle:plugin, numParams)
