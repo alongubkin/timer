@@ -360,6 +360,7 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 		if (hQuery == INVALID_HANDLE)
 		{
 			SQL_UnlockDatabase(g_hSQL);
+			CloseHandle(hQuery);
 			return false;
 		}
 
@@ -443,6 +444,7 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
 	g_bestTimeCache[client][IsCached] = false;
+	CloseHandle(hndl);
 }
 
 Float:CalculateTime(client)
