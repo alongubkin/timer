@@ -329,27 +329,32 @@ DisplaySelectPlayerMenu(client)
 	SetMenuTitle(menu, "%T", "Choose Player", client);
 	SetMenuExitButton(menu, true);
 	
-	for (new i = 1; i < MaxClients; i++)
-	{
-		if (IsClientInGame(i))
-		{
-			decl String:name[MAX_NAME_LENGTH];
-			GetClientName(i, name, sizeof(name));
-			
-			decl String:info[10];
-			IntToString(i, info, sizeof(info));
-			
-			AddMenuItem(menu, info, name);
-		}
+	new items = 0; 
+
+	for (new cache = 0; cache < g_cacheCount; cache++)
+	{			
+		decl String:text[92];
+		Format(text, sizeof(text), "%s - %s (%d Jumps)", g_cache[cache][Name], g_cache[cache][TimeString], g_cache[cache][Jumps]);
+
+		AddMenuItem(menu, g_cache[cache][Auth], text);
+		items++;
 	}
-	
-	DisplayMenu(menu, client, MENU_TIME_FOREVER);
+
+	if (items == 0)
+	{
+		CloseHandle(menu);		
+	}
+	else
+	{
+		DisplayMenu(menu, client, MENU_TIME_FOREVER);
+	}
 }
 
 public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
 {
 	if (action == MenuAction_End) 
 	{
+		RefreshCache();
 		CloseHandle(menu);
 	}
 	else if (action == MenuAction_Select) 
@@ -357,9 +362,19 @@ public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
 		decl String:info[32];		
 		GetMenuItem(menu, param2, info, sizeof(info));
 		
-		CreateDeleteMenu(param1, StringToInt(info));
+		decl String:query[384];
+		Format(query, sizeof(query), "DELETE FROM `round` WHERE auth = '%s' AND map = '%s'", info, g_currentMap);
+
+		SQL_TQuery(g_hSQL, DeletePlayersRecordCallback, query, param1, DBPrio_Normal);
 	}
 }
+
+public DeletePlayersRecordCallback(Handle:owner, Handle:hndl, const String:error[], any:param1)
+{
+	DisplaySelectPlayerMenu(param1);
+	CloseHandle(hndl);
+}
+
 
 DeleteMapRecords(const String:map[]) 
 {
