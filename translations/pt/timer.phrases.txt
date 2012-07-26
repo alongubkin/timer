@@ -1,0 +1,101 @@
+"Phrases"
+{
+    "Round Finish"
+    {
+        "pt"            "{1} terminou o mapa em {2} com {3} saltos."
+    }
+
+    "Round Finish Difficulty"
+    {
+        "pt"             "{1} terminou o mapa em {2} com {4} saltos na dificuldade {3}."
+    }
+
+    "Point Select Panel"
+    {
+        "pt"            "Por favor fique na {1} parte da zona,\e clique com ATTACK2 em seu mouse."
+    }
+
+    "Cancel"
+    {
+        "pt"            "Cancelar"
+    }
+
+    "Map Zone Delete"
+    {
+        "pt"            "Zona do Mapa deletada com sucesso."
+    }
+
+    "Time"
+    {
+        "pt"            "Tempo"
+    }
+
+    "Jumps"
+    {
+        "pt"            "Saltos"
+    }
+
+    "HUD Speed"
+    {
+        "pt"            "Velocidade"
+    }
+
+    "HUD Best Times"
+    {
+        "pt"            "Melhor Tempo"
+    }
+
+    "HUD Difficulty"
+    {
+        "pt"            "Dificuldade"
+    }
+
+    "No target"
+    {
+        "pt"            "Alvo não encontrado."
+    }
+
+    "Physics Difficulty"
+    {
+        "pt"            "Dificuldade Física"
+    }
+
+    "World Record Menu Title"
+    {
+        "pt"            "Recordes Mundias para {1}"
+    }
+
+    "World Record Loading"
+    {
+        "pt"            "Os Recordes Mundiais ainda estão carregando; tente novamente em alguns instantes."
+    }
+
+    "No Records"
+    {
+        "pt"            "Desculpe, não há recordes."
+    }
+
+    "No Difficulty Records"
+    {
+        "pt"            "Desculpe, não há recordes nesta dificuldade."
+    }
+
+    "Record Info"
+    {
+        "pt"            "Informação do Recorde"
+    }
+
+    "Player Name"
+    {
+        "pt"            "Nome do Jogador"
+    }
+
+    "Rank"
+    {
+        "pt"            "Rank"
+    }
+    "Toggle visibilty"
+    {
+        "pt"            "Habilitar visualização de Jogadores."
+    }
+}  
