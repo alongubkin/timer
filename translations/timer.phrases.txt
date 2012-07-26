@@ -12,6 +12,18 @@
 		"en"			 "{1} has finished the map in {2} in {4} on {3}."
 	}
 	
+	"Round Finish Without Jumps"
+	{
+		"#format"		"{1:s},{2:s}"
+		"en"			"{1} has finished the map in {2}."
+	}
+	
+	"Round Finish Difficulty Without Jumps"
+	{
+		"#format"		"{1:s},{2:s},{3:s}"
+		"en"			 "{1} has finished the map in {2} on {3}."
+	}
+	
 	"Point Select Panel"
 	{
 		"#format"		"{1:s}"

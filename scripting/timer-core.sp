@@ -54,10 +54,12 @@ new Handle:g_timerRestartForward;
 new Handle:g_restartEnabledCvar = INVALID_HANDLE;
 new Handle:g_stopEnabledCvar = INVALID_HANDLE;
 new Handle:g_pauseResumeEnabledCvar = INVALID_HANDLE;
+new Handle:g_showJumpsInMsg = INVALID_HANDLE;
 
 new bool:g_restartEnabled = true;
 new bool:g_stopEnabled = true;
 new bool:g_pauseResumeEnabled = true;
+new bool:g_showjumps = true;
 
 new bool:g_timerPhysics = false;
 new g_iVelocity;
@@ -115,16 +117,19 @@ public OnPluginStart()
 	g_restartEnabledCvar = CreateConVar("timer_restart_enabled", "1", "Whether or not players can restart their timers.");
 	g_stopEnabledCvar = CreateConVar("timer_stop_enabled", "1", "Whether or not players can stop their timers.");
 	g_pauseResumeEnabledCvar = CreateConVar("timer_pauseresume_enabled", "1", "Whether or not players can resume or pause their timers.");
+	g_showJumpsInMsg = CreateConVar("timer_showjumpsinfinishmessage", "1", "Whether or not players will see jumps in finish message.");
 	
 	AutoExecConfig(true, "timer-core");
 	
 	HookConVarChange(g_restartEnabledCvar, Action_OnSettingsChange);
 	HookConVarChange(g_stopEnabledCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_pauseResumeEnabledCvar, Action_OnSettingsChange);
+	HookConVarChange(g_showJumpsInMsg, Action_OnSettingsChange);
 	
 	g_restartEnabled     = GetConVarBool(g_restartEnabledCvar);
 	g_stopEnabled        = GetConVarBool(g_stopEnabledCvar);
 	g_pauseResumeEnabled = GetConVarBool(g_pauseResumeEnabledCvar);
+	g_showjumps          = GetConVarBool(g_showJumpsInMsg);
 	
 	if (LibraryExists("updater"))
 	{
@@ -233,7 +238,9 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 	else if (cvar == g_stopEnabledCvar)
 		g_stopEnabled = bool:StringToInt(newvalue);
 	else if (cvar == g_pauseResumeEnabledCvar)
-		g_pauseResumeEnabled = bool:StringToInt(newvalue);		
+		g_pauseResumeEnabled = bool:StringToInt(newvalue);	
+	else if (cvar == g_showJumpsInMsg)
+		g_showjumps = bool:StringToInt(newvalue);			
 }
 
 /**
@@ -424,19 +431,37 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 		
 		SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_Normal);
 		
-		decl String:buffer[32];
-		Timer_SecondsToTime(time, buffer, sizeof(buffer), true);
+		decl String:TimeString[32];
+		Timer_SecondsToTime(time, TimeString, sizeof(TimeString), true);
 		
-		if (g_timerPhysics)
+		
+		if(g_showjumps)
 		{
-			new String:difficulty[32];
-			Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
-			
-			PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty", name, buffer, difficulty, jumps);
+			if (g_timerPhysics)
+			{
+				new String:difficulty[32];
+				Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
+				
+				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty", name, TimeString, difficulty, jumps);
+			}
+			else
+			{
+				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish", name, TimeString, jumps);		
+			}
 		}
 		else
 		{
-			PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish", name, buffer, jumps);		
+			if (g_timerPhysics)
+			{
+				new String:difficulty[32];
+				Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
+				
+				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty Without Jumps", name, TimeString, difficulty);
+			}
+			else
+			{
+				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Without Jumps", name, TimeString);		
+			}
 		}
 	}
 }
