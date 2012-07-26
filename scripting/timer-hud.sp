@@ -144,7 +144,7 @@ UpdateHUD(client)
 	{
 		new observerMode = GetEntProp(client, Prop_Send, "m_iObserverMode");
 
-		if (observerMode == 4 || observerMode == 3)
+		if (observerMode == 5 ||observerMode == 4 || observerMode == 3)
 		{
 			new t = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
 
