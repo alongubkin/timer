@@ -98,8 +98,49 @@
 	{
 		"en"			"Rank"
 	}
+
 	"Toggle visibilty"
 	{
-		"en"			"Toggled player visibility."
+		"en"			"Toggled players visibility."
+	}
+
+	"Timer Management"
+	{
+		"en"			"Timer Management"
+	}
+
+	"Delete Map Records"
+	{
+		"en"			"Delete Map Records"
+	}
+
+	"Delete Player Record"
+	{
+		"en"			"Delete Player Record"
+	}
+
+	"Add Map Zone"
+	{
+		"en"			"Add Map Zone"
+	}
+
+	"Delete Map Zone"
+	{
+		"en"			"Delete Map Zone"
+	}
+	
+	"Select zone type"
+	{
+		"en"			"Select zone type:"
+	}
+	
+	"Choose Player"
+	{
+		"en"			"Choose Player:"
+	}
+	
+	"Delete Records"
+	{
+		"en"			"Delete Records:"
 	}
 }

@@ -285,9 +285,9 @@ public AdminMenu_CategoryHandler(Handle:topmenu,
 			maxlength)
 {
 	if (action == TopMenuAction_DisplayTitle) {
-		Format(buffer, maxlength, "Timer Management");
+		Format(buffer, maxlength, "%t", "Timer Management");
 	} else if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Timer Management");
+		Format(buffer, maxlength, "%t", "Timer Management");
 	}
 }
 
@@ -299,7 +299,7 @@ public AdminMenu_DeleteMapRecords(Handle:topmenu,
 			maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Delete Map Records");
+		Format(buffer, maxlength, "%t", "Delete Map Records");
 	} else if (action == TopMenuAction_SelectOption) {
 		decl String:map[32];
 		GetCurrentMap(map, sizeof(map));
@@ -316,7 +316,7 @@ public AdminMenu_DeleteRecord(Handle:topmenu,
 			maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Delete Player Record");
+		Format(buffer, maxlength, "%t", "Delete Player Record");
 	} else if (action == TopMenuAction_SelectOption) {
 		DisplaySelectPlayerMenu(param);
 	}
@@ -326,7 +326,7 @@ DisplaySelectPlayerMenu(client)
 {
 	new Handle:menu = CreateMenu(MenuHandler_SelectPlayer);
 
-	SetMenuTitle(menu, "Choose Player\n \n");
+	SetMenuTitle(menu, "%T", "Choose Player", client);
 	SetMenuExitButton(menu, true);
 	
 	for (new i = 1; i < MaxClients; i++)
@@ -679,7 +679,7 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 
 	new Handle:menu = CreateMenu(MenuHandler_DeleteRecord);
 
-	SetMenuTitle(menu, "Delete Record\n \n");
+	SetMenuTitle(menu, "%T", "Delete Records", client);
 	SetMenuExitButton(menu, true);
 	
 	decl String:auth[32];

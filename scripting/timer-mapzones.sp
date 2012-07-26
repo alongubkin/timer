@@ -346,9 +346,9 @@ public AdminMenu_CategoryHandler(Handle:topmenu,
 			maxlength)
 {
 	if (action == TopMenuAction_DisplayTitle) {
-		Format(buffer, maxlength, "Timer Management");
+		Format(buffer, maxlength, "%t", "Timer Management");
 	} else if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Timer Management");
+		Format(buffer, maxlength, "%t", "Timer Management");
 	}
 }
 
@@ -360,7 +360,7 @@ public AdminMenu_AddMapZone(Handle:topmenu,
 			maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Add Map Zone");
+		Format(buffer, maxlength, "%t", "Add Map Zone");
 	} else if (action == TopMenuAction_SelectOption) {
 		RestartMapZoneEditor(param);
 		g_mapZoneEditors[param][Step] = 1;
@@ -376,7 +376,7 @@ public AdminMenu_RemoveMapZone(Handle:topmenu,
 			maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) {
-		Format(buffer, maxlength, "Delete Map Zone");
+		Format(buffer, maxlength, "%t", "Delete Map Zone");
 	} else if (action == TopMenuAction_SelectOption) {
 		DeleteMapZone(param);
 	}
@@ -509,7 +509,7 @@ public Action:ChangeStep(Handle:timer, any:serial)
 DisplaySelectZoneTypeMenu(client)
 {
 	new Handle:menu = CreateMenu(ZoneTypeSelect);
-	SetMenuTitle(menu, "Select zone type:");
+	SetMenuTitle(menu, "%T", "Select zone type", client);
 
 	// This is ugly
 	AddMenuItem(menu, "0", "Start");
