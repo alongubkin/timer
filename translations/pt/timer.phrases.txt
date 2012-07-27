@@ -2,12 +2,12 @@
 {
 	"Round Finish"
 	{
-		"pt"			"{1} terminou o mapa em {2} com {3}."
+		"pt"			"{1} terminou o mapa em {2} com {3} saltos."
 	}
 
 	"Round Finish Difficulty"
 	{
-		"pt"			 "{1} terminou o mapa em {2} com {4} na dificuldade {3}."
+		"pt"			 "{1} terminou o mapa em {2} com {4} saltos na dificuldade {3}."
 	}
 
 	"Round Finish Without Jumps"
@@ -70,7 +70,7 @@
 		"pt"			"Dificuldade de Física"
 	}
 
-	"World Record Mptu Title"
+	"World Record Menu Title"
 	{
 		"pt"			"Records mundiais para {1}"
 	}
@@ -110,7 +110,7 @@
 		"pt"			"Habilitar ver jogadores."
 	}
 
-	"Timer Managemptt"
+	"Timer Management"
 	{
 		"pt"			"Gerptciamptto do Timer"
 	}
