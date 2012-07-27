@@ -186,6 +186,14 @@ public OnAdminMenuReady(Handle:topmenu)
 		oMapZoneMenu,
 		"timer_mapzones_remove",
 		ADMFLAG_RCON);
+	AddToTopMenu(hTopMenu, 
+		"timer_mapzones_remove_all",
+		TopMenuObject_Item,
+		AdminMenu_RemoveAllMapZones,
+		oMapZoneMenu,
+		"timer_mapzones_remove_all",
+		ADMFLAG_RCON);
+
 }
 
 AddMapZone(String:map[], MapZoneType:type, Float:point1[3], Float:point2[3])
@@ -382,6 +390,20 @@ public AdminMenu_RemoveMapZone(Handle:topmenu,
 	}
 }
 
+public AdminMenu_RemoveAllMapZones(Handle:topmenu, 
+			TopMenuAction:action,
+			TopMenuObject:object_id,
+			param,
+			String:buffer[],
+			maxlength)
+{
+	if (action == TopMenuAction_DisplayOption) {
+		Format(buffer, maxlength, "%t", "Delete All Map Zones");
+	} else if (action == TopMenuAction_SelectOption) {
+		DeleteAllMapZones(param);
+	}
+}
+
 RestartMapZoneEditor(client)
 {
 	g_mapZoneEditors[client][Step] = 0;
@@ -420,6 +442,25 @@ public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], an
 		
 	CloseHandle(hndl);
 }
+
+DeleteAllMapZones(client)
+{
+	decl String:query[256];
+	Format(query, sizeof(query), "DELETE FROM mapzone WHERE map = '%s'", g_currentMap);
+
+	SQL_TQuery(g_hSQL, DeleteAllMapZonesCallback, query, client, DBPrio_Normal);
+}
+
+public DeleteAllMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{
+	LoadMapZones();
+	
+	if (IsValidPlayer(data))
+		PrintToChat(data, "%t", "Map Zone Delete");
+		
+	CloseHandle(hndl);
+}
+
 
 DisplaySelectPointMenu(client, n)
 {

@@ -39,7 +39,7 @@
 	{
 		"en"			"Map zone deleted successfully."
 	}
-	
+
 	"Time"
 	{
 		"en"			"Time"
@@ -123,12 +123,17 @@
 
 	"Delete Map Records"
 	{
-		"en"			"Delete Map Records"
+		"en"			"Delete All Records From Current Map"
+	}
+	
+	"Delete All Map Zones"
+	{
+		"en"			"Delete All Zones From Current Map"
 	}
 
 	"Delete Player Record"
 	{
-		"en"			"Delete Player Record"
+		"en"			"Delete Player's Record From Current Map"
 	}
 
 	"Add Map Zone"
