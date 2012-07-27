@@ -75,18 +75,12 @@ public Hook_WeaponDrop(client, weapon)
 
 public Action:Hook_SetTransmit(entity, client) 
 { 
-    if (client != entity && (0 < entity <= MaxClients) && g_hide[client]) 
-        return Plugin_Handled; 
-     
-    return Plugin_Continue; 
+    return !(client != entity && (0 < entity <= MaxClients) && g_hide[client]) ? Plugin_Continue : Plugin_Handled; 
 }
 
 public Action:Hook_SetTransmitWeapon(entity, client) 
 { 
-    if (g_iWeaponOwner[entity] && g_iWeaponOwner[entity] != client && g_hide[client])
-        return Plugin_Handled; 
-     
-    return Plugin_Continue; 
+    return !(g_iWeaponOwner[entity] && g_iWeaponOwner[entity] != client && g_hide[client]) ? Plugin_Continue : Plugin_Handled; 
 }
 
 public Action:HideCommand(client, args)
