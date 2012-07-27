@@ -1,101 +1,157 @@
 "Phrases"
 {
-    "Round Finish"
-    {
-        "pt"            "{1} terminou o mapa em {2} com {3} saltos."
-    }
+	"Round Finish"
+	{
+		"pt"			"{1} terminou o mapa em {2} com {3}."
+	}
 
-    "Round Finish Difficulty"
-    {
-        "pt"             "{1} terminou o mapa em {2} com {4} saltos na dificuldade {3}."
-    }
+	"Round Finish Difficulty"
+	{
+		"pt"			 "{1} terminou o mapa em {2} com {4} na dificuldade {3}."
+	}
 
-    "Point Select Panel"
-    {
-        "pt"            "Por favor fique na {1} parte da zona,\e clique com ATTACK2 em seu mouse."
-    }
+	"Round Finish Without Jumps"
+	{
+		"pt"			"{1} terminou o mapa em {2}."
+	}
 
-    "Cancel"
-    {
-        "pt"            "Cancelar"
-    }
+	"Round Finish Difficulty Without Jumps"
+	{
+		"pt"			 "{1} terminou o mapa em {2} na dificuldade {3}."
+	}
 
-    "Map Zone Delete"
-    {
-        "pt"            "Zona do Mapa deletada com sucesso."
-    }
+	"Point Select Panel"
+	{
+		"pt"			"Por favor fique na parte {1} da zona,\ne clique com o botão ATTACK2 do seu mouse."
+	}
 
-    "Time"
-    {
-        "pt"            "Tempo"
-    }
+	"Cancel"
+	{
+		"pt"			"Cancelar"
+	}
 
-    "Jumps"
-    {
-        "pt"            "Saltos"
-    }
+	"Map Zone Delete"
+	{
+		"pt"			"Zona do mapa deletada com sucesso."
+	}
 
-    "HUD Speed"
-    {
-        "pt"            "Velocidade"
-    }
+	"Time"
+	{
+		"pt"			"Tempo"
+	}
 
-    "HUD Best Times"
-    {
-        "pt"            "Melhor Tempo"
-    }
+	"Jumps"
+	{
+		"pt"			"Pulos"
+	}
 
-    "HUD Difficulty"
-    {
-        "pt"            "Dificuldade"
-    }
+	"HUD Speed"
+	{
+		"pt"			"Velocidade"
+	}
 
-    "No target"
-    {
-        "pt"            "Alvo não encontrado."
-    }
+	"HUD Best Times"
+	{
+		"pt"			"Melhor Tempo"
+	}
 
-    "Physics Difficulty"
-    {
-        "pt"            "Dificuldade Física"
-    }
+	"HUD Difficulty"
+	{
+		"pt"			"Dificuldade"
+	}
 
-    "World Record Menu Title"
-    {
-        "pt"            "Recordes Mundias para {1}"
-    }
+	"No target"
+	{
+		"pt"			"Alvo não ptcontrado."
+	}
 
-    "World Record Loading"
-    {
-        "pt"            "Os Recordes Mundiais ainda estão carregando; tente novamente em alguns instantes."
-    }
+	"Physics Difficulty"
+	{
+		"pt"			"Dificuldade de Física"
+	}
 
-    "No Records"
-    {
-        "pt"            "Desculpe, não há recordes."
-    }
+	"World Record Mptu Title"
+	{
+		"pt"			"Records mundiais para {1}"
+	}
 
-    "No Difficulty Records"
-    {
-        "pt"            "Desculpe, não há recordes nesta dificuldade."
-    }
+	"World Record Loading"
+	{
+		"pt"			"Os recordes mundiais ainda estão carregando; tptte novamptte em alguns instantes."
+	}
 
-    "Record Info"
-    {
-        "pt"            "Informação do Recorde"
-    }
+	"No Records"
+	{
+		"pt"			"Desculpe, não há recordes."
+	}
 
-    "Player Name"
-    {
-        "pt"            "Nome do Jogador"
-    }
+	"No Difficulty Records"
+	{
+		"pt"			"Desculpe, não há recordes nesta dificuldade."
+	}
 
-    "Rank"
-    {
-        "pt"            "Rank"
-    }
-    "Toggle visibilty"
-    {
-        "pt"            "Habilitar visualização de Jogadores."
-    }
-}  
+	"Record Info"
+	{
+		"pt"			"Informação do Recorde"
+	}
+
+	"Player Name"
+	{
+		"pt"			"Nome do Jogador"
+	}
+
+	"Rank"
+	{
+		"pt"			"Rank"
+	}
+
+	"Toggle visibilty"
+	{
+		"pt"			"Habilitar ver jogadores."
+	}
+
+	"Timer Managemptt"
+	{
+		"pt"			"Gerptciamptto do Timer"
+	}
+
+	"Delete Map Records"
+	{
+		"pt"			"Delete All Records From Currptt Map"
+	}
+
+	"Delete All Map Zones"
+	{
+		"pt"			"Delete All Zones From Currptt Map"
+	}
+
+	"Delete Player Record"
+	{
+		"pt"			"Delete Player's Record From Currptt Map"
+	}
+
+	"Add Map Zone"
+	{
+		"pt"			"Adicionar zona no mapa"
+	}
+
+	"Delete Map Zone"
+	{
+		"pt"			"Deletar zona do mapa"
+	}
+
+	"Select zone type"
+	{
+		"pt"			"Escolha o tipo de zona:"
+	}
+
+	"Choose Player"
+	{
+		"pt"			"Escolher Jogador:"
+	}
+
+	"Delete Records"
+	{
+		"pt"			"Deletar Recordes:"
+	}
+}
