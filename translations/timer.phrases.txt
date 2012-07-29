@@ -2,26 +2,26 @@
 {
 	"Round Finish"
 	{
-		"#format"		"{1:s},{2:s},{3:d}"
-		"en"			"{1} has finished the map in {2} in {3} jumps."
+		"#format"		"{1:s},{2:s},{3:s},{4:d}"
+		"en"			"{1} has finished the map in {2}({3}) in {4} jumps."
 	}
 	
 	"Round Finish Difficulty"
 	{
-		"#format"		"{1:s},{2:s},{3:s},{4:d}"
-		"en"			 "{1} has finished the map in {2} in {4} jumps on {3}."
+		"#format"		"{1:s},{2:s},{3:s},{4:s},{5:d}"
+		"en"			 "{1} has finished the map in {2}({3}) in {5} jumps on {4}."
 	}
 	
 	"Round Finish Without Jumps"
 	{
-		"#format"		"{1:s},{2:s}"
-		"en"			"{1} has finished the map in {2}."
+		"#format"		"{1:s},{2:s},{3:s}"
+		"en"			"{1} has finished the map in {2}({3})."
 	}
 	
 	"Round Finish Difficulty Without Jumps"
 	{
-		"#format"		"{1:s},{2:s},{3:s}"
-		"en"			 "{1} has finished the map in {2} on {3}."
+		"#format"		"{1:s},{2:s},{3:s},{4:s}"
+		"en"			 "{1} has finished the map in {2}({3}) on {4}."
 	}
 	
 	"Point Select Panel"

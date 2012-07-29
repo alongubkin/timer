@@ -415,8 +415,38 @@ ClearClientCache(client)
 
 FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
 {
-	if (IsValidPlayer(client) && jumps > 0)
+	if (IsValidPlayer(client))
 	{
+		new Float:LastTime;
+		new LastJumps;
+		new String:TimeDiff[32];
+		
+		new bool:succcess = Timer_GetBestRound(client, map, LastTime, LastJumps);
+		if(succcess)
+		{
+			LastTime -= time;
+			new String:buffer[32];
+			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);			
+			if(LastTime < 0.0)
+			{
+				
+				Format(TimeDiff, sizeof(TimeDiff), "+%s", buffer);
+			}
+			else if(LastTime > 0.0)
+			{
+				Format(TimeDiff, sizeof(TimeDiff), "-%s", buffer);
+			}
+			else
+			{
+				Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
+			}
+		}
+		else
+		{
+			LastTime = 0.0;
+			Timer_SecondsToTime(LastTime, TimeDiff, sizeof(TimeDiff), true);
+		}
+		
 		decl String:auth[32];
 		GetClientAuthString(client, auth, sizeof(auth));
 
@@ -442,11 +472,11 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 				new String:difficulty[32];
 				Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
 				
-				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty", name, TimeString, difficulty, jumps);
+				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty", name, TimeString, TimeDiff, difficulty, jumps);
 			}
 			else
 			{
-				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish", name, TimeString, jumps);		
+				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish", name, TimeString, TimeDiff, jumps);		
 			}
 		}
 		else
@@ -456,11 +486,11 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 				new String:difficulty[32];
 				Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
 				
-				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty Without Jumps", name, TimeString, difficulty);
+				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty Without Jumps", name, TimeString, TimeDiff, difficulty);
 			}
 			else
 			{
-				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Without Jumps", name, TimeString);		
+				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Without Jumps", name, TimeString, TimeDiff);
 			}
 		}
 	}
@@ -545,7 +575,6 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 		
         return;
     }
-	
 	CloseHandle(hndl);
 }
 

@@ -2,22 +2,22 @@
 {
 	"Round Finish"
 	{
-		"pt"			"{1} terminou o mapa em {2} com {3} saltos."
+		"pt"			"{1} terminou o mapa em {2}({3}) com {4} saltos."
 	}
 
 	"Round Finish Difficulty"
 	{
-		"pt"			 "{1} terminou o mapa em {2} com {4} saltos na dificuldade {3}."
+		"pt"			 "{1} terminou o mapa em {2}({3}) com {5} saltos na dificuldade {4}."
 	}
 
 	"Round Finish Without Jumps"
 	{
-		"pt"			"{1} terminou o mapa em {2}."
+		"pt"			"{1} terminou o mapa em {2}({3})."
 	}
 
 	"Round Finish Difficulty Without Jumps"
 	{
-		"pt"			 "{1} terminou o mapa em {2} na dificuldade {3}."
+		"pt"			 "{1} terminou o mapa em {2}({3}) na dificuldade {4}."
 	}
 
 	"Point Select Panel"
