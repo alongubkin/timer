@@ -420,15 +420,14 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 		new Float:LastTime;
 		new LastJumps;
 		decl String:TimeDiff[32];
+		decl String:buffer[32];
 		
 		if(Timer_GetBestRound(client, map, LastTime, LastJumps))
 		{
 			LastTime -= time;
-			decl String:buffer[32];
 			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);			
 			if(LastTime < 0.0)
-			{
-				
+			{				
 				Format(TimeDiff, sizeof(TimeDiff), "+%s", buffer);
 			}
 			else if(LastTime > 0.0)
@@ -443,7 +442,8 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 		else
 		{
 			LastTime = 0.0;
-			Timer_SecondsToTime(LastTime, TimeDiff, sizeof(TimeDiff), true);
+			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
+			Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
 		}
 		
 		decl String:auth[32];
