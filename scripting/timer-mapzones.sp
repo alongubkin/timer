@@ -32,12 +32,10 @@ new Handle:g_hSQL;
 
 new Handle:g_startMapZoneColor = INVALID_HANDLE;
 new Handle:g_endMapZoneColor = INVALID_HANDLE;
-new Handle:g_resetTimerBeforeStart = INVALID_HANDLE;
 new Handle:g_startStopPrespeed = INVALID_HANDLE;
 
 new g_startColor[4] = { 0, 255, 0, 255 };
 new g_endColor[4] = { 0, 0, 255, 255 };
-new bool:g_resetTimer = true;
 new bool:g_stopPrespeed = false;
 
 new String:g_currentMap[32];
@@ -72,16 +70,13 @@ public OnPluginStart()
 	
 	g_startMapZoneColor = CreateConVar("timer_startcolor", "0 255 0 255", "The color of the start map zone.");
 	g_endMapZoneColor = CreateConVar("timer_endcolor", "0 0 255 255", "The color of the end map zone.");
-	g_resetTimerBeforeStart = CreateConVar("timer_resetbeforestart", "1", "Whether or not the timer is restarted in the start zone.");
 	g_startStopPrespeed = CreateConVar("timer_stopprespeeding", "0", "If enabled players won't be able to prespeed in start zone.");
 	AutoExecConfig(true, "timer-mapzones");
 	
 	HookConVarChange(g_startMapZoneColor, Action_OnSettingsChange);
 	HookConVarChange(g_endMapZoneColor, Action_OnSettingsChange);	
-	HookConVarChange(g_resetTimerBeforeStart, Action_OnSettingsChange);	
 	HookConVarChange(g_startStopPrespeed, Action_OnSettingsChange);
 	
-	g_resetTimer =   GetConVarBool(g_resetTimerBeforeStart);
 	g_stopPrespeed = GetConVarBool(g_startStopPrespeed);
 	
 	LoadTranslations("timer.phrases");
@@ -146,8 +141,6 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 		ParseColor(newvalue, g_startColor);
 	else if (cvar == g_endMapZoneColor)
 		ParseColor(newvalue, g_endColor);
-	else if (cvar == g_resetTimerBeforeStart)
-		g_resetTimer = bool:StringToInt(newvalue);
 	else if (cvar == g_startStopPrespeed)
 		g_stopPrespeed = bool:StringToInt(newvalue);
 }
@@ -662,8 +655,7 @@ public Action:PlayerTracker(Handle:timer)
 				{
 					if (g_mapZones[zone][Type] == Start)
 					{
-						if (g_resetTimer)
-							Timer_Stop(client, false);							
+						Timer_Stop(client, false);							
 						Timer_Start(client);
 						if (g_stopPrespeed)
 							CheckVelocity(client);
