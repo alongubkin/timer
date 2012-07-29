@@ -419,13 +419,12 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 	{
 		new Float:LastTime;
 		new LastJumps;
-		new String:TimeDiff[32];
+		decl String:TimeDiff[32];
 		
-		new bool:succcess = Timer_GetBestRound(client, map, LastTime, LastJumps);
-		if(succcess)
+		if(Timer_GetBestRound(client, map, LastTime, LastJumps))
 		{
 			LastTime -= time;
-			new String:buffer[32];
+			decl String:buffer[32];
 			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);			
 			if(LastTime < 0.0)
 			{
