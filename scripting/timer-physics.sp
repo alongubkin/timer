@@ -239,13 +239,19 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
             return Plugin_Handled;   
     }
 	
-	if (IsPlayerAlive(client) && GetEntityMoveType(client) != MOVETYPE_LADDER && g_auto[client])
+	if (IsPlayerAlive(client) && g_auto[client])
     {
 		if (buttons & IN_JUMP)
 		{
 			if (!(GetEntityFlags(client) & FL_ONGROUND))
 			{
-				buttons &= ~IN_JUMP;
+				if (!(GetEntityMoveType(client) & MOVETYPE_LADDER))
+				{
+					if (GetEntProp(client, Prop_Data, "m_nWaterLevel") <= 1)
+					{
+						buttons &= ~IN_JUMP;
+					}
+				}
 			}
 		}
     }
