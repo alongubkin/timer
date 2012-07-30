@@ -78,6 +78,7 @@ public OnPluginStart()
 	RegConsoleCmd("sm_record", Command_PersonalRecord);
 	RegConsoleCmd("sm_reloadcache", Command_ReloadCache);
 	RegAdminCmd("sm_deleterecord_all", Command_DeleteRecord_All, ADMFLAG_RCON, "sm_deleterecord_all STEAM_ID");
+	RegAdminCmd("sm_deleterecord", Command_DeleteRecord, ADMFLAG_RCON, "sm_deleterecord STEAM_ID");
 	
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
@@ -212,27 +213,44 @@ public Action:Command_ReloadCache(client, args)
 
 public Action:Command_DeleteRecord_All(client, args)
 {
-	decl String:auth[32];
-	
 	if (args < 1)
 	{
 		ReplyToCommand(client, "[Timer] Usage: sm_deleterecord_all STEAM_ID");
 		return Plugin_Handled;
 	}
-	else
-	{
-		GetCmdArgString(auth, sizeof(auth));
-	}
+
+	new String:auth[32];
+	GetCmdArgString(auth, sizeof(auth));
 
 	decl String:query[384];
 	Format(query, sizeof(query), "DELETE FROM round WHERE auth = '%s'", auth);
 
-	SQL_TQuery(g_hSQL, DeleteAllRecordsCallback, query, _, DBPrio_Normal);
+	SQL_TQuery(g_hSQL, DeleteRecordsCallback, query, _, DBPrio_Normal);
 	
 	return Plugin_Handled;
 }
 
-public DeleteAllRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+public Action:Command_DeleteRecord(client, args)
+{	
+	if (args < 1)
+	{
+		ReplyToCommand(client, "[Timer] Usage: sm_deleterecord STEAM_ID");
+		return Plugin_Handled;
+	}
+	
+	new String:auth[32];
+	GetCmdArgString(auth, sizeof(auth));
+
+	decl String:query[384];
+	Format(query, sizeof(query), "DELETE FROM round WHERE auth = '%s' AND map = '%s'", auth, g_currentMap);
+
+	SQL_TQuery(g_hSQL, DeleteRecordsCallback, query, _, DBPrio_Normal);
+	
+	return Plugin_Handled;
+}
+
+
+public DeleteRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
 	RefreshCache();
 	CloseHandle(hndl);
