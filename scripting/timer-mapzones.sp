@@ -460,7 +460,11 @@ DisplaySelectPointMenu(client, n)
 	new Handle:panel = CreatePanel();
 
  	decl String:message[255];
- 	Format(message, sizeof(message), "%t", "Point Select Panel", (n == 1) ? "FIRST" : "SECOND");
+	decl String:first[32], String:second[32];
+	Format(first, sizeof(first), "%t", "FIRST");
+	Format(second, sizeof(second), "%t", "SECOND");
+	
+ 	Format(message, sizeof(message), "%t", "Point Select Panel", (n == 1) ? first : second);
 
  	DrawPanelItem(panel, message, ITEMDRAW_RAWLINE);
 
@@ -474,8 +478,10 @@ DisplaySelectPointMenu(client, n)
 DisplayPleaseWaitMenu(client)
 {
 	new Handle:panel = CreatePanel();
-
-	DrawPanelItem(panel, "Please wait...", ITEMDRAW_RAWLINE);
+	
+	decl String:wait[64];
+	Format(wait, sizeof(wait), "%t", "Please wait");
+	DrawPanelItem(panel, wait, ITEMDRAW_RAWLINE);
 
 	SendPanelToClient(panel, client, PointSelect, 540);
 	CloseHandle(panel);

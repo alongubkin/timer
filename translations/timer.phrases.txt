@@ -35,6 +35,21 @@
 		"en"			"Cancel"
 	}
 	
+	"Please wait"
+	{
+		"en"			"Please wait..."
+	}
+
+	"FIRST"
+	{
+		"en"			"FIRST"
+	}
+	
+	"SECOND"
+	{
+		"en"			"SECOND"
+	}
+	
 	"Map Zone Delete"
 	{
 		"en"			"Map zone deleted successfully."

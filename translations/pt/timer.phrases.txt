@@ -22,12 +22,27 @@
 
 	"Point Select Panel"
 	{
-		"pt"			"Por favor fique na parte {1} da zona,\ne clique com o botão ATTACK2 do seu mouse."
+		"pt"			"Por favor fique na {1} parte da zona,\ne clique com o botão ATTACK2 do seu mouse."
 	}
 
 	"Cancel"
 	{
 		"pt"			"Cancelar"
+	}
+	
+	"Please wait"
+	{
+		"pt"			"Por favor aguarde..."
+	}
+
+	"FIRST"
+	{
+		"pt"			"PRIMEIRA"
+	}
+	
+	"SECOND"
+	{
+		"pt"			"SEGUNDA"
 	}
 
 	"Map Zone Delete"
