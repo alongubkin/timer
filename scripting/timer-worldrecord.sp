@@ -47,6 +47,9 @@ new bool:g_timerPhysics = false;
 
 new g_deleteMenuSelection[MAXPLAYERS+1];
 
+new Handle:g_showJumpsc = INVALID_HANDLE;
+new bool:g_showjumps = true;
+
 public Plugin:myinfo =
 {
     name        = "[Timer] World Record",
@@ -80,6 +83,14 @@ public OnPluginStart()
 	RegAdminCmd("sm_deleterecord_all", Command_DeleteRecord_All, ADMFLAG_RCON, "sm_deleterecord_all STEAM_ID");
 	RegAdminCmd("sm_deleterecord", Command_DeleteRecord, ADMFLAG_RCON, "sm_deleterecord STEAM_ID");
 	
+	g_showJumpsc = CreateConVar("timer_showjumps", "1", "Whether or not players will see jumps in menus.");
+	
+	AutoExecConfig(true, "timer-worldrecord");
+	
+	HookConVarChange(g_showJumpsc, Action_OnSettingsChange);
+	
+	g_showjumps = GetConVarBool(g_showJumpsc);
+
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
 	{
@@ -121,6 +132,13 @@ public OnMapStart()
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
 	RefreshCache();
 }
+
+public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
+{
+	if (cvar == g_showJumpsc)
+		g_showjumps = bool:StringToInt(newvalue);			
+}
+
 
 public Action:OnClientCommand(client, args)
 {
@@ -382,7 +400,14 @@ DisplaySelectPlayerMenu(client)
 	for (new cache = 0; cache < g_cacheCount; cache++)
 	{			
 		decl String:text[92];
-		Format(text, sizeof(text), "%s - %s (%d Jumps)", g_cache[cache][Name], g_cache[cache][TimeString], g_cache[cache][Jumps]);
+		if(g_showjumps)
+		{
+			Format(text, sizeof(text), "%s - %s (%d Jumps)", g_cache[cache][Name], g_cache[cache][TimeString], g_cache[cache][Jumps]);
+		}
+		else
+		{
+			Format(text, sizeof(text), "%s - %s", g_cache[cache][Name], g_cache[cache][TimeString]);
+		}
 
 		AddMenuItem(menu, g_cache[cache][Auth], text);
 		items++;
@@ -599,8 +624,14 @@ CreateWRMenu(client, difficulty)
 			IntToString(g_cache[cache][Id], id, sizeof(id));
 			
 			decl String:text[92];
-			Format(text, sizeof(text), "%s - %s (%d Jumps)", g_cache[cache][Name], g_cache[cache][TimeString], g_cache[cache][Jumps]);
-
+			if(g_showjumps)
+			{
+				Format(text, sizeof(text), "%s - %s (%d Jumps)", g_cache[cache][Name], g_cache[cache][TimeString], g_cache[cache][Jumps]);
+			}
+			else
+			{
+				Format(text, sizeof(text), "%s - %s", g_cache[cache][Name], g_cache[cache][TimeString]);
+			}
 			AddMenuItem(menu, id, text);
 			items++;
 		}
@@ -669,9 +700,12 @@ CreatePlayerInfoMenu(client, id, bool:back)
 
 			Format(text, sizeof(text), "%T: %s", "Time", client, g_cache[cache][TimeString]);
 			AddMenuItem(menu, difficulty, text);
-
-			Format(text, sizeof(text), "%T: %d", "Jumps", client, g_cache[cache][Jumps]);
-			AddMenuItem(menu, difficulty, text);
+			
+			if(g_showjumps)
+			{
+				Format(text, sizeof(text), "%T: %d", "Jumps", client, g_cache[cache][Jumps]);
+				AddMenuItem(menu, difficulty, text);
+			}
 			
 			if (g_timerPhysics)
 			{
@@ -771,8 +805,14 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 			Timer_GetDifficultyName(SQL_FetchInt(hndl, 3), difficulty, sizeof(difficulty));
 
 		decl String:value[92];
-		Format(value, sizeof(value), "%s %s, %T: %d", time, difficulty, "Jumps", client, SQL_FetchInt(hndl, 2));
-
+		if(g_showjumps)
+		{
+			Format(value, sizeof(value), "%s %s, %T: %d", time, difficulty, "Jumps", client, SQL_FetchInt(hndl, 2));
+		}
+		else
+		{
+			Format(value, sizeof(value), "%s %s", time, difficulty);
+		}
 		AddMenuItem(menu, id, value);
 	}
 
