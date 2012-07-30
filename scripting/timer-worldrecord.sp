@@ -5,6 +5,7 @@
 #include <adminmenu>
 #include <timer>
 #include <timer-worldrecord>
+#include <timer-logging>
 
 #undef REQUIRE_PLUGIN
 #include <timer-physics>
@@ -77,6 +78,7 @@ public OnPluginStart()
 	RegConsoleCmd("sm_delete", Command_Delete);
 	RegConsoleCmd("sm_record", Command_PersonalRecord);
 	RegConsoleCmd("sm_reloadcache", Command_ReloadCache);
+	RegAdminCmd("sm_deleterecord_all", Command_DeleteRecord_All, ADMFLAG_RCON, "sm_deleterecord_all <STEAM_ID>");
 	
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
@@ -208,6 +210,36 @@ public Action:Command_ReloadCache(client, args)
 	RefreshCache();
 	return Plugin_Handled;
 }
+
+public Action:Command_DeleteRecord_All(client, args)
+{
+	decl String:auth[32];
+	
+	if (args < 1)
+	{
+		ReplyToCommand(client, "[Timer] Usage: sm_deleterecord_all <STEAM_ID>");
+		return Plugin_Handled;
+	}
+	else if (args == 1)
+	{
+		GetCmdArg(1, auth, sizeof(auth));
+	}
+	
+	decl String:query[384];
+	Format(query, sizeof(query), "DELETE FROM round WHERE auth = '%s'", auth);
+
+	SQL_TQuery(g_hSQL, DeleteAllRecordsCallback, query, _, DBPrio_Normal);
+	
+	return Plugin_Handled;
+}
+
+public DeleteAllRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{
+	Timer_LogError(error);
+	RefreshCache();
+	CloseHandle(hndl);
+}
+
 
 LoadDifficulties()
 {
