@@ -5,7 +5,6 @@
 #include <adminmenu>
 #include <timer>
 #include <timer-worldrecord>
-#include <timer-logging>
 
 #undef REQUIRE_PLUGIN
 #include <timer-physics>
@@ -235,7 +234,6 @@ public Action:Command_DeleteRecord_All(client, args)
 
 public DeleteAllRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
-	Timer_LogError(error);
 	RefreshCache();
 	CloseHandle(hndl);
 }
