@@ -236,10 +236,12 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	if (g_prevent[client])
     {
         if (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT)
-            return Plugin_Handled;   
+		{
+			return Plugin_Handled;
+		}
     }
 	
-	if (IsPlayerAlive(client) && g_auto[client])
+	if (g_auto[client] && IsPlayerAlive(client))
     {
 		if (buttons & IN_JUMP)
 		{
