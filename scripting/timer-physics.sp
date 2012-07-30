@@ -48,6 +48,8 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 public OnPluginStart()
 {
 	g_cookie = RegClientCookie("timer-physics", "", CookieAccess_Public);
+	
+	LoadTranslations("timer.phrases");
 
 	LoadDifficulties();
 	
@@ -180,7 +182,7 @@ CreateDifficultyMenu(client)
 {
 	new Handle:menu = CreateMenu(MenuHandler_Difficulty);
 
-	SetMenuTitle(menu, "Physics Difficulty");
+	SetMenuTitle(menu, "%T", "Physics Difficulty", client);
 	SetMenuExitButton(menu, true);
 
 	for (new difficulty = 0; difficulty < g_difficultyCount; difficulty++)
@@ -233,7 +235,7 @@ ApplyDifficulty(client)
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {	
-	if (g_prevent[client])
+	if (g_prevent[client] && IsPlayerAlive(client))
     {
         if (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT)
 		{
