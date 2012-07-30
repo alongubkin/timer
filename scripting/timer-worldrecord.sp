@@ -78,7 +78,7 @@ public OnPluginStart()
 	RegConsoleCmd("sm_delete", Command_Delete);
 	RegConsoleCmd("sm_record", Command_PersonalRecord);
 	RegConsoleCmd("sm_reloadcache", Command_ReloadCache);
-	RegAdminCmd("sm_deleterecord_all", Command_DeleteRecord_All, ADMFLAG_RCON, "sm_deleterecord_all <STEAM_ID>");
+	RegAdminCmd("sm_deleterecord_all", Command_DeleteRecord_All, ADMFLAG_RCON, "sm_deleterecord_all STEAM_ID");
 	
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
@@ -217,14 +217,14 @@ public Action:Command_DeleteRecord_All(client, args)
 	
 	if (args < 1)
 	{
-		ReplyToCommand(client, "[Timer] Usage: sm_deleterecord_all <STEAM_ID>");
+		ReplyToCommand(client, "[Timer] Usage: sm_deleterecord_all STEAM_ID");
 		return Plugin_Handled;
 	}
-	else if (args == 1)
+	else
 	{
-		GetCmdArg(1, auth, sizeof(auth));
+		GetCmdArgString(auth, sizeof(auth));
 	}
-	
+
 	decl String:query[384];
 	Format(query, sizeof(query), "DELETE FROM round WHERE auth = '%s'", auth);
 
