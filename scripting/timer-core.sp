@@ -367,7 +367,6 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 		if (hQuery == INVALID_HANDLE)
 		{
 			SQL_UnlockDatabase(g_hSQL);
-			CloseHandle(hQuery);
 			return false;
 		}
 
