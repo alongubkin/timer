@@ -436,6 +436,12 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 				Format(TimeDiff, sizeof(TimeDiff), "-%s", buffer);
 			}
 		}
+		else
+		{
+			LastTime = 0.0;
+			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
+			Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
+		}
 
 		decl String:auth[32];
 		GetClientAuthString(client, auth, sizeof(auth));
