@@ -5,6 +5,7 @@
 #include <sdkhooks>
 #include <cstrike>
 
+new tsCount, ctsCount;
 
 public Plugin:myinfo =
 {
@@ -21,14 +22,33 @@ public OnPluginStart()
 	
 	AddCommandListener(Command_JoinTeam, "jointeam");
 	RegConsoleCmd("sm_r", Command_Respawn);
-	RegConsoleCmd("sm_respawn", Command_Respawn);
-	
-	HookUserMessage(GetUserMessageId("VGUIMenu"), UserMessageHook_VGUIMenu, true);
+	RegConsoleCmd("sm_respawn", Command_Respawn);	
+}
+
+public OnMapStart()
+{
+	new maxEnt = GetMaxEntities();
+	decl String:sClassName[64];
+	for (new i = MaxClients; i < maxEnt; i++)
+	{
+		if (IsValidEdict(i) && IsValidEntity(i) && GetEdictClassname(i, sClassName, sizeof(sClassName)))
+		{
+			if (StrEqual(sClassName, "info_player_terrorist"))
+			{
+				tsCount++;
+			}
+			else if (StrEqual(sClassName, "info_player_counterterrorist"))
+			{
+				ctsCount++;
+			}
+		}
+	}
 }
 
 public OnClientPutInServer(client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+	SetEntProp(client, Prop_Data, "m_iClass", GetRandomInt(0, 4));
 }
 
 public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damagetype)
@@ -43,7 +63,8 @@ public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damage
 public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if(1 <= client <= MaxClients)
+	new col = GetEntProp(client, Prop_Data, "m_CollisionGroup");
+	if(1 <= client <= MaxClients && col == 5)
 	{
 		SetEntProp(client, Prop_Data, "m_CollisionGroup", 2);
 	}
@@ -64,40 +85,60 @@ public Action:Command_JoinTeam(client, const String:command[], argc)
 	decl String:sArg[16];
 	GetCmdArg(1, sArg, sizeof(sArg));
 	
-	if (sArg[0] == '2')
+	if (sArg[0] == '2' && ctsCount == 0 && tsCount > 0)
 	{
 		if (IsClientInGame(client))
 		{
-			FakeClientCommand(client, "jointeam 0");
+			CS_SwitchTeam(client, 2);
+			CS_RespawnPlayer(client);
 		}
 		return Plugin_Handled;
 	}
-	else if (sArg[0] == '3')
+	else if (sArg[0] == '2' && tsCount == 0 && ctsCount > 0)
 	{
 		if (IsClientInGame(client))
 		{
-			FakeClientCommand(client, "jointeam 0");
+			CS_SwitchTeam(client, 3);
+			CS_RespawnPlayer(client);
+		}
+		return Plugin_Handled;
+	}
+	else if (sArg[0] == '3' && tsCount == 0 && ctsCount > 0)
+	{
+		if (IsClientInGame(client))
+		{
+			CS_SwitchTeam(client, 3);
+			CS_RespawnPlayer(client);
+		}
+		return Plugin_Handled;
+	}
+	else if (sArg[0] == '3' && ctsCount == 0 && tsCount > 0)
+	{
+		if (IsClientInGame(client))
+		{
+			CS_SwitchTeam(client, 2);
+			CS_RespawnPlayer(client);
+		}
+		return Plugin_Handled;
+	}
+	else if (sArg[0] == '0' && ctsCount == 0 && tsCount > 0)
+	{
+		if (IsClientInGame(client))
+		{
+			CS_SwitchTeam(client, 2);
+			CS_RespawnPlayer(client);
+		}
+		return Plugin_Handled;
+	}
+	else if (sArg[0] == '0' && tsCount == 0 && ctsCount > 0)
+	{
+		if (IsClientInGame(client))
+		{
+			CS_SwitchTeam(client, 3);
+			CS_RespawnPlayer(client);
 		}
 		return Plugin_Handled;
 	}
 	
-	return Plugin_Continue;
-}
-
-public Action:UserMessageHook_VGUIMenu(UserMsg:msg_id, Handle:bf, const players[], playersNum, bool:reliable, bool:init) 
-{
-	decl String:type[16];
-	BfReadString(bf, type, sizeof(type));
-	
-	if (StrEqual(type, "class_ct") || StrEqual(type, "class_ter")) 
-	{
-		for (new i = 0; i < playersNum; i++) 
-		{
-			FakeClientCommand(players[i], "joinclass %i", GetRandomInt(0, 4));
-			CS_RespawnPlayer(players[i]);
-		}
-		return Plugin_Handled;
-	}
-
 	return Plugin_Continue;
 }
