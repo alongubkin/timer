@@ -237,7 +237,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 {	
 	if (g_prevent[client] && IsPlayerAlive(client))
     {
-        if (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT)
+        if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT))
 		{
 			return Plugin_Handled;
 		}
