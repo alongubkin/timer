@@ -570,13 +570,14 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 
 public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {	
-    if (owner == INVALID_HANDLE)
-    {
-        g_reconnectCounter++;
-        ConnectSQL();
-		
-        return;
-    }
+	if (owner == INVALID_HANDLE)
+	{
+		g_reconnectCounter++;
+		ConnectSQL();
+
+		return;
+	}
+
 	CloseHandle(hndl);
 }
 
