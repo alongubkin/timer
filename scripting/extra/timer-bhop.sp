@@ -48,7 +48,6 @@ public OnMapStart()
 public OnClientPutInServer(client)
 {
 	SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
-	SetEntProp(client, Prop_Data, "m_iClass", GetRandomInt(0, 4));
 }
 
 public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damagetype)
