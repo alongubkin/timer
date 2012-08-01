@@ -7,6 +7,7 @@
 
 #undef REQUIRE_PLUGIN
 #include <timer-physics>
+#include <timer-logging>
 #include <updater>
 
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-core.txt"
@@ -62,6 +63,7 @@ new bool:g_pauseResumeEnabled = true;
 new bool:g_showjumps = true;
 
 new bool:g_timerPhysics = false;
+new bool:g_timerLogging = false;
 new g_iVelocity;
 
 public Plugin:myinfo =
@@ -100,6 +102,7 @@ public OnPluginStart()
 
 	g_iVelocity = FindSendPropInfo("CBasePlayer", "m_vecVelocity[0]");
 	g_timerPhysics = LibraryExists("timer-physics");
+	g_timerLogging = LibraryExists("timer-logging");
 	
 	LoadTranslations("timer.phrases");
 	
@@ -143,6 +146,12 @@ public OnLibraryAdded(const String:name[])
 	{
 		g_timerPhysics = true;
 	}
+	
+	else if (StrEqual(name, "timer-logging"))
+	{
+		g_timerLogging = true;
+	}
+
 	else if (StrEqual(name, "updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -155,6 +164,11 @@ public OnLibraryRemoved(const String:name[])
 	{
 		g_timerPhysics = false;
 	}
+	else if (StrEqual(name, "timer-logging"))
+	{
+		g_timerLogging = false;
+	}
+
 }
 
 public OnMapStart()
@@ -500,6 +514,14 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 
 public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+	}
+
 	g_bestTimeCache[client][IsCached] = false;
 	CloseHandle(hndl);
 }
@@ -525,7 +547,10 @@ ConnectSQL()
 	}
     else
 	{
-        LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		if(g_timerLogging)
+		{
+			Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		}
 	}
 }
 
@@ -533,13 +558,19 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 {
 	if (g_reconnectCounter >= 5)
 	{
-		LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
+		if(g_timerLogging)
+		{
+			Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
+		}
 		return -1;
 	}
 
 	if (hndl == INVALID_HANDLE)
 	{
-		LogError("Connection to SQL database has failed, Reason: %s", error);
+		if(g_timerLogging)
+		{
+			Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
+		}
 		
 		g_reconnectCounter++;
 		ConnectSQL();
@@ -572,10 +603,23 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 {	
 	if (owner == INVALID_HANDLE)
 	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+
 		g_reconnectCounter++;
 		ConnectSQL();
 
 		return;
+	}
+	
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
 	}
 
 	CloseHandle(hndl);
