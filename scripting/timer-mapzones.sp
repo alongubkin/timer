@@ -550,13 +550,24 @@ DisplaySelectZoneTypeMenu(client)
 {
 	new Handle:menu = CreateMenu(ZoneTypeSelect);
 	SetMenuTitle(menu, "%T", "Select zone type", client);
+	
+	decl String:Startm[64];
+	Format(Startm, sizeof(Startm), "%T", "Start", client);
+	decl String:Endm[64];
+	Format(Endm, sizeof(Endm), "%T", "End", client);
+	decl String:Glitch1m[64];
+	Format(Glitch1m, sizeof(Glitch1m), "%T", "Glitch1", client);
+	decl String:Glitch2m[64];
+	Format(Glitch2m, sizeof(Glitch2m), "%T", "Glitch2", client);
+	decl String:Glitch3m[64];
+	Format(Glitch3m, sizeof(Glitch3m), "%T", "Glitch3", client);
 
 	// This is ugly
-	AddMenuItem(menu, "0", "Start");
-	AddMenuItem(menu, "1", "End");
-	AddMenuItem(menu, "2", "Glitch1 - Stop Timer");
-	AddMenuItem(menu, "3", "Glitch2 - Restart Timer");
-	AddMenuItem(menu, "4", "Glitch3 - Respawn Player");
+	AddMenuItem(menu, "0", Startm);
+	AddMenuItem(menu, "1", Endm);
+	AddMenuItem(menu, "2", Glitch1m);
+	AddMenuItem(menu, "3", Glitch2m);
+	AddMenuItem(menu, "4", Glitch3m);
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 360);

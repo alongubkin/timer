@@ -159,6 +159,31 @@
 	{
 		"pt"			"Escolha o tipo de zona:"
 	}
+	
+	"Start"
+	{
+		"pt"			"Inicio"
+	}
+	
+	"End"
+	{
+		"pt"			"Fim"
+	}
+	
+	"Glitch1"
+	{
+		"pt"			"Abuso - Parar Tempo"
+	}
+	
+	"Glitch2"
+	{
+		"pt"			"Abuso2 - Reiniciar Timer"
+	}
+	
+	"Glitch3"
+	{
+		"pt"			"Abuso3 - Renascer Jogador"
+	}
 
 	"Choose Player"
 	{

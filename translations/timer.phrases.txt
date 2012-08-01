@@ -166,6 +166,31 @@
 		"en"			"Select zone type:"
 	}
 	
+	"Start"
+	{
+		"en"			"Start"
+	}
+	
+	"End"
+	{
+		"en"			"End"
+	}
+	
+	"Glitch1"
+	{
+		"en"			"Glitch1 - Stop Timer"
+	}
+	
+	"Glitch2"
+	{
+		"en"			"Glitch2 - Restart Timer"
+	}
+	
+	"Glitch3"
+	{
+		"en"			"Glitch3 - Respawn Player"
+	}
+	
 	"Choose Player"
 	{
 		"en"			"Choose Player:"
