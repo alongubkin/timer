@@ -645,7 +645,7 @@ public ZoneTypeSelect(Handle:menu, MenuAction:action, param1, param2)
 		new Float:point2[3];
 		Array_Copy(g_mapZoneEditors[param1][Point2], point2, 3);
 
-		point1[2] -= 50;
+		point1[2] -= 2;
 		point2[2] += 100;
 
 		AddMapZone(g_currentMap, MapZoneType:param2, point1, point2);
@@ -823,7 +823,7 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	fLeftBottomFront[0] = fFrom[0];
 	fLeftBottomFront[1] = fFrom[1];
 	if(flat)
-		fLeftBottomFront[2] = fTo[2]-50;
+		fLeftBottomFront[2] = fTo[2]-2;
 	else
 		fLeftBottomFront[2] = fTo[2];
 	
@@ -831,7 +831,7 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	fRightBottomFront[0] = fTo[0];
 	fRightBottomFront[1] = fFrom[1];
 	if(flat)
-		fRightBottomFront[2] = fTo[2]-50;
+		fRightBottomFront[2] = fTo[2]-2;
 	else
 		fRightBottomFront[2] = fTo[2];
 	
@@ -840,7 +840,7 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	fLeftBottomBack[0] = fFrom[0];
 	fLeftBottomBack[1] = fTo[1];
 	if(flat)
-		fLeftBottomBack[2] = fTo[2]-50;
+		fLeftBottomBack[2] = fTo[2]-2;
 	else
 		fLeftBottomBack[2] = fTo[2];
 	
@@ -848,7 +848,7 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	fRightBottomBack[0] = fTo[0];
 	fRightBottomBack[1] = fTo[1];
 	if(flat)
-		fRightBottomBack[2] = fTo[2]-50;
+		fRightBottomBack[2] = fTo[2]-2;
 	else
 		fRightBottomBack[2] = fTo[2];
 	
@@ -857,14 +857,14 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	lefttopfront[0] = fFrom[0];
 	lefttopfront[1] = fFrom[1];
 	if(flat)
-		lefttopfront[2] = fFrom[2]+50;
+		lefttopfront[2] = fFrom[2]+2;
 	else
 		lefttopfront[2] = fFrom[2]+100;
 	decl Float:righttopfront[3];
 	righttopfront[0] = fTo[0];
 	righttopfront[1] = fFrom[1];
 	if(flat)
-		righttopfront[2] = fFrom[2]+50;
+		righttopfront[2] = fFrom[2]+2;
 	else
 		righttopfront[2] = fFrom[2]+100;
 	
@@ -873,14 +873,14 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	fLeftTopBack[0] = fFrom[0];
 	fLeftTopBack[1] = fTo[1];
 	if(flat)
-		fLeftTopBack[2] = fFrom[2]+50;
+		fLeftTopBack[2] = fFrom[2]+2;
 	else
 		fLeftTopBack[2] = fFrom[2]+100;
 	decl Float:fRightTopBack[3];
 	fRightTopBack[0] = fTo[0];
 	fRightTopBack[1] = fTo[1];
 	if(flat)
-		fRightTopBack[2] = fFrom[2]+50;
+		fRightTopBack[2] = fFrom[2]+2;
 	else
 		fRightTopBack[2] = fFrom[2]+100;
 	
