@@ -5,6 +5,10 @@
 #include <smlib>
 #include <timer>
 
+#undef REQUIRE_PLUGIN
+#include <timer-logging>
+
+
 enum Checkpoint
 {
 	Id,
@@ -29,6 +33,8 @@ new bool:g_loadingCheckpoints = false;
 
 new g_currentCheckpoint[MAXPLAYERS+1];
 
+new bool:g_timerLogging = false;
+
 public Plugin:myinfo =
 {
     name        = "[Timer] Checkpoints",
@@ -41,6 +47,8 @@ public Plugin:myinfo =
 public OnPluginStart()
 {
 	ConnectSQL(true);
+	
+	g_timerLogging = LibraryExists("timer-logging");
 
 	RegConsoleCmd("sm_clear", ClearCommand);
 	RegConsoleCmd("sm_next", NextCommand);
@@ -52,6 +60,24 @@ public OnPluginStart()
 
 	Array_Fill(g_currentCheckpoint, sizeof(g_currentCheckpoint), 0, 0);
 }
+
+public OnLibraryAdded(const String:name[])
+{
+	if (StrEqual(name, "timer-logging"))
+	{
+		g_timerLogging = true;
+	}
+}
+
+public OnLibraryRemoved(const String:name[])
+{
+	if (StrEqual(name, "timer-logging"))
+	{
+		g_timerLogging = false;
+	}
+
+}
+
 
 public OnMapStart()
 {
@@ -122,7 +148,11 @@ public LoadCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[], 
 
 	if (hndl == INVALID_HANDLE)
 	{
-		return 0;
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
 	}
 	
 	while (SQL_FetchRow(hndl))
@@ -144,7 +174,6 @@ public LoadCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[], 
 	CloseHandle(hndl);
 	
 	g_loadingCheckpoints = false;
-	return 1;
 }
 
 ConnectSQL(bool:refreshCache)
@@ -160,7 +189,10 @@ ConnectSQL(bool:refreshCache)
 	}
     else
 	{
-        LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		if(g_timerLogging)
+		{
+			Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		}
 	}
 }
 
@@ -168,18 +200,24 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 {
 	if (g_reconnectCounter >= 5)
 	{
-		LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
-		return -1;
+		if(g_timerLogging)
+		{
+			Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
+		}
+		return;
 	}
 
 	if (hndl == INVALID_HANDLE)
 	{
-		LogError("Connection to SQL database has failed, Reason: %s", error);
+		if(g_timerLogging)
+		{
+			Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
+		}
 
 		g_reconnectCounter++;
 		ConnectSQL(data);
 
-		return -1;
+		return;
 	}
 
 	decl String:driver[16];
@@ -199,19 +237,32 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 
 	
 	g_reconnectCounter = 1;
-
-	return 1;
 }
 
 public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
 	if (owner == INVALID_HANDLE)
 	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+
 		g_reconnectCounter++;
 		ConnectSQL(data);
 		
 		return;
 	}
+	
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
+
 	
 	LoadCheckpoints();
 	
@@ -241,7 +292,11 @@ public ClearCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[],
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		return 0;
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
 	}
 	
 	PrintToChat(client, "All checkpoints for this map removed successfully.");
@@ -251,8 +306,6 @@ public ClearCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[],
 	CloseHandle(hndl);
 	
 	g_currentCheckpoint[client] = 0;
-
-	return 1;
 }
 
 SaveCheckpoint(client)
@@ -298,15 +351,18 @@ SaveCheckpoint(client)
 public SaveCheckpointCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
 	if (hndl == INVALID_HANDLE)
-	{	
-		return 0;
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
 	}
+	
 	PrintToChat(client, "Checkpoint saved successfully.");
 	LoadCheckpoints();
 	
 	CloseHandle(hndl);
-
-	return 1;
 }
 
 TeleportToLastCheckpoint(client)

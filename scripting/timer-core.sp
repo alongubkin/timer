@@ -164,11 +164,11 @@ public OnLibraryRemoved(const String:name[])
 	{
 		g_timerPhysics = false;
 	}
+	
 	else if (StrEqual(name, "timer-logging"))
 	{
 		g_timerLogging = false;
 	}
-
 }
 
 public OnMapStart()

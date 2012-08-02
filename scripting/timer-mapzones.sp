@@ -101,7 +101,6 @@ public OnMapStart()
 	ConnectSQL();
 	
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
-	g_timerPhysics = LibraryExists("timer-physics");
 	
 	precache_laser = PrecacheModel("materials/sprites/laserbeam.vmt");
 }
