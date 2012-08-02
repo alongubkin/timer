@@ -476,6 +476,15 @@ DeleteMapZone(client)
 	}
 }
 
+DeleteAllMapZones(client)
+{
+	decl String:query[256];
+	Format(query, sizeof(query), "DELETE FROM mapzone WHERE map = '%s'", g_currentMap);
+
+	SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_Normal);
+}
+
+
 public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
 	if (hndl == INVALID_HANDLE)
@@ -490,38 +499,10 @@ public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], an
 	LoadMapZones();
 	
 	if (IsValidPlayer(data))
-		PrintToChat(data, "%t", "Map Zone Delete");
+		PrintToChat(data, PLUGIN_PREFIX, "Map Zone Delete");
 		
 	CloseHandle(hndl);
 }
-
-DeleteAllMapZones(client)
-{
-	decl String:query[256];
-	Format(query, sizeof(query), "DELETE FROM mapzone WHERE map = '%s'", g_currentMap);
-
-	SQL_TQuery(g_hSQL, DeleteAllMapZonesCallback, query, client, DBPrio_Normal);
-}
-
-public DeleteAllMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
-{
-	if (hndl == INVALID_HANDLE)
-	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
-		return;
-	}
-
-	LoadMapZones();
-	
-	if (IsValidPlayer(data))
-		PrintToChat(data, "%t", "Map Zone Delete");
-		
-	CloseHandle(hndl);
-}
-
 
 DisplaySelectPointMenu(client, n)
 {

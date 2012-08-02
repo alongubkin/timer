@@ -6,7 +6,7 @@
 #pragma semicolon 1
 
 #define PL_VERSION "1.0.4"
-#define PLUGIN_PREFIX "\x0700FFBF[Timer] \x01"
+#define PLUGIN_PREFIX "\x0700FFBF[Timer] \x01%t"
 
 enum MapZoneType
 {

@@ -86,6 +86,6 @@ public Action:Hook_SetTransmitWeapon(entity, client)
 public Action:HideCommand(client, args)
 {
 	g_hide[client] = !g_hide[client];
-	PrintToChat(client, "%s%t", PLUGIN_PREFIX, "Toggle visibilty");
+	PrintToChat(client, PLUGIN_PREFIX, "Toggle visibilty");
 	return Plugin_Handled;
 }

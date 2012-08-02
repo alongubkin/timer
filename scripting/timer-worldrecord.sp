@@ -217,7 +217,7 @@ public Action:Command_PersonalRecord(client, args)
 
 	if (target == -1)
 	{
-		PrintToChat(client, "%s%t", PLUGIN_PREFIX, "No target");
+		PrintToChat(client, PLUGIN_PREFIX, "No target");
 	}
 	else
 	{
@@ -617,7 +617,7 @@ CreateDifficultyMenu(client)
 {
 	if (!g_cacheLoaded)
 	{
-		PrintToChat(client, "%s%t", PLUGIN_PREFIX, "World Record Loading");
+		PrintToChat(client, PLUGIN_PREFIX, "World Record Loading");
 		return;	
 	}
 
@@ -693,9 +693,9 @@ CreateWRMenu(client, difficulty)
 		CloseHandle(menu);
 		
 		if (difficulty == -1)
-			PrintToChat(client, "%s%t", PLUGIN_PREFIX, "No Records");	
+			PrintToChat(client, PLUGIN_PREFIX, "No Records");	
 		else
-			PrintToChat(client, "%s%t", PLUGIN_PREFIX, "No Difficulty Records");
+			PrintToChat(client, PLUGIN_PREFIX, "No Difficulty Records");
 	}
 	else
 	{

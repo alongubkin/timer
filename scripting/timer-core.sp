@@ -488,11 +488,11 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 				new String:difficulty[32];
 				Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
 				
-				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty", name, TimeString, TimeDiff, difficulty, jumps);
+				PrintToChatAll(PLUGIN_PREFIX, "Round Finish Difficulty", name, TimeString, TimeDiff, difficulty, jumps);
 			}
 			else
 			{
-				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish", name, TimeString, TimeDiff, jumps);		
+				PrintToChatAll(PLUGIN_PREFIX, "Round Finish", name, TimeString, TimeDiff, jumps);		
 			}
 		}
 		else
@@ -502,11 +502,11 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 				new String:difficulty[32];
 				Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
 				
-				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Difficulty Without Jumps", name, TimeString, TimeDiff, difficulty);
+				PrintToChatAll(PLUGIN_PREFIX, "Round Finish Difficulty Without Jumps", name, TimeString, TimeDiff, difficulty);
 			}
 			else
 			{
-				PrintToChatAll("%s%t", PLUGIN_PREFIX, "Round Finish Without Jumps", name, TimeString, TimeDiff);
+				PrintToChatAll(PLUGIN_PREFIX, "Round Finish Without Jumps", name, TimeString, TimeDiff);
 			}
 		}
 	}
