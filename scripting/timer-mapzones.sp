@@ -325,7 +325,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		{
 			Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
 		}
-		return -1;
+		return;
 	}
 
 	if (hndl == INVALID_HANDLE)
@@ -338,7 +338,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		g_reconnectCounter++;
 		ConnectSQL();
 		
-		return -1;
+		return;
 	}
 
 	decl String:driver[16];
@@ -359,7 +359,6 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	CloseHandle(hndl);
 	
 	g_reconnectCounter = 1;
-	return 1;
 }
 
 public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], any:data)

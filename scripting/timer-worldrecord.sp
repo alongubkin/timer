@@ -8,6 +8,7 @@
 
 #undef REQUIRE_PLUGIN
 #include <timer-physics>
+#include <timer-logging>
 #include <updater>
 
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-worldrecord.txt"
@@ -44,6 +45,7 @@ new g_cacheCount = 0;
 new bool:g_cacheLoaded = false;
 
 new bool:g_timerPhysics = false;
+new bool:g_timerLogging = false;
 
 new g_deleteMenuSelection[MAXPLAYERS+1];
 
@@ -73,6 +75,7 @@ public OnPluginStart()
 	ConnectSQL(true);
 	
 	g_timerPhysics = LibraryExists("timer-physics");
+	g_timerLogging = LibraryExists("timer-logging");
 	
 	LoadTranslations("timer.phrases");
 	
@@ -109,6 +112,12 @@ public OnLibraryAdded(const String:name[])
 	{
 		g_timerPhysics = true;
 	}
+	
+	else if (StrEqual(name, "timer-logging"))
+	{
+		g_timerLogging = true;
+	}
+
 	else if (StrEqual(name, "updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -125,6 +134,11 @@ public OnLibraryRemoved(const String:name[])
 	{
 		hTopMenu = INVALID_HANDLE;
 	}	
+	else if (StrEqual(name, "timer-logging"))
+	{
+		g_timerLogging = false;
+	}
+
 }
 
 public OnMapStart()
@@ -270,6 +284,15 @@ public Action:Command_DeleteRecord(client, args)
 
 public DeleteRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
+
 	RefreshCache();
 	CloseHandle(hndl);
 }
@@ -444,6 +467,15 @@ public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
 
 public DeletePlayersRecordCallback(Handle:owner, Handle:hndl, const String:error[], any:param1)
 {
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
+
 	DisplaySelectPlayerMenu(param1);
 	CloseHandle(hndl);
 }
@@ -459,6 +491,15 @@ DeleteMapRecords(const String:map[])
 
 public DeleteMapRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
+
 	RefreshCache();
 	CloseHandle(hndl);
 }
@@ -483,12 +524,16 @@ RefreshCache()
 
 public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
-	PrintToServer(error);
-	
 	g_cacheCount = 0;
-
+	
 	if (hndl == INVALID_HANDLE)
-		return 0;
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
 	
 	while (SQL_FetchRow(hndl))
 	{
@@ -505,7 +550,6 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 	CloseHandle(hndl);
 	
 	g_cacheLoaded = true;
-	return 1;
 }
 
 ConnectSQL(bool:refreshCache)
@@ -521,45 +565,52 @@ ConnectSQL(bool:refreshCache)
 	}
     else
 	{
-        LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		if(g_timerLogging)
+		{
+			Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		}
 	}
 }
 
 public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
-    if (g_reconnectCounter >= 5)
-    {
-        LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
-        return -1;
-    }
+	if (g_reconnectCounter >= 5)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
+		}
+		return;
+	}
 
-    if (hndl == INVALID_HANDLE)
-    {
-        LogError("Connection to SQL database has failed, Reason: %s", error);
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
+		}
 		
-        g_reconnectCounter++;
-        ConnectSQL(data);
-		
-        return -1;
-    }
+		g_reconnectCounter++;
+		ConnectSQL(data);
 
-    decl String:driver[16];
-    SQL_GetDriverIdent(owner, driver, sizeof(driver));
-	
-    if (StrEqual(driver, "mysql", false))
-        SQL_FastQuery(hndl, "SET NAMES 'utf8'");
+		return;
+	}
 
-    g_hSQL = CloneHandle(hndl);
-    CloseHandle(hndl);
+	decl String:driver[16];
+	SQL_GetDriverIdent(owner, driver, sizeof(driver));
 	
-    g_reconnectCounter = 1;
+	if (StrEqual(driver, "mysql", false))
+		SQL_FastQuery(hndl, "SET NAMES 'utf8'");
 
-    if (data)
-    {
-    	RefreshCache();	
-    }	
-	
-    return 1;
+	g_hSQL = CloneHandle(hndl);
+	CloseHandle(hndl);
+
+	g_reconnectCounter = 1;
+
+	if (data)
+	{
+		RefreshCache();	
+	}
 }
 
 CreateDifficultyMenu(client)
@@ -772,7 +823,13 @@ CreateDeleteMenu(client, target)
 public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {	
 	if (hndl == INVALID_HANDLE)
-		return 0;
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
 
 	new Handle:menu = CreateMenu(MenuHandler_DeleteRecord);
 
@@ -790,7 +847,7 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 		if (!StrEqual(steamid, auth))
 		{
 			CloseHandle(menu);
-			return 0;
+			return;
 		}
 		
 		decl String:id[10];
@@ -819,8 +876,6 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 	
 	CloseHandle(hndl);
-	
-	return 1;
 }
 
 public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
@@ -844,6 +899,15 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 
 public DeleteRecordCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
+
 	CreateDeleteMenu(client, g_deleteMenuSelection[client]);
 	CloseHandle(hndl);
 }
