@@ -520,6 +520,7 @@ public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:
 		{
 			Timer_LogError(error);
 		}
+		return;
 	}
 
 	g_bestTimeCache[client][IsCached] = false;
@@ -620,6 +621,7 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 		{
 			Timer_LogError(error);
 		}
+		return;
 	}
 
 	CloseHandle(hndl);

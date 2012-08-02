@@ -11,6 +11,7 @@
 #undef REQUIRE_PLUGIN
 #include <timer-physics>
 #include <timer-worldrecord>
+#include <timer-logging>
 #include <updater>
 
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-mapzones.txt"
@@ -53,6 +54,7 @@ new precache_laser;
 
 new bool:g_timerPhysics = false;
 new bool:g_timerWorldRecord = false;
+new bool:g_timerLogging = false;
 
 public Plugin:myinfo =
 {
@@ -67,6 +69,7 @@ public OnPluginStart()
 {
 	g_timerPhysics = LibraryExists("timer-physics");
 	g_timerWorldRecord = LibraryExists("timer-worldrecord");
+	g_timerLogging = LibraryExists("timer-logging");
 	
 	g_startMapZoneColor = CreateConVar("timer_startcolor", "0 255 0 255", "The color of the start map zone.");
 	g_endMapZoneColor = CreateConVar("timer_endcolor", "0 0 255 255", "The color of the end map zone.");
@@ -113,6 +116,11 @@ public OnLibraryAdded(const String:name[])
 	{
 		g_timerWorldRecord = true;
 	}
+	else if (StrEqual(name, "timer-logging"))
+	{
+		g_timerLogging = true;
+	}
+
 	else if (StrEqual(name, "updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -133,6 +141,11 @@ public OnLibraryRemoved(const String:name[])
 	{
 		g_timerWorldRecord = false;
 	}	
+	else if (StrEqual(name, "timer-logging"))
+	{
+		g_timerLogging = false;
+	}
+
 }
 
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
@@ -208,7 +221,14 @@ AddMapZone(String:map[], MapZoneType:type, Float:point1[3], Float:point2[3])
 
 public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
-	PrintToServer(error);
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
 	CloseHandle(hndl);
 }
 
@@ -222,6 +242,15 @@ LoadMapZones()
 
 public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
+
 	g_mapZonesCount = 0;
 
 	while (SQL_FetchRow(hndl))
@@ -281,7 +310,10 @@ ConnectSQL()
 	}
     else
 	{
-        LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		if(g_timerLogging)
+		{
+			Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		}
 	}
 }
 
@@ -289,13 +321,19 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 {
 	if (g_reconnectCounter >= 5)
 	{
-		LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
+		if(g_timerLogging)
+		{
+			Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
+		}
 		return -1;
 	}
 
 	if (hndl == INVALID_HANDLE)
 	{
-		LogError("Connection to SQL database has failed, Reason: %s", error);
+		if(g_timerLogging)
+		{
+			Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
+		}
 		
 		g_reconnectCounter++;
 		ConnectSQL();
@@ -328,9 +366,23 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 {
 	if (owner == INVALID_HANDLE)
 	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+
 		g_reconnectCounter++;
 		ConnectSQL();
 		
+		return;
+	}
+	
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
 		return;
 	}
 	
@@ -428,6 +480,15 @@ DeleteMapZone(client)
 
 public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
+
 	LoadMapZones();
 	
 	if (IsValidPlayer(data))
@@ -446,6 +507,15 @@ DeleteAllMapZones(client)
 
 public DeleteAllMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
+	if (hndl == INVALID_HANDLE)
+	{
+		if(g_timerLogging)
+		{
+			Timer_LogError(error);
+		}
+		return;
+	}
+
 	LoadMapZones();
 	
 	if (IsValidPlayer(data))
