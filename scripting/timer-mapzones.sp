@@ -3,15 +3,14 @@
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
-#include <loghelper>
 #include <adminmenu>
-#include <smlib>
+#include <smlib/arrays>
 #include <timer>
+#include <timer-logging>
 
 #undef REQUIRE_PLUGIN
 #include <timer-physics>
 #include <timer-worldrecord>
-#include <timer-logging>
 #include <updater>
 
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-mapzones.txt"
@@ -54,7 +53,6 @@ new precache_laser;
 
 new bool:g_timerPhysics = false;
 new bool:g_timerWorldRecord = false;
-new bool:g_timerLogging = false;
 
 public Plugin:myinfo =
 {
@@ -69,16 +67,16 @@ public OnPluginStart()
 {
 	g_timerPhysics = LibraryExists("timer-physics");
 	g_timerWorldRecord = LibraryExists("timer-worldrecord");
-	g_timerLogging = LibraryExists("timer-logging");
-	
+
 	g_startMapZoneColor = CreateConVar("timer_startcolor", "0 255 0 255", "The color of the start map zone.");
 	g_endMapZoneColor = CreateConVar("timer_endcolor", "0 0 255 255", "The color of the end map zone.");
 	g_startStopPrespeed = CreateConVar("timer_stopprespeeding", "0", "If enabled players won't be able to prespeed in start zone.");
-	AutoExecConfig(true, "timer-mapzones");
 	
 	HookConVarChange(g_startMapZoneColor, Action_OnSettingsChange);
 	HookConVarChange(g_endMapZoneColor, Action_OnSettingsChange);	
 	HookConVarChange(g_startStopPrespeed, Action_OnSettingsChange);
+	
+	AutoExecConfig(true, "timer-mapzones");
 	
 	g_stopPrespeed = GetConVarBool(g_startStopPrespeed);
 	
@@ -115,11 +113,6 @@ public OnLibraryAdded(const String:name[])
 	{
 		g_timerWorldRecord = true;
 	}
-	else if (StrEqual(name, "timer-logging"))
-	{
-		g_timerLogging = true;
-	}
-
 	else if (StrEqual(name, "updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -139,12 +132,7 @@ public OnLibraryRemoved(const String:name[])
 	else if (StrEqual(name, "timer-worldrecord"))
 	{
 		g_timerWorldRecord = false;
-	}	
-	else if (StrEqual(name, "timer-logging"))
-	{
-		g_timerLogging = false;
 	}
-
 }
 
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
@@ -222,13 +210,9 @@ public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on AddMapZone: %s", error);
 		return;
 	}
-	CloseHandle(hndl);
 }
 
 LoadMapZones()
@@ -243,10 +227,7 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on LoadMapZones: %s", error);
 		return;
 	}
 
@@ -272,8 +253,6 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 
 	CreateTimer(2.0, DrawZones, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	CreateTimer(0.1, PlayerTracker, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-	
-	CloseHandle(hndl);
 }
 
 public OnTimerRestart(client)
@@ -309,10 +288,7 @@ ConnectSQL()
 	}
     else
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
-		}
+		Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
 	}
 }
 
@@ -320,19 +296,13 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 {
 	if (g_reconnectCounter >= 5)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
-		}
+		Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
 		return;
 	}
 
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
-		}
+		Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
 		
 		g_reconnectCounter++;
 		ConnectSQL();
@@ -354,9 +324,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	{
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `mapzone` (`id` INTEGER PRIMARY KEY, `type` INTEGER NOT NULL, `point1_x` float NOT NULL, `point1_y` float NOT NULL, `point1_z` float NOT NULL, `point2_x` float NOT NULL, `point2_y` float NOT NULL, `point2_z` float NOT NULL, `map` varchar(32) NOT NULL);");
 	}
-	
-	CloseHandle(hndl);
-	
+		
 	g_reconnectCounter = 1;
 }
 
@@ -364,10 +332,7 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 {
 	if (owner == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError(error);
 
 		g_reconnectCounter++;
 		ConnectSQL();
@@ -377,16 +342,11 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on CreateSQLTable: %s", error);
 		return;
 	}
 	
 	LoadMapZones();
-	
-	CloseHandle(hndl);
 }
 
 public AdminMenu_CategoryHandler(Handle:topmenu, 
@@ -484,24 +444,18 @@ DeleteAllMapZones(client)
 	SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_Normal);
 }
 
-
 public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on DeleteMapZone: %s", error);
 		return;
 	}
 
 	LoadMapZones();
 	
-	if (IsValidPlayer(data))
+	if (IsClientInGame(data))
 		PrintToChat(data, PLUGIN_PREFIX, "Map Zone Delete");
-		
-	CloseHandle(hndl);
 }
 
 DisplaySelectPointMenu(client, n)
@@ -710,7 +664,7 @@ public Action:PlayerTracker(Handle:timer)
 {
 	for (new client = 1; client <= MaxClients; client++)
 	{
-		if (IsValidPlayer(client) && IsPlayerAlive(client) && !IsClientObserver(client))
+		if (IsClientInGame(client) && IsPlayerAlive(client) && !IsClientObserver(client))
 		{
 			new Float:vec[3];
 			GetClientAbsOrigin(client, vec);

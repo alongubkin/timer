@@ -2,8 +2,8 @@
 
 #include <sourcemod>
 #include <clientprefs>
-#include <loghelper>
 #include <timer>
+#include <timer-logging>
 #include <timer-physics>
 
 #undef REQUIRE_PLUGIN
@@ -60,21 +60,14 @@ public OnPluginStart()
 	RegConsoleCmd("sm_difficulty", Command_Difficulty);
 	
 	g_joinTeamDifficultyCvar = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
-	
-	AutoExecConfig(true, "timer-physics");
 	HookConVarChange(g_joinTeamDifficultyCvar, Action_OnSettingsChange);
 	
-	g_joinTeamDifficulty = GetConVarBool(g_joinTeamDifficultyCvar);
+	AutoExecConfig(true, "timer-physics");
 	
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
 	}		
-}
-
-public OnPluginStop()
-{
-	CloseHandle(g_cookie);	
 }
 
 public OnLibraryAdded(const String:name[])
@@ -122,6 +115,7 @@ public Action:Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroad
 {
 	new team = GetEventInt(event, "team");
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	
 	if (g_joinTeamDifficulty && team > 1 && client > 0)
 	{
 		CreateDifficultyMenu(client);
@@ -217,7 +211,7 @@ public MenuHandler_Difficulty(Handle:menu, MenuAction:action, param1, param2)
 
 ApplyDifficulty(client)
 {
-	if (!IsValidPlayer(client))
+	if (!IsClientInGame(client))
 		return;
 		
 	new difficulty = 0;

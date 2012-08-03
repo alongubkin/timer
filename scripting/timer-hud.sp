@@ -1,7 +1,7 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <loghelper>
+#include <sdktools>
 #include <timer>
 
 #undef REQUIRE_PLUGIN
@@ -53,9 +53,7 @@ public OnPluginStart()
 	g_showBestTimesCvar = CreateConVar("timer_hud_besttimes", "1", "Whether or not best times for this map is shown in the HUD.");
 	g_fragsCvar = CreateConVar("timer_frags", "0", "Whether or not players' score should be his current timer.");
 	g_jumpsDeathCvar = CreateConVar("timer_jumps_death", "0", "Whether or not players' death count should be their jump count.");
-	
-	AutoExecConfig(true, "timer-hud");
-	
+
 	HookConVarChange(g_showSpeedCvar, Action_OnSettingsChange);
 	HookConVarChange(g_showJumpsCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_showTimeCvar, Action_OnSettingsChange);
@@ -64,14 +62,8 @@ public OnPluginStart()
 	HookConVarChange(g_fragsCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_jumpsDeathCvar, Action_OnSettingsChange);
 	
-	g_showSpeed      = GetConVarBool(g_showSpeedCvar);
-	g_showJumps      = GetConVarBool(g_showJumpsCvar);
-	g_showTime       = GetConVarBool(g_showTimeCvar);
-	g_showDifficulty = GetConVarBool(g_showDifficultyCvar);
-	g_showBestTimes  = GetConVarBool(g_showBestTimesCvar);
-	g_frags          = GetConVarBool(g_fragsCvar);
-	g_jumpsDeath     = GetConVarBool(g_jumpsDeathCvar);
-	
+	AutoExecConfig(true, "timer-hud");
+		
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -126,7 +118,7 @@ public Action:HUDTimer(Handle:timer)
 {
 	for (new client = 1; client <= MaxClients; client++)
 	{
-		if (IsValidPlayer(client))
+		if (IsClientInGame(client))
 			UpdateHUD(client);
 	}
 
@@ -148,7 +140,7 @@ UpdateHUD(client)
 		{
 			new t = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
 
-			if (IsValidPlayer(t) && !IsFakeClient(t))
+			if (IsClientInGame(t) && !IsFakeClient(t))
 				target = t;
 		}		
 	}

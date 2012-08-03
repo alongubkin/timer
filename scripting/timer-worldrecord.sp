@@ -1,14 +1,14 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <loghelper>
 #include <adminmenu>
+
 #include <timer>
+#include <timer-logging>
 #include <timer-worldrecord>
 
 #undef REQUIRE_PLUGIN
 #include <timer-physics>
-#include <timer-logging>
 #include <updater>
 
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-worldrecord.txt"
@@ -23,7 +23,8 @@ enum RecordCache
 	String:TimeString[16],
 	Jumps,
 	String:RecordPhysicsDifficulty[32],
-	String:Auth[32]
+	String:Auth[32],
+	bool:Ignored
 }
 
 /**
@@ -45,12 +46,11 @@ new g_cacheCount = 0;
 new bool:g_cacheLoaded = false;
 
 new bool:g_timerPhysics = false;
-new bool:g_timerLogging = false;
 
 new g_deleteMenuSelection[MAXPLAYERS+1];
 
-new Handle:g_showJumpsc = INVALID_HANDLE;
-new bool:g_showjumps = true;
+new Handle:g_showJumpCvar = INVALID_HANDLE;
+new bool:g_showJumps = true;
 
 public Plugin:myinfo =
 {
@@ -75,7 +75,6 @@ public OnPluginStart()
 	ConnectSQL(true);
 	
 	g_timerPhysics = LibraryExists("timer-physics");
-	g_timerLogging = LibraryExists("timer-logging");
 	
 	LoadTranslations("timer.phrases");
 	
@@ -83,17 +82,15 @@ public OnPluginStart()
 	RegConsoleCmd("sm_delete", Command_Delete);
 	RegConsoleCmd("sm_record", Command_PersonalRecord);
 	RegConsoleCmd("sm_reloadcache", Command_ReloadCache);
+	
 	RegAdminCmd("sm_deleterecord_all", Command_DeleteRecord_All, ADMFLAG_RCON, "sm_deleterecord_all STEAM_ID");
 	RegAdminCmd("sm_deleterecord", Command_DeleteRecord, ADMFLAG_RCON, "sm_deleterecord STEAM_ID");
 	
-	g_showJumpsc = CreateConVar("timer_showjumps", "1", "Whether or not players will see jumps in menus.");
+	g_showJumpCvar = CreateConVar("timer_showjumps", "1", "Whether or not jumps will be shown in some of the WR menus.");
+	HookConVarChange(g_showJumpCvar, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-worldrecord");
 	
-	HookConVarChange(g_showJumpsc, Action_OnSettingsChange);
-	
-	g_showjumps = GetConVarBool(g_showJumpsc);
-
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
 	{
@@ -112,12 +109,6 @@ public OnLibraryAdded(const String:name[])
 	{
 		g_timerPhysics = true;
 	}
-	
-	else if (StrEqual(name, "timer-logging"))
-	{
-		g_timerLogging = true;
-	}
-
 	else if (StrEqual(name, "updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -133,12 +124,7 @@ public OnLibraryRemoved(const String:name[])
 	else if (StrEqual(name, "adminmenu"))
 	{
 		hTopMenu = INVALID_HANDLE;
-	}	
-	else if (StrEqual(name, "timer-logging"))
-	{
-		g_timerLogging = false;
 	}
-
 }
 
 public OnMapStart()
@@ -149,10 +135,9 @@ public OnMapStart()
 
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
-	if (cvar == g_showJumpsc)
-		g_showjumps = bool:StringToInt(newvalue);			
+	if (cvar == g_showJumpCvar)
+		g_showJumps = bool:StringToInt(newvalue);			
 }
-
 
 public Action:OnClientCommand(client, args)
 {
@@ -170,15 +155,6 @@ public Action:OnClientCommand(client, args)
 
 public Action:Command_WorldRecord(client, args)
 {
-	/*
-	decl String:map[32];
-	
-	if (args == 0)
-		GetCurrentMap(map, sizeof(map));
-	else if (args == 1)
-		GetCmdArg(1, map, sizeof(map));
-	*/
-	
 	if (g_timerPhysics)
 		CreateDifficultyMenu(client);
 	else
@@ -247,7 +223,7 @@ public Action:Command_DeleteRecord_All(client, args)
 {
 	if (args < 1)
 	{
-		ReplyToCommand(client, "[Timer] Usage: sm_deleterecord_all STEAM_ID");
+		ReplyToCommand(client, "Usage: sm_deleterecord_all <steamid>");
 		return Plugin_Handled;
 	}
 
@@ -266,7 +242,7 @@ public Action:Command_DeleteRecord(client, args)
 {	
 	if (args < 1)
 	{
-		ReplyToCommand(client, "[Timer] Usage: sm_deleterecord STEAM_ID");
+		ReplyToCommand(client, "Usage: sm_deleterecord <steamid>");
 		return Plugin_Handled;
 	}
 	
@@ -281,22 +257,16 @@ public Action:Command_DeleteRecord(client, args)
 	return Plugin_Handled;
 }
 
-
 public DeleteRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on DeleteRecord: %s", error);
 		return;
 	}
 
 	RefreshCache();
-	CloseHandle(hndl);
 }
-
 
 LoadDifficulties()
 {
@@ -421,16 +391,15 @@ DisplaySelectPlayerMenu(client)
 	new items = 0; 
 
 	for (new cache = 0; cache < g_cacheCount; cache++)
-	{			
+	{
+		if (g_cache[cache][Ignored])
+			continue;
+		
 		decl String:text[92];
-		if(g_showjumps)
-		{
-			Format(text, sizeof(text), "%s - %s (%d Jumps)", g_cache[cache][Name], g_cache[cache][TimeString], g_cache[cache][Jumps]);
-		}
-		else
-		{
-			Format(text, sizeof(text), "%s - %s", g_cache[cache][Name], g_cache[cache][TimeString]);
-		}
+		Format(text, sizeof(text), "%s - %s", g_cache[cache][Name], g_cache[cache][TimeString]);
+		
+		if (g_showJumps)
+			Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Jumps], "Jumps", client);
 
 		AddMenuItem(menu, g_cache[cache][Auth], text);
 		items++;
@@ -438,12 +407,11 @@ DisplaySelectPlayerMenu(client)
 
 	if (items == 0)
 	{
-		CloseHandle(menu);		
+		CloseHandle(menu);
+		return;
 	}
-	else
-	{
-		DisplayMenu(menu, client, MENU_TIME_FOREVER);
-	}
+
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
 public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
@@ -462,6 +430,12 @@ public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
 		Format(query, sizeof(query), "DELETE FROM `round` WHERE auth = '%s' AND map = '%s'", info, g_currentMap);
 
 		SQL_TQuery(g_hSQL, DeletePlayersRecordCallback, query, param1, DBPrio_Normal);
+		
+		for (new cache = 0; cache < g_cacheCount; cache++)
+		{
+			if (StrEqual(g_cache[cache][Auth], info))
+				g_cache[cache][Ignored] = true;
+		}
 	}
 }
 
@@ -469,15 +443,11 @@ public DeletePlayersRecordCallback(Handle:owner, Handle:hndl, const String:error
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on DeletePlayerRecord: %s", error);
 		return;
 	}
-
+	
 	DisplaySelectPlayerMenu(param1);
-	CloseHandle(hndl);
 }
 
 
@@ -493,15 +463,11 @@ public DeleteMapRecordsCallback(Handle:owner, Handle:hndl, const String:error[],
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on DeleteMapRecord: %s", error);
 		return;
 	}
 
 	RefreshCache();
-	CloseHandle(hndl);
 }
 
 RefreshCache()
@@ -517,24 +483,21 @@ RefreshCache()
 	{	
 		decl String:query[384];
 		Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
-		// PrintToServer(query);
+		
 		SQL_TQuery(g_hSQL, RefreshCacheCallback, query, _, DBPrio_Normal);
 	}
 }
 
 public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
 {
-	g_cacheCount = 0;
-	
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on RefreshCache: %s", error);
 		return;
 	}
 	
+	g_cacheCount = 0;
+		
 	while (SQL_FetchRow(hndl))
 	{
 		g_cache[g_cacheCount][Id] = SQL_FetchInt(hndl, 0);
@@ -543,12 +506,11 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 		g_cache[g_cacheCount][Jumps] = SQL_FetchInt(hndl, 3);
 		g_cache[g_cacheCount][RecordPhysicsDifficulty] = SQL_FetchInt(hndl, 4);
 		SQL_FetchString(hndl, 5, g_cache[g_cacheCount][Name], 32);
-			
+		g_cache[g_cacheCount][Ignored] = false;
+		
 		g_cacheCount++;
 	}
-	
-	CloseHandle(hndl);
-	
+		
 	g_cacheLoaded = true;
 }
 
@@ -565,10 +527,7 @@ ConnectSQL(bool:refreshCache)
 	}
     else
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
-		}
+		Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
 	}
 }
 
@@ -576,23 +535,17 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 {
 	if (g_reconnectCounter >= 5)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
-		}
+		Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
 		return;
 	}
 
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
-		}
+		Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
 		
 		g_reconnectCounter++;
 		ConnectSQL(data);
-
+		
 		return;
 	}
 
@@ -603,7 +556,6 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		SQL_FastQuery(hndl, "SET NAMES 'utf8'");
 
 	g_hSQL = CloneHandle(hndl);
-	CloseHandle(hndl);
 
 	g_reconnectCounter = 1;
 
@@ -675,14 +627,11 @@ CreateWRMenu(client, difficulty)
 			IntToString(g_cache[cache][Id], id, sizeof(id));
 			
 			decl String:text[92];
-			if(g_showjumps)
-			{
-				Format(text, sizeof(text), "%s - %s (%d Jumps)", g_cache[cache][Name], g_cache[cache][TimeString], g_cache[cache][Jumps]);
-			}
-			else
-			{
-				Format(text, sizeof(text), "%s - %s", g_cache[cache][Name], g_cache[cache][TimeString]);
-			}
+			Format(text, sizeof(text), "%s - %s", g_cache[cache][Name], g_cache[cache][TimeString]);
+			
+			if (g_showJumps)
+				Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Jumps], "Jumps", client);
+			
 			AddMenuItem(menu, id, text);
 			items++;
 		}
@@ -752,7 +701,7 @@ CreatePlayerInfoMenu(client, id, bool:back)
 			Format(text, sizeof(text), "%T: %s", "Time", client, g_cache[cache][TimeString]);
 			AddMenuItem(menu, difficulty, text);
 			
-			if(g_showjumps)
+			if (g_showJumps)
 			{
 				Format(text, sizeof(text), "%T: %d", "Jumps", client, g_cache[cache][Jumps]);
 				AddMenuItem(menu, difficulty, text);
@@ -824,10 +773,7 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 {	
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on CreateDeleteMenu: %s", error);
 		return;
 	}
 
@@ -862,20 +808,15 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 			Timer_GetDifficultyName(SQL_FetchInt(hndl, 3), difficulty, sizeof(difficulty));
 
 		decl String:value[92];
-		if(g_showjumps)
-		{
-			Format(value, sizeof(value), "%s %s, %T: %d", time, difficulty, "Jumps", client, SQL_FetchInt(hndl, 2));
-		}
-		else
-		{
-			Format(value, sizeof(value), "%s %s", time, difficulty);
-		}
+		Format(value, sizeof(value), "%s %s", time, difficulty);
+		
+		if (g_showJumps)
+			Format(value, sizeof(value), "%s %T: %d", value, "Jumps", client, SQL_FetchInt(hndl, 2));
+			
 		AddMenuItem(menu, id, value);
 	}
 
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
-	
-	CloseHandle(hndl);
 }
 
 public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
@@ -901,15 +842,11 @@ public DeleteRecordCallback(Handle:owner, Handle:hndl, const String:error[], any
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on DeleteRecord: %s", error);
 		return;
 	}
 
 	CreateDeleteMenu(client, g_deleteMenuSelection[client]);
-	CloseHandle(hndl);
 }
 
 public Native_ForceReloadWorldRecordCache(Handle:plugin, numParams)

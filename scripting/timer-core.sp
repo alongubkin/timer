@@ -1,13 +1,14 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <loghelper>
-#include <smlib>
+#include <sdktools>
+#include <smlib/arrays>
+
 #include <timer>
+#include <timer-logging>
 
 #undef REQUIRE_PLUGIN
 #include <timer-physics>
-#include <timer-logging>
 #include <updater>
 
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-core.txt"
@@ -63,7 +64,6 @@ new bool:g_pauseResumeEnabled = true;
 new bool:g_showjumps = true;
 
 new bool:g_timerPhysics = false;
-new bool:g_timerLogging = false;
 new g_iVelocity;
 
 public Plugin:myinfo =
@@ -83,9 +83,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	CreateNative("Timer_Stop", Native_TimerStop);
 	CreateNative("Timer_Restart", Native_TimerRestart);
 	CreateNative("Timer_GetBestRound", Native_GetBestRound);
-	// CreateNative("Timer_GetRoundById", Native_GetRoundById);
 	CreateNative("Timer_GetClientTimer", Native_GetClientTimer);
-	// CreateNative("Timer_GetMapDifficulty", Native_GetMapDifficulty);
 	CreateNative("Timer_FinishRound", Native_FinishRound);
 	CreateNative("Timer_ForceReloadBestRoundCache", Native_ForceReloadBestRoundCache);
 
@@ -102,7 +100,6 @@ public OnPluginStart()
 
 	g_iVelocity = FindSendPropInfo("CBasePlayer", "m_vecVelocity[0]");
 	g_timerPhysics = LibraryExists("timer-physics");
-	g_timerLogging = LibraryExists("timer-logging");
 	
 	LoadTranslations("timer.phrases");
 	
@@ -122,17 +119,12 @@ public OnPluginStart()
 	g_pauseResumeEnabledCvar = CreateConVar("timer_pauseresume_enabled", "1", "Whether or not players can resume or pause their timers.");
 	g_showJumpsInMsg = CreateConVar("timer_showjumpsinfinishmessage", "1", "Whether or not players will see jumps in finish message.");
 	
-	AutoExecConfig(true, "timer-core");
-	
 	HookConVarChange(g_restartEnabledCvar, Action_OnSettingsChange);
 	HookConVarChange(g_stopEnabledCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_pauseResumeEnabledCvar, Action_OnSettingsChange);
 	HookConVarChange(g_showJumpsInMsg, Action_OnSettingsChange);
 	
-	g_restartEnabled     = GetConVarBool(g_restartEnabledCvar);
-	g_stopEnabled        = GetConVarBool(g_stopEnabledCvar);
-	g_pauseResumeEnabled = GetConVarBool(g_pauseResumeEnabledCvar);
-	g_showjumps          = GetConVarBool(g_showJumpsInMsg);
+	AutoExecConfig(true, "timer-core");
 	
 	if (LibraryExists("updater"))
 	{
@@ -146,12 +138,6 @@ public OnLibraryAdded(const String:name[])
 	{
 		g_timerPhysics = true;
 	}
-	
-	else if (StrEqual(name, "timer-logging"))
-	{
-		g_timerLogging = true;
-	}
-
 	else if (StrEqual(name, "updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -163,11 +149,6 @@ public OnLibraryRemoved(const String:name[])
 	if (StrEqual(name, "timer-physics"))
 	{
 		g_timerPhysics = false;
-	}
-	
-	else if (StrEqual(name, "timer-logging"))
-	{
-		g_timerLogging = false;
 	}
 }
 
@@ -358,7 +339,7 @@ bool:ResumeTimer(client)
 
 bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 {
-	if (IsValidPlayer(client))
+	if (IsClientInGame(client))
 	{
 		if (g_bestTimeCache[client][IsCached])
 		{			
@@ -428,7 +409,7 @@ ClearClientCache(client)
 
 FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
 {
-	if (IsValidPlayer(client))
+	if (IsClientInGame(client))
 	{
 		new Float:LastTime;
 		new LastJumps;
@@ -516,15 +497,11 @@ public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:
 {
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on FinishRound: %s", error);
 		return;
 	}
 
 	g_bestTimeCache[client][IsCached] = false;
-	CloseHandle(hndl);
 }
 
 Float:CalculateTime(client)
@@ -548,10 +525,7 @@ ConnectSQL()
 	}
     else
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
-		}
+		Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
 	}
 }
 
@@ -559,19 +533,13 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 {
 	if (g_reconnectCounter >= 5)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
-		}
+		Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
 		return;
 	}
 
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
-		}
+		Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
 		
 		g_reconnectCounter++;
 		ConnectSQL();
@@ -594,8 +562,6 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` INTEGER PRIMARY KEY, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` INTEGER NOT NULL, `physicsdifficulty` INTEGER NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` INTEGER NOT NULL);");
 	}
 	
-	CloseHandle(hndl);
-	
 	g_reconnectCounter = 1;
 }
 
@@ -603,11 +569,8 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 {	
 	if (owner == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
-
+		Timer_LogError(error);
+		
 		g_reconnectCounter++;
 		ConnectSQL();
 
@@ -616,14 +579,9 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	
 	if (hndl == INVALID_HANDLE)
 	{
-		if(g_timerLogging)
-		{
-			Timer_LogError(error);
-		}
+		Timer_LogError("SQL Error on CreateSQLTable: %s", error);
 		return;
 	}
-
-	CloseHandle(hndl);
 }
 
 public Native_TimerStart(Handle:plugin, numParams)

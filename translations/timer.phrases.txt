@@ -138,27 +138,27 @@
 
 	"Delete Map Records"
 	{
-		"en"			"Delete All Records From Current Map"
+		"en"			"Delete all records of this map"
 	}
 	
 	"Delete All Map Zones"
 	{
-		"en"			"Delete All Zones From Current Map"
+		"en"			"Delete all map zones"
 	}
 
 	"Delete Player Record"
 	{
-		"en"			"Delete Player's Record From Current Map"
+		"en"			"Delete record"
 	}
 
 	"Add Map Zone"
 	{
-		"en"			"Add Map Zone"
+		"en"			"Add map zone"
 	}
 
 	"Delete Map Zone"
 	{
-		"en"			"Delete Map Zone"
+		"en"			"Delete map zone"
 	}
 	
 	"Select zone type"
