@@ -29,7 +29,7 @@ new g_reconnectCounter = 0;
 new g_checkpoints[2048][Checkpoint];
 new g_checkpointCount = 0;
 
-new bool:g_loadingCheckpoints = false;
+//new bool:g_loadingCheckpoints = false;
 
 new g_currentCheckpoint[MAXPLAYERS+1];
 
@@ -78,7 +78,6 @@ public OnLibraryRemoved(const String:name[])
 
 }
 
-
 public OnMapStart()
 {
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
@@ -100,25 +99,37 @@ public Action:ClearCommand(client, args)
 
 public Action:NextCommand(client, args)
 {
-	GoToCheckpoint(client, g_currentCheckpoint[client] + 1);
+	if(IsPlayerAlive(client))
+	{
+		GoToCheckpoint(client, g_currentCheckpoint[client] + 1);
+	}
 	return Plugin_Handled;
 }
 
 public Action:PrevCommand(client, args)
 {
-	GoToCheckpoint(client, g_currentCheckpoint[client] - 1);
+	if(IsPlayerAlive(client))
+	{
+		GoToCheckpoint(client, g_currentCheckpoint[client] - 1);
+	}
 	return Plugin_Handled;
 }
 
 public Action:SaveCommand(client, args)
 {
-	SaveCheckpoint(client);
+	if(IsPlayerAlive(client))
+	{
+		SaveCheckpoint(client);
+	}
 	return Plugin_Handled;
 }
 
 public Action:TeleCommand(client, args)
 {
-	TeleportToLastCheckpoint(client);
+	if(IsPlayerAlive(client))
+	{
+		TeleportToLastCheckpoint(client);
+	}
 	return Plugin_Handled;
 }
 
@@ -127,7 +138,7 @@ LoadCheckpoints()
 	/*if (g_loadingCheckpoints)
 		return;*/
 	
-	g_loadingCheckpoints = true;
+	//g_loadingCheckpoints = true;
 
 	if (g_hSQL == INVALID_HANDLE)
 	{
@@ -173,7 +184,7 @@ public LoadCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[], 
 	
 	CloseHandle(hndl);
 	
-	g_loadingCheckpoints = false;
+	//g_loadingCheckpoints = false;
 }
 
 ConnectSQL(bool:refreshCache)
@@ -412,6 +423,7 @@ GoToCheckpoint(client, order)
 
 	if (cp == -1)
 	{
+		PrintToChat(client, "You have no checkpoints saved.");
 		return;
 	}
 
