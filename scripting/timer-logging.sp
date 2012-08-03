@@ -1,6 +1,11 @@
+#include <timer>
 #include <timer-logging>
 
+#undef REQUIRE_PLUGIN
+#include <updater>
+
 #define PLUGIN_NAME_RESERVED_LENGTH 33
+#define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-logging.txt"
 
 static Handle:g_log_file = INVALID_HANDLE;
 static const String:g_log_level_names[][] = { "     ", "ERROR", "WARN ", "INFO ", "DEBUG", "TRACE" };
@@ -8,6 +13,31 @@ static Timer_LogLevel:g_log_level = Timer_LogLevelNone;
 static Timer_LogLevel:g_log_flush_level = Timer_LogLevelNone;
 static bool:g_log_errors_to_SM = false;
 static String:g_current_date[20];
+
+public Plugin:myinfo =
+{
+    name        = "[Timer] Logging",
+    author      = "alongub | Glite",
+    description = "Logging component for [Timer]",
+    version     = PL_VERSION,
+    url         = "https://github.com/alongubkin/timer"
+};
+
+public OnPluginStart() 
+{
+	LoadConfig();
+	
+	FormatTime(g_current_date, sizeof(g_current_date), "%Y-%m-%d", GetTime());
+	CreateTimer(1.0, OnCheckDate, INVALID_HANDLE, TIMER_REPEAT);
+	
+	if (g_log_level > Timer_LogLevelNone)
+		CreateLogFileOrTurnOffLogging();
+		
+	if (LibraryExists("updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}			
+}
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max) 
 {
@@ -24,13 +54,12 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	return APLRes_Success;
 }
 
-public OnPluginStart() 
+public OnLibraryAdded(const String:name[])
 {
-	LoadConfig();
-	FormatTime(g_current_date, sizeof(g_current_date), "%Y-%m-%d", GetTime());
-	CreateTimer(1.0, OnCheckDate, INVALID_HANDLE, TIMER_REPEAT);
-	if (g_log_level > Timer_LogLevelNone)
-		CreateLogFileOrTurnOffLogging();
+	if (StrEqual(name, "updater"))
+	{
+		Updater_AddPlugin(UPDATE_URL);
+	}	
 }
 
 LoadConfig() 
