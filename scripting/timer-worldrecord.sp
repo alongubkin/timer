@@ -89,6 +89,8 @@ public OnPluginStart()
 	g_showJumpCvar = CreateConVar("timer_showjumps", "1", "Whether or not jumps will be shown in some of the WR menus.");
 	HookConVarChange(g_showJumpCvar, Action_OnSettingsChange);
 	
+	g_showJumps = GetConVarBool(g_showJumpCvar);
+	
 	AutoExecConfig(true, "timer-worldrecord");
 	
 	new Handle:topmenu;

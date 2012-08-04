@@ -124,6 +124,11 @@ public OnPluginStart()
 	HookConVarChange(g_pauseResumeEnabledCvar, Action_OnSettingsChange);
 	HookConVarChange(g_showJumpsInMsg, Action_OnSettingsChange);
 	
+	g_restartEnabled     = GetConVarBool(g_restartEnabledCvar);
+	g_stopEnabled        = GetConVarBool(g_stopEnabledCvar);
+	g_pauseResumeEnabled = GetConVarBool(g_pauseResumeEnabledCvar);
+	g_showjumps          = GetConVarBool(g_showJumpsInMsg);
+	
 	AutoExecConfig(true, "timer-core");
 	
 	if (LibraryExists("updater"))

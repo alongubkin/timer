@@ -63,6 +63,8 @@ public OnPluginStart()
 	g_joinTeamDifficultyCvar = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
 	HookConVarChange(g_joinTeamDifficultyCvar, Action_OnSettingsChange);
 	
+	g_joinTeamDifficulty = GetConVarBool(g_joinTeamDifficultyCvar);
+	
 	AutoExecConfig(true, "timer-physics");
 	
 	if (LibraryExists("updater"))
