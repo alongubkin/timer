@@ -61,11 +61,17 @@ Allows players to view the records for the current map using the **/wr** command
 
 It also provides the **/record** and the **/record <name>** commands to view your or another player's record for the current map. In addition, it provides the **/delete** command, that allows you to delete any of your records in this map.
 
+
 ### HUD (timer-hud.smx)
 
 The HUD module adds a constant hint message for players, showing them their timers. Usually, it shows the time since the timer started, jumps, speed and best times for this map. If the physics module is enabled, it also shows them their current difficulty.
 
 If you're currently spectating someone else, it will show you his timer.
+
+
+### Logging (timer-logging.smx)
+
+The logging module has 5 different levels of messages: trace, debug, info, warning and error. It logs to *sourcemod/logs/timer-<date>.txt*. You can configure the minimum type of messages that you want in your log (for example: warning and errors only), in *configs/timer/logging.cfg*. 
 
 
 Installation
