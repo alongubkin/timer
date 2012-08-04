@@ -11,6 +11,7 @@ enum PhysicsDifficulty
     Float:Stamina,
     Float:Gravity,
     bool:PreventAD,
+    bool:PreventBack,
     bool:Auto
 }
 

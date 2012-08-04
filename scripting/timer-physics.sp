@@ -23,7 +23,8 @@ new g_defaultDifficulty = 0;
 new Float:g_stamina[MAXPLAYERS+1];
 new g_clientDifficulty[MAXPLAYERS+1];
 
-new bool:g_prevent[MAXPLAYERS+1];
+new bool:g_preventAD[MAXPLAYERS+1];
+new bool:g_preventBack[MAXPLAYERS+1];
 new bool:g_auto[MAXPLAYERS+1];
 
 public Plugin:myinfo =
@@ -161,6 +162,7 @@ LoadDifficulties()
 		g_difficulties[g_difficultyCount][Stamina] = KvGetFloat(kv, "stamina", -1.0);
 		g_difficulties[g_difficultyCount][Gravity] = KvGetFloat(kv, "gravity", 1.0);
 		g_difficulties[g_difficultyCount][PreventAD] = bool:KvGetNum(kv, "prevent_ad", 0);
+		g_difficulties[g_difficultyCount][PreventBack] = bool:KvGetNum(kv, "prevent_back", 0);
 		g_difficulties[g_difficultyCount][Auto] = bool:KvGetNum(kv, "auto", 0);
         
 		if (g_difficulties[g_difficultyCount][IsDefault])
@@ -223,19 +225,29 @@ ApplyDifficulty(client)
 
 	SetEntityGravity(client, g_difficulties[difficulty][Gravity]);
 	g_stamina[client] = g_difficulties[difficulty][Stamina];
-	g_prevent[client] = g_difficulties[difficulty][PreventAD];
+	g_preventAD[client] = g_difficulties[difficulty][PreventAD];
+	g_preventBack[client] = g_difficulties[difficulty][PreventBack];
 	g_auto[client] = g_difficulties[difficulty][Auto];
 }
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {	
-	if (g_prevent[client] && IsPlayerAlive(client))
+	if (g_preventAD[client] && IsPlayerAlive(client))
     {
         if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT))
 		{
 			return Plugin_Handled;
 		}
     }
+	
+	if (g_preventBack[client] && IsPlayerAlive(client))
+    {
+        if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_BACK))
+		{
+			return Plugin_Handled;
+		}
+    }
+
 	
 	if (g_auto[client] && IsPlayerAlive(client))
     {
