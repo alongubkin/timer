@@ -52,7 +52,7 @@ public OnClientPutInServer(client)
 
 public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damagetype)
 {
-	if(attacker == 0 && attacker == client && IsPlayerAlive(client))
+	if(attacker == 0 && IsPlayerAlive(client))
 	{
 		return Plugin_Handled;
 	}
