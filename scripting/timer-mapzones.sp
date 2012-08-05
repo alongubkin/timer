@@ -195,7 +195,7 @@ AddMapZone(String:map[], MapZoneType:type, Float:point1[3], Float:point2[3])
 	
 	if (type == Start || type == End)
 	{
-		decl String:deleteQuery[128];
+		decl String:deleteQuery[255];
 		Format(deleteQuery, sizeof(deleteQuery), "DELETE FROM mapzone WHERE map = '%s' AND type = %d;", map, type);
 
 		SQL_TQuery(g_hSQL, AddMapZoneCallback, deleteQuery, _, DBPrio_High);	
@@ -217,7 +217,7 @@ public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 
 LoadMapZones()
 {
-	decl String:query[128];
+	decl String:query[255];
 	Format(query, sizeof(query), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_currentMap);
 	
 	SQL_TQuery(g_hSQL, LoadMapZonesCallback, query, _, DBPrio_Normal);	
