@@ -1,0 +1,197 @@
+"Phrases"
+{
+	"Round Finish"
+	{
+		"de"			"{1} beendete die Map in {2}({3}) mit {4} Sprьngen."
+	}
+	
+	"Round Finish Difficulty"
+	{
+		"de"			 "{1} benndete die Map in {2}({3}) mit {5} Sprьngen in {4}."
+	}
+	
+	"Round Finish Without Jumps"
+	{
+		"de"			"{1} beendete die Map in {2}({3})."
+	}
+	
+	"Round Finish Difficulty Without Jumps"
+	{
+		"de"			 "{1} beendete die Map in {2}({3}) in {4}."
+	}
+	
+	"Point Select Panel"
+	{
+		"de"			"Stelle dich bitte in den {1} Punkt der Zone,\nund klicke deinen ATTACK2 Mausknopf."
+	}
+	
+	"Cancel"
+	{
+		"de"			"Abbrechen"
+	}
+	
+	"Please wait"
+	{
+		"de"			"Bitte warte..."
+	}
+
+	"FIRST"
+	{
+		"de"			"ERSTE"
+	}
+	
+	"SECOND"
+	{
+		"de"			"ZWEITE"
+	}
+	
+	"Map Zone Delete"
+	{
+		"de"			"Map Zone erfolgreich gelцscht."
+	}
+
+	"Time"
+	{
+		"de"			"Zeit"
+	}
+	
+	"Jumps"
+	{
+		"de"			"Spruenge"
+	}
+	
+	"HUD Speed"
+	{
+		"de"			"Geschwindigkeit"
+	}
+
+	"HUD Best Times"
+	{
+		"de"			"Beste Zeiten"
+	}
+	
+	"HUD Difficulty"
+	{
+		"de"			"Schwierigkeit"
+	}
+	
+	"No target"
+	{
+		"de"			"Kein Ziel gefunden."
+	}
+	
+	"Physics Difficulty"
+	{
+		"de"			"Physik Schwierigkeit"
+	}
+	
+	"World Record Menu Title"
+	{
+		"de"			"Weltrekorde fьr {1}"
+	}
+	
+	"World Record Loading"
+	{
+		"de"			"Weltrekord lдdt noch; versuche es gleich nochmal."
+	}
+	
+	"No Records"
+	{
+		"de"			"Sorry, es sind keine Rekorde vorhanden."
+	}
+	
+	"No Difficulty Records"
+	{
+		"de"			"Sorry, es sind keine Rekorde in dieser Schwierigkeitsstufe vorhanden."
+	}
+	
+	"Record Info"
+	{
+		"de"			"Rekord Info"
+	}
+	
+	"Player Name"
+	{
+		"de"			"Spieler Name"
+	}
+	
+	"Rank"
+	{
+		"de"			"Rang"
+	}
+
+	"Toggle visibilty"
+	{
+		"de"			"Spieler Sichtbarkeit gewechselt."
+	}
+
+	"Timer Management"
+	{
+		"de"			"Timer Management"
+	}
+
+	"Delete Map Records"
+	{
+		"de"			"Loesche alle Rekorde dieser Map"
+	}
+	
+	"Delete All Map Zones"
+	{
+		"de"			"Loesche alle Map Zonen"
+	}
+
+	"Delete Player Record"
+	{
+		"de"			"Loesche einen Rekord"
+	}
+
+	"Add Map Zone"
+	{
+		"de"			"Fuege eine Map Zone hinzu"
+	}
+
+	"Delete Map Zone"
+	{
+		"de"			"Loesche eine Map Zone"
+	}
+	
+	"Select zone type"
+	{
+		"de"			"Waehle Zonen-Typ:"
+	}
+	
+	"Start"
+	{
+		"de"			"Start"
+	}
+	
+	"End"
+	{
+		"de"			"Ende"
+	}
+	
+	"Glitch1"
+	{
+		"de"			"Cheat-Zone 1 - Timer stoppen"
+	}
+	
+	"Glitch2"
+	{
+		"de"			"Cheat-Zone 2 -  Timer neustarten"
+	}
+	
+	"Glitch3"
+	{
+		"de"			"Cheat-Zone 3 - Spieler respawnen"
+	}
+	
+	"Choose Player"
+	{
+		"de"			"Waehle einen Spieler:"
+	}
+	
+	"Delete Records"
+	{
+		"de"			"Loesche Rekorde:"
+	}
+}
