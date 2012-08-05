@@ -352,7 +352,7 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 		decl String:auth[32];
 		GetClientAuthString(client, auth, sizeof(auth));
 		
-		decl String:query[128];
+		decl String:query[255], String:error[255];
 		Format(query, sizeof(query), "SELECT id, map, auth, time, jumps FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", auth, map);
 		
 		SQL_LockDatabase(g_hSQL);
@@ -361,6 +361,8 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 		
 		if (hQuery == INVALID_HANDLE)
 		{
+			SQL_GetError(g_hSQL, error, sizeof(error));
+			Timer_LogError("SQL Error on GetBestRound: %s", error);
 			SQL_UnlockDatabase(g_hSQL);
 			return false;
 		}
