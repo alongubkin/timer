@@ -76,9 +76,9 @@ public OnPluginStart()
 	HookConVarChange(g_endMapZoneColor, Action_OnSettingsChange);	
 	HookConVarChange(g_startStopPrespeed, Action_OnSettingsChange);
 	
-	g_stopPrespeed = GetConVarBool(g_startStopPrespeed);
-	
 	AutoExecConfig(true, "timer-mapzones");
+	
+	g_stopPrespeed = GetConVarBool(g_startStopPrespeed);
 	
 	LoadTranslations("timer.phrases");
 	
