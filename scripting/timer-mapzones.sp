@@ -678,7 +678,7 @@ public Action:PlayerTracker(Handle:timer)
 						Timer_Stop(client, false);							
 						Timer_Start(client);
 						if (g_stopPrespeed)
-							CheckVelocity(client);
+							StopPrespeed(client);
 					}
 					else if (g_mapZones[zone][Type] == End)
 					{
@@ -869,16 +869,30 @@ ParseColor(const String:color[], result[])
 		result[i] = StringToInt(buffers[i]);
 }
 
-CheckVelocity(client)
+StopPrespeed(client)
 {
 	new Float:ClientOrigin[3], Float:fVelocity[3];
+	new String:Weapon[32];
 	
 	GetClientAbsOrigin(client, ClientOrigin);
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", fVelocity);
+	GetClientWeapon(client, Weapon, sizeof(Weapon));
 	new speed = RoundToFloor(SquareRoot(Pow(fVelocity[0],2.0)+Pow(fVelocity[1],2.0)));
-	if	(speed > 289)
+	if (StrEqual(Weapon, "weapon_scout"))
 	{
-		fVelocity[0] = fVelocity[1] = fVelocity[2] = 0.0;
-		TeleportEntity(client, ClientOrigin, NULL_VECTOR, fVelocity);
-	}		
+		if (speed > 289)
+		{
+			fVelocity[0] = fVelocity[1] = fVelocity[2] = 0.0;
+			TeleportEntity(client, ClientOrigin, NULL_VECTOR, fVelocity);
+		}	
+	}
+	else
+	{
+		if (speed > 279)
+		{
+			fVelocity[0] = fVelocity[1] = fVelocity[2] = 0.0;
+			TeleportEntity(client, ClientOrigin, NULL_VECTOR, fVelocity);
+		}	
+
+	}
 }
