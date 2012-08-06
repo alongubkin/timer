@@ -187,7 +187,7 @@ public Action:Event_StopTimer(Handle:event, const String:name[], bool:dontBroadc
 
 public Action:Command_Restart(client, args)
 {
-	if (g_restartEnabled && IsPlayerAlive(client))
+	if (g_restartEnabled)
 		RestartTimer(client);
 	
 	return Plugin_Handled;
@@ -195,7 +195,7 @@ public Action:Command_Restart(client, args)
 
 public Action:Command_Stop(client, args)
 {
-	if (g_stopEnabled && IsPlayerAlive(client))
+	if (g_stopEnabled)
 		StopTimer(client);
 		
 	return Plugin_Handled;
@@ -203,7 +203,7 @@ public Action:Command_Stop(client, args)
 
 public Action:Command_Pause(client, args)
 {
-	if (g_pauseResumeEnabled && IsPlayerAlive(client))
+	if (g_pauseResumeEnabled)
 		PauseTimer(client);
 		
 	return Plugin_Handled;
@@ -211,7 +211,7 @@ public Action:Command_Pause(client, args)
 
 public Action:Command_Resume(client, args)
 {
-	if (g_pauseResumeEnabled && IsPlayerAlive(client))
+	if (g_pauseResumeEnabled)
 		ResumeTimer(client);
 		
 	return Plugin_Handled;
@@ -239,25 +239,33 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
  */
 bool:StartTimer(client)
 {
-	g_timers[client][Enabled] = true;
-	g_timers[client][StartTime] = GetGameTime();
-	g_timers[client][EndTime] = -1.0;
-	g_timers[client][Jumps] = 0;
-	g_timers[client][IsPaused] = false;
-	g_timers[client][PauseStartTime] = 0.0;
-	g_timers[client][PauseTotalTime] = 0.0;
-
-	QueryClientConVar(client, "fps_max", FpsMaxCallback, client);
-
-	Call_StartForward(g_timerStartedForward);
-	Call_PushCell(client);
-	Call_Finish();
-
-	return true;
+	if (IsPlayerAlive(client))
+	{
+		g_timers[client][Enabled] = true;
+		g_timers[client][StartTime] = GetGameTime();
+		g_timers[client][EndTime] = -1.0;
+		g_timers[client][Jumps] = 0;
+		g_timers[client][IsPaused] = false;
+		g_timers[client][PauseStartTime] = 0.0;
+		g_timers[client][PauseTotalTime] = 0.0;
+		
+		QueryClientConVar(client, "fps_max", FpsMaxCallback, client);
+		
+		Call_StartForward(g_timerStartedForward);
+		Call_PushCell(client);
+		Call_Finish();
+		
+		return true;
+	}
+	
+	return false;
 }
 
 bool:StopTimer(client, bool:stopPaused = true)
 {
+	if (IsPlayerAlive(client))
+		return false;
+	
 	if (!g_timers[client][Enabled])
 		return false;
 	
@@ -276,58 +284,71 @@ bool:StopTimer(client, bool:stopPaused = true)
 
 bool:RestartTimer(client)
 {
-	StopTimer(client);
+	if (IsPlayerAlive(client))
+	{		
+		Call_StartForward(g_timerRestartForward);
+		Call_PushCell(client);
+		Call_Finish();
+		
+		return StartTimer(client);
+	}
 	
-	Call_StartForward(g_timerRestartForward);
-	Call_PushCell(client);
-	Call_Finish();
-
-	return StartTimer(client);
+	return false;
 }
 
 bool:PauseTimer(client)
 {
-	if (!g_timers[client][Enabled] || g_timers[client][IsPaused])
-		return false;
+	if (IsPlayerAlive(client))
+	{
+		if (!g_timers[client][Enabled] || g_timers[client][IsPaused])
+			return false;
+		
+		g_timers[client][IsPaused] = true;
+		g_timers[client][PauseStartTime] = GetGameTime();
+		
+		new Float:origin[3];
+		GetClientAbsOrigin(client, origin);
+		Array_Copy(origin, g_timers[client][PauseLastOrigin], 3);
+		
+		new Float:angles[3];
+		GetClientAbsAngles(client, angles);
+		Array_Copy(angles, g_timers[client][PauseLastAngles], 3);
+		
+		new Float:velocity[3];
+		GetClientAbsVelocity(client, velocity);
+		Array_Copy(velocity, g_timers[client][PauseLastVelocity], 3);
+		
+		return true;
+	}
 	
-	g_timers[client][IsPaused] = true;
-	g_timers[client][PauseStartTime] = GetGameTime();
-	
-	new Float:origin[3];
-	GetClientAbsOrigin(client, origin);
-	Array_Copy(origin, g_timers[client][PauseLastOrigin], 3);
-
-	new Float:angles[3];
-	GetClientAbsAngles(client, angles);
-	Array_Copy(angles, g_timers[client][PauseLastAngles], 3);
-
-	new Float:velocity[3];
-	GetClientAbsVelocity(client, velocity);
-	Array_Copy(velocity, g_timers[client][PauseLastVelocity], 3);
-
-	return true;
+	return false;
 }
 
 bool:ResumeTimer(client)
 {
-	if (!g_timers[client][Enabled] || !g_timers[client][IsPaused])
-		return false;
-
-	g_timers[client][IsPaused] = false;
-	g_timers[client][PauseTotalTime] += GetGameTime() - g_timers[client][PauseStartTime];
-
-	new Float:origin[3];
-	Array_Copy(g_timers[client][PauseLastOrigin], origin, 3);
-
-	new Float:angles[3];
-	Array_Copy(g_timers[client][PauseLastAngles], angles, 3);
-
-	new Float:velocity[3];
-	Array_Copy(g_timers[client][PauseLastVelocity], velocity, 3);
-
-	TeleportEntity(client, origin, angles, velocity);
-
-	return true;
+	if (IsPlayerAlive(client))
+	{
+		if (!g_timers[client][Enabled] || !g_timers[client][IsPaused])
+			return false;
+		
+		g_timers[client][IsPaused] = false;
+		g_timers[client][PauseTotalTime] += GetGameTime() - g_timers[client][PauseStartTime];
+		
+		new Float:origin[3];
+		Array_Copy(g_timers[client][PauseLastOrigin], origin, 3);
+		
+		new Float:angles[3];
+		Array_Copy(g_timers[client][PauseLastAngles], angles, 3);
+		
+		new Float:velocity[3];
+		Array_Copy(g_timers[client][PauseLastVelocity], velocity, 3);
+		
+		TeleportEntity(client, origin, angles, velocity);
+		
+		return true;
+	}
+	
+	return false;
 }
 
 bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
@@ -404,7 +425,7 @@ ClearClientCache(client)
 
 FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
 {
-	if (IsClientInGame(client))
+	if (IsClientInGame(client) && IsPlayerAlive(client))
 	{
 		new Float:LastTime;
 		new LastJumps;
