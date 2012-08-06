@@ -266,7 +266,7 @@ public OnTimerRestart(client)
 			new Float:center[3];
 			center[0] = (g_mapZones[mapZone][Point1][0] + g_mapZones[mapZone][Point2][0]) / 2.0;
 			center[1] = (g_mapZones[mapZone][Point1][1] + g_mapZones[mapZone][Point2][1]) / 2.0;
-			center[2] = (g_mapZones[mapZone][Point1][2] + g_mapZones[mapZone][Point2][2]) / 2.0;
+			center[2] = ((g_mapZones[mapZone][Point1][2] + g_mapZones[mapZone][Point2][2]) / 2.0) - 40.0;
 			
 			TeleportEntity(client, center, zero, zero);
 
