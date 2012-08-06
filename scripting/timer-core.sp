@@ -166,11 +166,6 @@ public OnMapEnd()
 	ClearCache();
 }
 
-public OnPlayerConnect(client)
-{
-    StartTimer(client);
-}
-
 /**
  * Events
  */
@@ -331,7 +326,7 @@ bool:ResumeTimer(client)
 	Array_Copy(g_timers[client][PauseLastAngles], angles, 3);
 
 	new Float:velocity[3];
-	Array_Copy(g_timers[client][PauseLastVelocity], angles, 3);
+	Array_Copy(g_timers[client][PauseLastVelocity], velocity, 3);
 
 	TeleportEntity(client, origin, angles, velocity);
 
