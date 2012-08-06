@@ -239,9 +239,6 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
  */
 bool:StartTimer(client)
 {
-	if (g_timers[client][Enabled])
-		return false;
-	
 	g_timers[client][Enabled] = true;
 	g_timers[client][StartTime] = GetGameTime();
 	g_timers[client][EndTime] = -1.0;
