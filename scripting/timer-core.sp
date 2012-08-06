@@ -110,6 +110,7 @@ public OnPluginStart()
 	HookEvent("player_disconnect", Event_StopTimer);
 	
 	RegConsoleCmd("sm_restart", Command_Restart);
+	RegConsoleCmd("sm_r", Command_Restart);
 	RegConsoleCmd("sm_stop", Command_Stop);
 	RegConsoleCmd("sm_pause", Command_Pause);
 	RegConsoleCmd("sm_resume", Command_Resume);
