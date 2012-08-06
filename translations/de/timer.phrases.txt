@@ -37,12 +37,12 @@
 
 	"FIRST"
 	{
-		"de"			"ERSTE"
+		"de"			"ERSTEN"
 	}
 	
 	"SECOND"
 	{
-		"de"			"ZWEITE"
+		"de"			"ZWEITEN"
 	}
 	
 	"Map Zone Delete"
