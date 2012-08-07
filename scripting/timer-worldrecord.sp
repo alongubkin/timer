@@ -78,6 +78,8 @@ public OnPluginStart()
 	
 	LoadTranslations("timer.phrases");
 	
+	HookEvent("player_changename", Event_PlayerChangeName);
+	
 	RegConsoleCmd("sm_wr", Command_WorldRecord);
 	RegConsoleCmd("sm_delete", Command_Delete);
 	RegConsoleCmd("sm_record", Command_PersonalRecord);
@@ -132,6 +134,39 @@ public OnMapStart()
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
 	RefreshCache();
 }
+
+public Action:Event_PlayerChangeName(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+	decl String:auth[32];
+	GetClientAuthString(client, auth, sizeof(auth));
+
+	decl String:newname[MAX_NAME_LENGTH];
+	GetEventString(event, "newname", newname, sizeof(newname));
+	
+	decl String:safeName[2 * strlen(newname) + 1];
+	SQL_EscapeString(g_hSQL, newname, safeName, 2 * strlen(newname) + 1);
+
+	decl String:query[256];
+	Format(query, sizeof(query), "UPDATE round SET name = '%s' WHERE auth = '%s';", safeName, auth);
+
+	SQL_TQuery(g_hSQL, ChangeNameCallback, query, _, DBPrio_Normal);
+	
+	return Plugin_Continue;
+}
+
+public ChangeNameCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{
+	if (hndl == INVALID_HANDLE)
+	{
+		Timer_LogError("SQL Error on ChangeName: %s", error);
+		return;
+	}
+	
+	RefreshCache();
+}
+
 
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
