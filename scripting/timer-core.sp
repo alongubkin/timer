@@ -242,6 +242,9 @@ bool:StartTimer(client)
 {
 	if (!IsPlayerAlive(client))
 		return false;
+	
+	if (g_timers[client][Enabled])
+		return false;
 		
 	g_timers[client][Enabled] = true;
 	g_timers[client][StartTime] = GetGameTime();

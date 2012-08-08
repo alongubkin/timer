@@ -674,8 +674,10 @@ public Action:PlayerTracker(Handle:timer)
 				if (IsInsideBox(vec, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
 				{
 					if (g_mapZones[zone][Type] == Start)
-					{						
+					{
+						Timer_Stop(client, false);
 						Timer_Start(client);
+						
 						if (g_stopPrespeed)
 							StopPrespeed(client);
 					}
