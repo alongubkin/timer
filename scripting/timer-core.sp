@@ -417,10 +417,10 @@ ClearClientCache(client)
 FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
 {
 	if (!IsClientInGame(client))
-		return false;
+		return;
 		
 	if (!IsPlayerAlive(client))
-		return false;
+		return;
 		
 	new Float:LastTime;
 	new LastJumps;
