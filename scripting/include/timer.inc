@@ -126,6 +126,15 @@ native Timer_FinishRound(client, const String:map[], Float:time, jumps, physicsD
  */
 native Timer_ForceReloadBestRoundCache();
 
+/**
+ * Finishes a round.
+ *
+ * @param map
+ *
+ * @return Returns total rank.
+ */
+native Timer_GetTotalRank(const String:map[]);
+
 stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precision = true)
 {
 	new t = RoundToFloor(seconds);
@@ -178,4 +187,5 @@ public __pl_timer_SetNTVOptional()
 	MarkNativeAsOptional("Timer_GetMapDifficulty");
 	MarkNativeAsOptional("Timer_FinishRound");
 	MarkNativeAsOptional("Timer_ForceReloadBestRoundCache");
+	MarkNativeAsOptional("Timer_GetTotalRank");
 }
