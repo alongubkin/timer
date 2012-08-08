@@ -240,26 +240,24 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
  */
 bool:StartTimer(client)
 {
-	if (IsPlayerAlive(client))
-	{
-		g_timers[client][Enabled] = true;
-		g_timers[client][StartTime] = GetGameTime();
-		g_timers[client][EndTime] = -1.0;
-		g_timers[client][Jumps] = 0;
-		g_timers[client][IsPaused] = false;
-		g_timers[client][PauseStartTime] = 0.0;
-		g_timers[client][PauseTotalTime] = 0.0;
+	if (!IsPlayerAlive(client))
+		return false;
 		
-		QueryClientConVar(client, "fps_max", FpsMaxCallback, client);
-		
-		Call_StartForward(g_timerStartedForward);
-		Call_PushCell(client);
-		Call_Finish();
-		
-		return true;
-	}
+	g_timers[client][Enabled] = true;
+	g_timers[client][StartTime] = GetGameTime();
+	g_timers[client][EndTime] = -1.0;
+	g_timers[client][Jumps] = 0;
+	g_timers[client][IsPaused] = false;
+	g_timers[client][PauseStartTime] = 0.0;
+	g_timers[client][PauseTotalTime] = 0.0;
 	
-	return false;
+	QueryClientConVar(client, "fps_max", FpsMaxCallback, client);
+	
+	Call_StartForward(g_timerStartedForward);
+	Call_PushCell(client);
+	Call_Finish();
+	
+	return true;
 }
 
 bool:StopTimer(client, bool:stopPaused = true)
@@ -282,130 +280,122 @@ bool:StopTimer(client, bool:stopPaused = true)
 
 bool:RestartTimer(client)
 {
-	if (IsPlayerAlive(client))
-	{		
-		Call_StartForward(g_timerRestartForward);
-		Call_PushCell(client);
-		Call_Finish();
-		
-		return StartTimer(client);
-	}
+	if (!IsPlayerAlive(client))
+		return false;
 	
-	return false;
+	Call_StartForward(g_timerRestartForward);
+	Call_PushCell(client);
+	Call_Finish();
+	
+	return StartTimer(client);
 }
 
 bool:PauseTimer(client)
 {
-	if (IsPlayerAlive(client))
-	{
-		if (!g_timers[client][Enabled] || g_timers[client][IsPaused])
-			return false;
+	if (!IsPlayerAlive(client))
+		return false;
 		
-		g_timers[client][IsPaused] = true;
-		g_timers[client][PauseStartTime] = GetGameTime();
-		
-		new Float:origin[3];
-		GetClientAbsOrigin(client, origin);
-		Array_Copy(origin, g_timers[client][PauseLastOrigin], 3);
-		
-		new Float:angles[3];
-		GetClientAbsAngles(client, angles);
-		Array_Copy(angles, g_timers[client][PauseLastAngles], 3);
-		
-		new Float:velocity[3];
-		GetClientAbsVelocity(client, velocity);
-		Array_Copy(velocity, g_timers[client][PauseLastVelocity], 3);
-		
-		return true;
-	}
+	if (!g_timers[client][Enabled] || g_timers[client][IsPaused])
+		return false;
 	
-	return false;
+	g_timers[client][IsPaused] = true;
+	g_timers[client][PauseStartTime] = GetGameTime();
+	
+	new Float:origin[3];
+	GetClientAbsOrigin(client, origin);
+	Array_Copy(origin, g_timers[client][PauseLastOrigin], 3);
+	
+	new Float:angles[3];
+	GetClientAbsAngles(client, angles);
+	Array_Copy(angles, g_timers[client][PauseLastAngles], 3);
+	
+	new Float:velocity[3];
+	GetClientAbsVelocity(client, velocity);
+	Array_Copy(velocity, g_timers[client][PauseLastVelocity], 3);
+	
+	return true;
 }
 
 bool:ResumeTimer(client)
 {
-	if (IsPlayerAlive(client))
-	{
-		if (!g_timers[client][Enabled] || !g_timers[client][IsPaused])
-			return false;
+	if (!IsPlayerAlive(client))
+		return false;
 		
-		g_timers[client][IsPaused] = false;
-		g_timers[client][PauseTotalTime] += GetGameTime() - g_timers[client][PauseStartTime];
-		
-		new Float:origin[3];
-		Array_Copy(g_timers[client][PauseLastOrigin], origin, 3);
-		
-		new Float:angles[3];
-		Array_Copy(g_timers[client][PauseLastAngles], angles, 3);
-		
-		new Float:velocity[3];
-		Array_Copy(g_timers[client][PauseLastVelocity], velocity, 3);
-		
-		TeleportEntity(client, origin, angles, velocity);
-		
-		return true;
-	}
+	if (!g_timers[client][Enabled] || !g_timers[client][IsPaused])
+		return false;
 	
-	return false;
+	g_timers[client][IsPaused] = false;
+	g_timers[client][PauseTotalTime] += GetGameTime() - g_timers[client][PauseStartTime];
+	
+	new Float:origin[3];
+	Array_Copy(g_timers[client][PauseLastOrigin], origin, 3);
+	
+	new Float:angles[3];
+	Array_Copy(g_timers[client][PauseLastAngles], angles, 3);
+	
+	new Float:velocity[3];
+	Array_Copy(g_timers[client][PauseLastVelocity], velocity, 3);
+	
+	TeleportEntity(client, origin, angles, velocity);
+	
+	return true;
 }
 
 bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 {
-	if (IsClientInGame(client))
-	{
-		if (g_bestTimeCache[client][IsCached])
-		{			
-			time = g_bestTimeCache[client][Time];
-			jumps = g_bestTimeCache[client][Jumps];
-			
-			return true;
-		}
-
-		decl String:auth[32];
-		GetClientAuthString(client, auth, sizeof(auth));
+	if (!IsClientInGame(client))
+		return false;
 		
-		decl String:query[255], String:error[255];
-		Format(query, sizeof(query), "SELECT id, map, auth, time, jumps FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", auth, map);
-		
-		SQL_LockDatabase(g_hSQL);
-	
-		new Handle:hQuery = SQL_Query(g_hSQL, query);
-		
-		if (hQuery == INVALID_HANDLE)
-		{
-			SQL_GetError(g_hSQL, error, sizeof(error));
-			Timer_LogError("SQL Error on GetBestRound: %s", error);
-			SQL_UnlockDatabase(g_hSQL);
-			return false;
-		}
-
-		SQL_UnlockDatabase(g_hSQL); 
-
-		if (SQL_FetchRow(hQuery))
-		{			
-			time = SQL_FetchFloat(hQuery, 3);
-			jumps = SQL_FetchInt(hQuery, 4);
-			
-			g_bestTimeCache[client][IsCached] = true;
-			g_bestTimeCache[client][Time] = time;
-			g_bestTimeCache[client][Jumps] = jumps;
-			
-			CloseHandle(hQuery);
-		}
-		else
-		{
-			g_bestTimeCache[client][IsCached] = true;
-			g_bestTimeCache[client][Time] = 0.0;
-			g_bestTimeCache[client][Jumps] = 0;			
-			
-			CloseHandle(hQuery);
-			return false;
-		}
+	if (g_bestTimeCache[client][IsCached])
+	{			
+		time = g_bestTimeCache[client][Time];
+		jumps = g_bestTimeCache[client][Jumps];
 		
 		return true;
 	}
+
+	decl String:auth[32];
+	GetClientAuthString(client, auth, sizeof(auth));
 	
-	return false;
+	decl String:query[255], String:error[255];
+	Format(query, sizeof(query), "SELECT id, map, auth, time, jumps FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", auth, map);
+	
+	SQL_LockDatabase(g_hSQL);
+
+	new Handle:hQuery = SQL_Query(g_hSQL, query);
+	
+	if (hQuery == INVALID_HANDLE)
+	{
+		SQL_GetError(g_hSQL, error, sizeof(error));
+		Timer_LogError("SQL Error on GetBestRound: %s", error);
+		SQL_UnlockDatabase(g_hSQL);
+		return false;
+	}
+
+	SQL_UnlockDatabase(g_hSQL); 
+
+	if (SQL_FetchRow(hQuery))
+	{			
+		time = SQL_FetchFloat(hQuery, 3);
+		jumps = SQL_FetchInt(hQuery, 4);
+		
+		g_bestTimeCache[client][IsCached] = true;
+		g_bestTimeCache[client][Time] = time;
+		g_bestTimeCache[client][Jumps] = jumps;
+		
+		CloseHandle(hQuery);
+	}
+	else
+	{
+		g_bestTimeCache[client][IsCached] = true;
+		g_bestTimeCache[client][Time] = 0.0;
+		g_bestTimeCache[client][Jumps] = 0;			
+		
+		CloseHandle(hQuery);
+		return false;
+	}
+	
+	return true;
 }
 
 ClearCache()
@@ -423,86 +413,88 @@ ClearClientCache(client)
 
 FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
 {
-	if (IsClientInGame(client) && IsPlayerAlive(client))
-	{
-		new Float:LastTime;
-		new LastJumps;
-		decl String:TimeDiff[32];
-		decl String:buffer[32];
+	if (!IsClientInGame(client))
+		return false;
 		
-		if(Timer_GetBestRound(client, map, LastTime, LastJumps))
-		{
-			LastTime -= time;			
-			if(LastTime < 0.0)
-			{	
-				LastTime *= -1.0;
-				Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
-				Format(TimeDiff, sizeof(TimeDiff), "+%s", buffer);
-			}
-			else if(LastTime > 0.0)
-			{
-				Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
-				Format(TimeDiff, sizeof(TimeDiff), "-%s", buffer);
-			}
-			else if(LastTime == 0.0)
-			{
-				Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
-				Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
-
-			}
+	if (!IsPlayerAlive(client))
+		return false;
+		
+	new Float:LastTime;
+	new LastJumps;
+	decl String:TimeDiff[32];
+	decl String:buffer[32];
+	
+	if(Timer_GetBestRound(client, map, LastTime, LastJumps))
+	{
+		LastTime -= time;			
+		if(LastTime < 0.0)
+		{	
+			LastTime *= -1.0;
+			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
+			Format(TimeDiff, sizeof(TimeDiff), "+%s", buffer);
 		}
-		else
+		else if(LastTime > 0.0)
 		{
-			LastTime = 0.0;
+			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
+			Format(TimeDiff, sizeof(TimeDiff), "-%s", buffer);
+		}
+		else if(LastTime == 0.0)
+		{
 			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
 			Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
+
 		}
+	}
+	else
+	{
+		LastTime = 0.0;
+		Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
+		Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
+	}
 
-		decl String:auth[32];
-		GetClientAuthString(client, auth, sizeof(auth));
+	decl String:auth[32];
+	GetClientAuthString(client, auth, sizeof(auth));
 
-		decl String:name[MAX_NAME_LENGTH];
-		GetClientName(client, name, sizeof(name));
-		
-		decl String:safeName[2 * strlen(name) + 1];
-		SQL_EscapeString(g_hSQL, name, safeName, 2 * strlen(name) + 1);
+	decl String:name[MAX_NAME_LENGTH];
+	GetClientName(client, name, sizeof(name));
+	
+	decl String:safeName[2 * strlen(name) + 1];
+	SQL_EscapeString(g_hSQL, name, safeName, 2 * strlen(name) + 1);
 
-		decl String:query[256];
-		Format(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax) VALUES ('%s', '%s', %f, %d, %d, '%s', %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax);
-		
-		SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_Normal);
-		
-		decl String:TimeString[32];
-		Timer_SecondsToTime(time, TimeString, sizeof(TimeString), true);
-		
-		
-		if(g_showjumps)
+	decl String:query[256];
+	Format(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax) VALUES ('%s', '%s', %f, %d, %d, '%s', %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax);
+	
+	SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_Normal);
+	
+	decl String:TimeString[32];
+	Timer_SecondsToTime(time, TimeString, sizeof(TimeString), true);
+	
+	if(g_showjumps)
+	{
+		if (g_timerPhysics)
 		{
-			if (g_timerPhysics)
-			{
-				new String:difficulty[32];
-				Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
-				
-				PrintToChatAll(PLUGIN_PREFIX, "Round Finish Difficulty", name, TimeString, TimeDiff, difficulty, jumps);
-			}
-			else
-			{
-				PrintToChatAll(PLUGIN_PREFIX, "Round Finish", name, TimeString, TimeDiff, jumps);		
-			}
+			new String:difficulty[32];
+			Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
+			
+			PrintToChatAll(PLUGIN_PREFIX, "Round Finish Difficulty", name, TimeString, TimeDiff, difficulty, jumps);
 		}
 		else
 		{
-			if (g_timerPhysics)
-			{
-				new String:difficulty[32];
-				Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
-				
-				PrintToChatAll(PLUGIN_PREFIX, "Round Finish Difficulty Without Jumps", name, TimeString, TimeDiff, difficulty);
-			}
-			else
-			{
-				PrintToChatAll(PLUGIN_PREFIX, "Round Finish Without Jumps", name, TimeString, TimeDiff);
-			}
+			PrintToChatAll(PLUGIN_PREFIX, "Round Finish", name, TimeString, TimeDiff, jumps);		
+		}
+	}
+	else
+	{
+		if (g_timerPhysics)
+		{
+			new String:difficulty[32];
+			Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
+			
+			PrintToChatAll(PLUGIN_PREFIX, "Round Finish Difficulty Without Jumps", name, TimeString, TimeDiff, difficulty);
+		}
+		else
+		{
+			PrintToChatAll(PLUGIN_PREFIX, "Round Finish Without Jumps", name, TimeString, TimeDiff);
 		}
 	}
 }
