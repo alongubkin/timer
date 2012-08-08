@@ -86,7 +86,6 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	CreateNative("Timer_GetClientTimer", Native_GetClientTimer);
 	CreateNative("Timer_FinishRound", Native_FinishRound);
 	CreateNative("Timer_ForceReloadBestRoundCache", Native_ForceReloadBestRoundCache);
-	CreateNative("Timer_GetTotalRank", Native_GetTotalRank);
 
 	return APLRes_Success;
 }
@@ -665,35 +664,6 @@ public Native_FinishRound(Handle:plugin, numParams)
 public Native_ForceReloadBestRoundCache(Handle:plugin, numParams)
 {
 	ClearCache();
-}
-
-public Native_GetTotalRank(Handle:plugin, numParams)
-{
-	decl String:map[32];
-	GetNativeString(1, map, sizeof(map));
-	
-	decl String:query[384], String:error[255];
-	Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", map, map);
-
-	SQL_LockDatabase(g_hSQL);
-	
-	new Handle:hQuery = SQL_Query(g_hSQL, query);
-
-	if (hQuery == INVALID_HANDLE)
-	{
-		SQL_GetError(g_hSQL, error, sizeof(error));
-		Timer_LogError("SQL Error on GetTotalRank: %s", error);
-		SQL_UnlockDatabase(g_hSQL);
-		return 0;
-	}
- 
-	SQL_UnlockDatabase(g_hSQL); 
-	
-	new totalrank = SQL_GetRowCount(hQuery);
-	
-	CloseHandle(hQuery);
-	
-	return totalrank;
 }
 
 /**
