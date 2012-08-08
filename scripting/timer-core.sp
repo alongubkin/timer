@@ -108,6 +108,7 @@ public OnPluginStart()
 	HookEvent("player_team", Event_StopTimer);
 	HookEvent("player_spawn", Event_StopTimer);
 	HookEvent("player_disconnect", Event_StopTimer);
+	HookEvent("player_connect", Event_StopTimer);
 	
 	RegConsoleCmd("sm_restart", Command_Restart);
 	RegConsoleCmd("sm_r", Command_Restart);
@@ -263,9 +264,6 @@ bool:StartTimer(client)
 
 bool:StopTimer(client, bool:stopPaused = true)
 {
-	if (IsPlayerAlive(client))
-		return false;
-	
 	if (!g_timers[client][Enabled])
 		return false;
 	
