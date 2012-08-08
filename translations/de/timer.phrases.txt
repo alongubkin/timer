@@ -74,7 +74,12 @@
 	{
 		"de"			"Schwierigkeit"
 	}
-	
+
+	"Player"
+	{
+		"de"			"Spieler"
+	}
+
 	"No target"
 	{
 		"de"			"Kein Ziel gefunden."

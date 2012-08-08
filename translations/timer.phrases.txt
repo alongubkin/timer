@@ -79,6 +79,11 @@
 	{
 		"en"			"Difficulty"
 	}
+
+	"Player"
+	{
+		"en"			"Player"
+	}
 	
 	"No target"
 	{

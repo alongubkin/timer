@@ -21,6 +21,7 @@ new Handle:g_showJumpsCvar = INVALID_HANDLE;
 new Handle:g_showTimeCvar = INVALID_HANDLE;
 new Handle:g_showDifficultyCvar = INVALID_HANDLE;
 new Handle:g_showBestTimesCvar = INVALID_HANDLE;
+new Handle:g_showNameCvar = INVALID_HANDLE;
 new Handle:g_fragsCvar = INVALID_HANDLE;
 new Handle:g_jumpsDeathCvar = INVALID_HANDLE;
 
@@ -29,6 +30,7 @@ new bool:g_showJumps = true;
 new bool:g_showTime = true;
 new bool:g_showDifficulty = true;
 new bool:g_showBestTimes = true;
+new bool:g_showName = true;
 new bool:g_frags = false;
 new bool:g_jumpsDeath = false;
 
@@ -51,6 +53,7 @@ public OnPluginStart()
 	g_showTimeCvar = CreateConVar("timer_hud_time", "1", "Whether or not time is shown in the HUD.");
 	g_showDifficultyCvar = CreateConVar("timer_hud_difficulty", "1", "Whether or not difficulty is shown in the HUD, if the timer-physics module is enabled.");
 	g_showBestTimesCvar = CreateConVar("timer_hud_besttimes", "1", "Whether or not best times for this map is shown in the HUD.");
+	g_showNameCvar = CreateConVar("timer_hud_name", "1", "Whether or not spectating player's name is shown in the HUD.");
 	g_fragsCvar = CreateConVar("timer_frags", "0", "Whether or not players' score should be his current timer.");
 	g_jumpsDeathCvar = CreateConVar("timer_jumps_death", "0", "Whether or not players' death count should be their jump count.");
 
@@ -59,6 +62,7 @@ public OnPluginStart()
 	HookConVarChange(g_showTimeCvar, Action_OnSettingsChange);
 	HookConVarChange(g_showDifficultyCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_showBestTimesCvar, Action_OnSettingsChange);
+	HookConVarChange(g_showNameCvar, Action_OnSettingsChange);
 	HookConVarChange(g_fragsCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_jumpsDeathCvar, Action_OnSettingsChange);
 	
@@ -108,6 +112,8 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 		g_showDifficulty = bool:StringToInt(newvalue);
 	else if (cvar == g_showBestTimesCvar)
 		g_showBestTimes = bool:StringToInt(newvalue);	
+	else if (cvar == g_showNameCvar)
+		g_showName = bool:StringToInt(newvalue);	
 	else if (cvar == g_fragsCvar)
 		g_frags = bool:StringToInt(newvalue);
 	else if (cvar == g_jumpsDeathCvar)
@@ -127,10 +133,11 @@ public Action:HUDTimer(Handle:timer)
 
 UpdateHUD(client)
 {
-	if (!g_showTime && !g_showJumps && !g_showSpeed && !g_showBestTimes && !g_showDifficulty)
+	if (!g_showTime && !g_showJumps && !g_showSpeed && !g_showBestTimes && !g_showDifficulty && !g_showName)
 		return;
 		
 	new target = client;
+	new t;
 	
 	if (IsClientObserver(client))
 	{
@@ -138,7 +145,7 @@ UpdateHUD(client)
 
 		if (observerMode == 4 || observerMode == 3)
 		{
-			new t = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
+			t = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
 
 			if (IsClientInGame(t) && !IsFakeClient(t))
 				target = t;
@@ -161,7 +168,9 @@ UpdateHUD(client)
 		}
 		
 		if (g_jumpsDeath)
-			SetEntProp(client, Prop_Data, "m_iDeaths", jumps);		
+		{
+			SetEntProp(target, Prop_Data, "m_iDeaths", jumps);		
+		}
 	}
 	
 	new String:hintText[256];
@@ -222,6 +231,17 @@ UpdateHUD(client)
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 			
 		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "HUD Difficulty", difficulty);
+	}
+	
+	if (g_showName && target == t)
+	{
+		decl String:name[MAX_NAME_LENGTH];
+		GetClientName(target, name, sizeof(name));
+		
+		if ((enabled && (g_showTime || g_showJumps)) || g_showSpeed || g_showBestTimes || g_showDifficulty)
+			Format(hintText, sizeof(hintText), "%s\n", hintText);
+	
+		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "Player", name);	
 	}
 	
 	PrintHintText(client, hintText);

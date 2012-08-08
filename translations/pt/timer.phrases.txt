@@ -74,6 +74,11 @@
 	{
 		"pt"			"Dificuldade"
 	}
+	
+	"Player"
+	{
+		"pt"			"Jogador"
+	}
 
 	"No target"
 	{
