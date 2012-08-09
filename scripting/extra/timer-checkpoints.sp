@@ -81,6 +81,7 @@ public OnLibraryRemoved(const String:name[])
 public OnMapStart()
 {
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
+	StringToLower(g_currentMap);
 
 	LoadCheckpoints();
 	Array_Fill(g_currentCheckpoint, sizeof(g_currentCheckpoint), 0, 0);

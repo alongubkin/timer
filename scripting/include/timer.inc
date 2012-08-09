@@ -157,6 +157,13 @@ stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precis
 		Format(buffer, maxlength, "%s%02d", buffer, t);
 }
 
+stock StringToLower(String:f_sInput[])
+{
+	new f_iSize = strlen(f_sInput);
+	for(new i=0;i<f_iSize;i++)
+		f_sInput[i] = CharToLower(f_sInput[i]);
+}
+
 public SharedPlugin:__pl_timer = 
 {
 	name = "timer",

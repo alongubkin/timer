@@ -99,6 +99,7 @@ public OnMapStart()
 	ConnectSQL();
 	
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
+	StringToLower(g_currentMap);
 	
 	precache_laser = PrecacheModel("materials/sprites/laserbeam.vmt");
 }

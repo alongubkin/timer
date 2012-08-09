@@ -77,6 +77,8 @@ public OnPluginStart()
 public OnMapStart() 
 {
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
+	StringToLower(g_currentMap);
+	
 	CreateTimer(0.25, HUDTimer, _, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
 }
 
