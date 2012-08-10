@@ -424,7 +424,7 @@ DisplaySelectPlayerMenu(client)
 			continue;
 		
 		decl String:text[92];
-		Format(text, sizeof(text), "%s - %s", g_cache[cache][Name], g_cache[cache][TimeString]);
+		Format(text, sizeof(text), "%d. %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
 		
 		if (g_showJumps)
 			Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Jumps], "Jumps", client);
@@ -655,7 +655,7 @@ CreateWRMenu(client, difficulty)
 			IntToString(g_cache[cache][Id], id, sizeof(id));
 			
 			decl String:text[92];
-			Format(text, sizeof(text), "%s - %s", g_cache[cache][Name], g_cache[cache][TimeString]);
+			Format(text, sizeof(text), "%d. %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
 			
 			if (g_showJumps)
 				Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Jumps], "Jumps", client);
