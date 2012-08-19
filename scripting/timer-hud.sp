@@ -185,7 +185,7 @@ UpdateHUD(client)
 
 	Timer_GetClientTimer(target, enabled, time, jumps, fpsmax);
 	
-	if (client == target)
+	if (enabled && (g_frags || g_jumpsDeath) && client == target)
 	{		
 		if (g_frags)
 		{
@@ -277,7 +277,7 @@ UpdateHUD(client)
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 		}
 		
-		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "Player", name);	
+		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "Player", name);
 	}
 	
 	PrintHintText(client, hintText);
