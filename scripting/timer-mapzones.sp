@@ -873,10 +873,9 @@ ParseColor(const String:color[], result[])
 
 StopPrespeed(client)
 {
-	new Float:ClientOrigin[3], Float:fVelocity[3];
+	new Float:fVelocity[3];
 	new String:Weapon[32];
 	
-	GetClientAbsOrigin(client, ClientOrigin);
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", fVelocity);
 	GetClientWeapon(client, Weapon, sizeof(Weapon));
 	new speed = RoundToFloor(SquareRoot(Pow(fVelocity[0],2.0)+Pow(fVelocity[1],2.0)));
@@ -885,16 +884,12 @@ StopPrespeed(client)
 		if (speed > 289)
 		{
 			fVelocity[0] = fVelocity[1] = fVelocity[2] = 0.0;
-			TeleportEntity(client, ClientOrigin, NULL_VECTOR, fVelocity);
+			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fVelocity);
 		}	
 	}
-	else
+	else if (speed > 279)
 	{
-		if (speed > 279)
-		{
-			fVelocity[0] = fVelocity[1] = fVelocity[2] = 0.0;
-			TeleportEntity(client, ClientOrigin, NULL_VECTOR, fVelocity);
-		}	
-
+		fVelocity[0] = fVelocity[1] = fVelocity[2] = 0.0;
+		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fVelocity);
 	}
 }
