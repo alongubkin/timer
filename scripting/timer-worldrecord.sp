@@ -174,7 +174,15 @@ public Action:OnClientCommand(client, args)
 
 	if (StrEqual(cmd, "wr"))
 	{
-		ConsoleWR(client, 0);
+		if (g_timerPhysics)
+		{
+			ConsoleWR(client, Timer_GetClientDifficulty(client));
+		}
+		else
+		{
+			ConsoleWR(client, -1);
+		}
+
 		return Plugin_Handled;
 	}
 
@@ -184,9 +192,13 @@ public Action:OnClientCommand(client, args)
 public Action:Command_WorldRecord(client, args)
 {
 	if (g_timerPhysics)
+	{
 		CreateDifficultyMenu(client);
+	}
 	else
+	{
 		CreateWRMenu(client, -1);
+	}
 	
 	return Plugin_Handled;
 }
