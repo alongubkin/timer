@@ -31,7 +31,9 @@ public OnPluginStart()
 	CreateTimer(1.0, OnCheckDate, INVALID_HANDLE, TIMER_REPEAT);
 	
 	if (g_log_level > Timer_LogLevelNone)
+	{
 		CreateLogFileOrTurnOffLogging();
+	}
 		
 	if (LibraryExists("updater"))
 	{
@@ -85,7 +87,9 @@ LoadConfig()
 public OnPluginEnd() 
 {
 	if (g_log_file != INVALID_HANDLE)
+	{
 		CloseLogFile();
+	}
 }
 
 public Action:OnCheckDate(Handle:timer)
@@ -148,7 +152,9 @@ public Timer_Log_(Handle:plugin, num_params)
 		FormatNativeString(0, 2, 3, sizeof(message), written, message);
         
 		if (g_log_file != INVALID_HANDLE)
+		{
 			WriteMessageToLog(plugin, log_level, message);
+		}
             
 		if (log_level == Timer_LogLevelError && g_log_errors_to_SM) 
         {
@@ -225,7 +231,9 @@ WriteMessageToLog(Handle:plugin, Timer_LogLevel:log_level, const String:message[
 	WriteFileString(g_log_file, log_line, false);
     
 	if (log_level <= g_log_flush_level || force_flush)
+	{
 		FlushFile(g_log_file);
+	}
 }
 
 PrepareLogLine(Handle:plugin, Timer_LogLevel:log_level, const String:message[], String:log_line[10000]) 
@@ -237,7 +245,9 @@ PrepareLogLine(Handle:plugin, Timer_LogLevel:log_level, const String:message[], 
 	new name_end = strlen(plugin_name);
 	plugin_name[name_end++] = ']';
 	for (new end=PLUGIN_NAME_RESERVED_LENGTH-1; name_end<end; ++name_end)
+	{
 		plugin_name[name_end] = ' ';
+	}
 	plugin_name[name_end++] = 0;
 	FormatTime(log_line, sizeof(log_line), "%Y-%m-%d %H:%M:%S [", GetTime());
 	new pos = strlen(log_line);

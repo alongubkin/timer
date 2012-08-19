@@ -1,9 +1,8 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <loghelper>
 #include <sdkhooks>
-#include <smlib>
+#include <smlib/arrays>
 #include <timer>
 
 new bool:g_hide[MAXPLAYERS+1];
@@ -87,5 +86,6 @@ public Action:HideCommand(client, args)
 {
 	g_hide[client] = !g_hide[client];
 	PrintToChat(client, PLUGIN_PREFIX, "Toggle visibilty");
+	
 	return Plugin_Handled;
 }

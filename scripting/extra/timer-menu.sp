@@ -1,8 +1,6 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <loghelper>
-#include <smlib>
 #include <timer>
 
 public Plugin:myinfo =

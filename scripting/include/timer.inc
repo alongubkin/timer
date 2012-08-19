@@ -145,23 +145,29 @@ stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precis
     }
 
 	if (hour)
+	{
 		Format(buffer, maxlength, "%s%02d:", buffer, hour);
-	else
-		Format(buffer, maxlength, "");
+	}
 	
 	Format(buffer, maxlength, "%s%02d:", buffer, mins);
 	
 	if (precision)
+	{
 		Format(buffer, maxlength, "%s%06.3f", buffer, float(t) + seconds - RoundToFloor(seconds));
+	}
 	else 
+	{
 		Format(buffer, maxlength, "%s%02d", buffer, t);
+	}
 }
 
 stock StringToLower(String:f_sInput[])
 {
 	new f_iSize = strlen(f_sInput);
 	for(new i=0;i<f_iSize;i++)
+	{
 		f_sInput[i] = CharToLower(f_sInput[i]);
+	}
 }
 
 public SharedPlugin:__pl_timer = 

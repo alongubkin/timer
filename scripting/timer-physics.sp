@@ -82,7 +82,9 @@ public OnLibraryAdded(const String:name[])
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
 	if (cvar == g_joinTeamDifficultyCvar)
+	{
 		g_joinTeamDifficulty = bool:StringToInt(newvalue);
+	}
 }
 
 public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
@@ -93,9 +95,13 @@ public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 	GetClientCookie(client, g_cookie, buffer, sizeof(buffer));
 
 	if (StrEqual(buffer, ""))
+	{
 		g_clientDifficulty[client] = g_defaultDifficulty;
+	}
 	else
+	{
 		g_clientDifficulty[client] = StringToInt(buffer);
+	}
 	
 	ApplyDifficulty(client);
 }
@@ -128,6 +134,7 @@ public Action:Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroad
 public Action:Command_Difficulty(client, args)
 {
 	CreateDifficultyMenu(client);
+	
 	return Plugin_Handled;
 }
 
@@ -166,7 +173,9 @@ LoadDifficulties()
 		g_difficulties[g_difficultyCount][Auto] = bool:KvGetNum(kv, "auto", 0);
         
 		if (g_difficulties[g_difficultyCount][IsDefault])
+		{
 			g_defaultDifficulty = g_difficulties[g_difficultyCount][Id];
+		}
 		
 		g_difficultyCount++;
 	} while (KvGotoNextKey(kv));
@@ -185,7 +194,7 @@ CreateDifficultyMenu(client)
 	{
 		decl String:id[5];
 		IntToString(g_difficulties[difficulty][Id], id, sizeof(id));
-			
+
 		AddMenuItem(menu, id, g_difficulties[difficulty][Name]);
 	}
 
@@ -214,13 +223,17 @@ public MenuHandler_Difficulty(Handle:menu, MenuAction:action, param1, param2)
 ApplyDifficulty(client)
 {
 	if (!IsClientInGame(client))
+	{
 		return;
-		
+	}
+	
 	new difficulty = 0;
 	for (; difficulty < g_difficultyCount; difficulty++)
 	{
 		if (g_difficulties[difficulty][Id] == g_clientDifficulty[client])
+		{
 			break;
+		}
 	}
 
 	SetEntityGravity(client, g_difficulties[difficulty][Gravity]);
@@ -284,7 +297,9 @@ public Native_GetDifficultyName(Handle:plugin, numParams)
 	for (; t < g_difficultyCount; t++)
 	{
 		if (g_difficulties[t][Id] == difficulty)
+		{
 			break;
+		}
 	}
 
 	SetNativeString(2, g_difficulties[t][Name], maxlength);

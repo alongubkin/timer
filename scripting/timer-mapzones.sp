@@ -139,17 +139,24 @@ public OnLibraryRemoved(const String:name[])
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
 	if (cvar == g_startMapZoneColor)
+	{
 		ParseColor(newvalue, g_startColor);
+	}
 	else if (cvar == g_endMapZoneColor)
+	{
 		ParseColor(newvalue, g_endColor);
+	}
 	else if (cvar == g_startStopPrespeed)
+	{
 		g_stopPrespeed = bool:StringToInt(newvalue);
+	}
 }
 
 public OnAdminMenuReady(Handle:topmenu)
 {
 	// Block this from being called twice
-	if (topmenu == hTopMenu) {
+	if (topmenu == hTopMenu) 
+	{
 		return;
 	}
  
@@ -164,7 +171,7 @@ public OnAdminMenuReady(Handle:topmenu)
 			AdminMenu_CategoryHandler,
 			INVALID_TOPMENUOBJECT);
 	}
-	
+
 	AddToTopMenu(hTopMenu, 
 		"timer_mapzones_add",
 		TopMenuObject_Item,
@@ -180,6 +187,7 @@ public OnAdminMenuReady(Handle:topmenu)
 		oMapZoneMenu,
 		"timer_mapzones_remove",
 		ADMFLAG_RCON);
+
 	AddToTopMenu(hTopMenu, 
 		"timer_mapzones_remove_all",
 		TopMenuObject_Item,
@@ -278,16 +286,18 @@ public OnTimerRestart(client)
 
 ConnectSQL()
 {
-    if (g_hSQL != INVALID_HANDLE)
-        CloseHandle(g_hSQL);
-	
-    g_hSQL = INVALID_HANDLE;
+	if (g_hSQL != INVALID_HANDLE)
+	{
+		CloseHandle(g_hSQL);
+	}
 
-    if (SQL_CheckConfig("timer"))
+	g_hSQL = INVALID_HANDLE;
+
+	if (SQL_CheckConfig("timer"))
 	{
 		SQL_TConnect(ConnectSQLCallback, "timer");
 	}
-    else
+	else
 	{
 		Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
 	}
@@ -357,9 +367,12 @@ public AdminMenu_CategoryHandler(Handle:topmenu,
 			String:buffer[],
 			maxlength)
 {
-	if (action == TopMenuAction_DisplayTitle) {
+	if (action == TopMenuAction_DisplayTitle) 
+	{
 		Format(buffer, maxlength, "%t", "Timer Management");
-	} else if (action == TopMenuAction_DisplayOption) {
+	}
+	else if (action == TopMenuAction_DisplayOption) 
+	{
 		Format(buffer, maxlength, "%t", "Timer Management");
 	}
 }
@@ -371,9 +384,12 @@ public AdminMenu_AddMapZone(Handle:topmenu,
 			String:buffer[],
 			maxlength)
 {
-	if (action == TopMenuAction_DisplayOption) {
+	if (action == TopMenuAction_DisplayOption) 
+	{
 		Format(buffer, maxlength, "%t", "Add Map Zone");
-	} else if (action == TopMenuAction_SelectOption) {
+	} 
+	else if (action == TopMenuAction_SelectOption) 
+	{
 		RestartMapZoneEditor(param);
 		g_mapZoneEditors[param][Step] = 1;
 		DisplaySelectPointMenu(param, 1);
@@ -387,9 +403,12 @@ public AdminMenu_RemoveMapZone(Handle:topmenu,
 			String:buffer[],
 			maxlength)
 {
-	if (action == TopMenuAction_DisplayOption) {
+	if (action == TopMenuAction_DisplayOption)
+	{
 		Format(buffer, maxlength, "%t", "Delete Map Zone");
-	} else if (action == TopMenuAction_SelectOption) {
+	} 
+	else if (action == TopMenuAction_SelectOption) 
+	{
 		DeleteMapZone(param);
 	}
 }
@@ -401,9 +420,12 @@ public AdminMenu_RemoveAllMapZones(Handle:topmenu,
 			String:buffer[],
 			maxlength)
 {
-	if (action == TopMenuAction_DisplayOption) {
+	if (action == TopMenuAction_DisplayOption) 
+	{
 		Format(buffer, maxlength, "%t", "Delete All Map Zones");
-	} else if (action == TopMenuAction_SelectOption) {
+	} 
+	else if (action == TopMenuAction_SelectOption) 
+	{
 		DeleteAllMapZones(param);
 	}
 }
@@ -413,10 +435,14 @@ RestartMapZoneEditor(client)
 	g_mapZoneEditors[client][Step] = 0;
 
 	for (new i = 0; i < 3; i++)
+	{
 		g_mapZoneEditors[client][Point1][i] = 0.0;
+	}
 
 	for (new i = 0; i < 3; i++)
-		g_mapZoneEditors[client][Point1][i] = 0.0;		
+	{
+		g_mapZoneEditors[client][Point1][i] = 0.0;	
+	}
 }
 
 DeleteMapZone(client)
@@ -456,7 +482,9 @@ public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], an
 	LoadMapZones();
 	
 	if (IsClientInGame(data))
+	{
 		PrintToChat(data, PLUGIN_PREFIX, "Map Zone Delete");
+	}
 }
 
 DisplaySelectPointMenu(client, n)
@@ -566,7 +594,6 @@ DisplaySelectZoneTypeMenu(client)
 	decl String:Glitch3m[64];
 	Format(Glitch3m, sizeof(Glitch3m), "%T", "Glitch3", client);
 
-	// This is ugly
 	AddMenuItem(menu, "0", Startm);
 	AddMenuItem(menu, "1", Endm);
 	AddMenuItem(menu, "2", Glitch1m);
@@ -623,9 +650,13 @@ public Action:DrawAdminBox(Handle:timer, any:serial)
 	Array_Copy(g_mapZoneEditors[client][Point1], b, 3);
 
 	if (g_mapZoneEditors[client][Step] == 3)
+	{
 		Array_Copy(g_mapZoneEditors[client][Point2], a, 3);
+	}
 	else
+	{
 		GetClientAbsOrigin(client, a);
+	}
 
 	// Effect_DrawBeamBoxToClient(client, a, b, precache_laser, 0, 0, 30, 0.1, 3.0, 3.0);
 	new color[4] = {255, 255, 255, 255};
@@ -647,14 +678,22 @@ public Action:DrawZones(Handle:timer)
 			Array_Copy(g_mapZones[zone][Point2], point2, 3);
 			
 			if (point1[2] < point2[2])
+			{
 				point2[2] = point1[2];
+			}
 			else
+			{
 				point1[2] = point2[2];
+			}
 
 			if (g_mapZones[zone][Type] == Start)
+			{
 				DrawBox(point1, point2, 2.0, g_startColor, true);
+			}
 			else if (g_mapZones[zone][Type] == End)
+			{
 				DrawBox(point1, point2, 2.0, g_endColor, true);
+			}
 		}
 	}
 
@@ -680,7 +719,9 @@ public Action:PlayerTracker(Handle:timer)
 						Timer_Start(client);
 						
 						if (g_stopPrespeed)
+						{
 							StopPrespeed(client);
+						}
 					}
 					else if (g_mapZones[zone][Type] == End)
 					{
@@ -695,12 +736,16 @@ public Action:PlayerTracker(Handle:timer)
 							{
 								new difficulty = 0;
 								if (g_timerPhysics)
+								{
 									difficulty = Timer_GetClientDifficulty(client);
+								}
 
 								Timer_FinishRound(client, g_currentMap, time, jumps, difficulty, fpsmax);
 								
 								if (g_timerWorldRecord)
+								{
 									Timer_ForceReloadWorldRecordCache();
+								}
 							}
 						}
 					}
@@ -736,22 +781,36 @@ IsInsideBox(Float:fPCords[3], Float:fbsx, Float:fbsy, Float:fbsz, Float:fbex, Fl
 	new bool:bZ = false;
 
 	if (fbsx > fbex && fpx <= fbsx && fpx >= fbex)
+	{
 		bX = true;
+	}
 	else if (fbsx < fbex && fpx >= fbsx && fpx <= fbex)
+	{
 		bX = true;
+	}
 		
 	if (fbsy > fbey && fpy <= fbsy && fpy >= fbey)
+	{
 		bY = true;
+	}
 	else if (fbsy < fbey && fpy >= fbsy && fpy <= fbey)
+	{
 		bY = true;
+	}
 	
 	if (fbsz > fbez && fpz <= fbsz && fpz >= fbez)
+	{
 		bZ = true;
+	}
 	else if (fbsz < fbez && fpz >= fbsz && fpz <= fbez)
+	{
 		bZ = true;
+	}
 		
 	if (bX && bY && bZ)
+	{
 		return true;
+	}
 	
 	return false;
 }
@@ -779,66 +838,100 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	fLeftBottomFront[0] = fFrom[0];
 	fLeftBottomFront[1] = fFrom[1];
 	if(flat)
+	{
 		fLeftBottomFront[2] = fTo[2]-2;
+	}
 	else
+	{
 		fLeftBottomFront[2] = fTo[2];
+	}
 	
 	decl Float:fRightBottomFront[3];
 	fRightBottomFront[0] = fTo[0];
 	fRightBottomFront[1] = fFrom[1];
 	if(flat)
+	{
 		fRightBottomFront[2] = fTo[2]-2;
+	}
 	else
+	{
 		fRightBottomFront[2] = fTo[2];
+	}
 	
 	//initialize tempoary variables bottom back
 	decl Float:fLeftBottomBack[3];
 	fLeftBottomBack[0] = fFrom[0];
 	fLeftBottomBack[1] = fTo[1];
 	if(flat)
+	{
 		fLeftBottomBack[2] = fTo[2]-2;
+	}
 	else
+	{
 		fLeftBottomBack[2] = fTo[2];
+	}
 	
 	decl Float:fRightBottomBack[3];
 	fRightBottomBack[0] = fTo[0];
 	fRightBottomBack[1] = fTo[1];
 	if(flat)
+	{
 		fRightBottomBack[2] = fTo[2]-2;
+	}
 	else
+	{
 		fRightBottomBack[2] = fTo[2];
+	}
 	
 	//initialize tempoary variables top front
 	decl Float:lefttopfront[3];
 	lefttopfront[0] = fFrom[0];
 	lefttopfront[1] = fFrom[1];
 	if(flat)
+	{
 		lefttopfront[2] = fFrom[2]+2;
+	}
 	else
+	{
 		lefttopfront[2] = fFrom[2]+100;
+	}
+	
 	decl Float:righttopfront[3];
 	righttopfront[0] = fTo[0];
 	righttopfront[1] = fFrom[1];
 	if(flat)
+	{
 		righttopfront[2] = fFrom[2]+2;
+	}
 	else
+	{
 		righttopfront[2] = fFrom[2]+100;
+	}
 	
 	//initialize tempoary variables top back
 	decl Float:fLeftTopBack[3];
 	fLeftTopBack[0] = fFrom[0];
 	fLeftTopBack[1] = fTo[1];
 	if(flat)
+	{
 		fLeftTopBack[2] = fFrom[2]+2;
+	}
 	else
+	{
 		fLeftTopBack[2] = fFrom[2]+100;
+	}
+	
 	decl Float:fRightTopBack[3];
 	fRightTopBack[0] = fTo[0];
 	fRightTopBack[1] = fTo[1];
 	if(flat)
+	{
 		fRightTopBack[2] = fFrom[2]+2;
+	}
 	else
+	{
 		fRightTopBack[2] = fFrom[2]+100;
+	}
 	
 	//create the box
 	TE_SetupBeamPoints(lefttopfront,righttopfront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
@@ -868,7 +961,9 @@ ParseColor(const String:color[], result[])
 	ExplodeString(color, " ", buffers, sizeof(buffers), sizeof(buffers[]));
 	
 	for (new i = 0; i < sizeof(buffers); i++)
+	{
 		result[i] = StringToInt(buffers[i]);
+	}
 }
 
 StopPrespeed(client)

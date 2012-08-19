@@ -57,14 +57,14 @@ public Action:OnTakeDamage(client, &attacker, &inflictor, &Float:damage, &damage
 	{
 		return Plugin_Handled;
 	}
+	
 	return Plugin_Continue;
 }
 
 public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	new col = GetEntProp(client, Prop_Data, "m_CollisionGroup");
-	if(1 <= client <= MaxClients && col == 5)
+	if(1 <= client <= MaxClients && GetEntProp(client, Prop_Data, "m_CollisionGroup") == 5)
 	{
 		SetEntProp(client, Prop_Data, "m_CollisionGroup", 2);
 	}
@@ -76,6 +76,7 @@ public Action:Command_Respawn(client, args)
 	{ 
 		CS_RespawnPlayer(client);
 	}
+	
 	return Plugin_Handled;
 }
 
@@ -92,6 +93,7 @@ public Action:Command_JoinTeam(client, const String:command[], argc)
 			CS_SwitchTeam(client, 2);
 			CS_RespawnPlayer(client);
 		}
+		
 		return Plugin_Handled;
 	}
 	else if (sArg[0] == '2' && tsCount == 0 && ctsCount > 0)
@@ -101,6 +103,7 @@ public Action:Command_JoinTeam(client, const String:command[], argc)
 			CS_SwitchTeam(client, 3);
 			CS_RespawnPlayer(client);
 		}
+		
 		return Plugin_Handled;
 	}
 	else if (sArg[0] == '3' && tsCount == 0 && ctsCount > 0)
@@ -110,6 +113,7 @@ public Action:Command_JoinTeam(client, const String:command[], argc)
 			CS_SwitchTeam(client, 3);
 			CS_RespawnPlayer(client);
 		}
+		
 		return Plugin_Handled;
 	}
 	else if (sArg[0] == '3' && ctsCount == 0 && tsCount > 0)
@@ -119,6 +123,7 @@ public Action:Command_JoinTeam(client, const String:command[], argc)
 			CS_SwitchTeam(client, 2);
 			CS_RespawnPlayer(client);
 		}
+		
 		return Plugin_Handled;
 	}
 	else if (sArg[0] == '0' && ctsCount == 0 && tsCount > 0)
@@ -128,6 +133,7 @@ public Action:Command_JoinTeam(client, const String:command[], argc)
 			CS_SwitchTeam(client, 2);
 			CS_RespawnPlayer(client);
 		}
+		
 		return Plugin_Handled;
 	}
 	else if (sArg[0] == '0' && tsCount == 0 && ctsCount > 0)
@@ -137,6 +143,7 @@ public Action:Command_JoinTeam(client, const String:command[], argc)
 			CS_SwitchTeam(client, 3);
 			CS_RespawnPlayer(client);
 		}
+		
 		return Plugin_Handled;
 	}
 	

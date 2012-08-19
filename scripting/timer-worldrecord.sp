@@ -164,7 +164,9 @@ public ChangeNameCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
 	if (cvar == g_showJumpCvar)
-		g_showJumps = bool:StringToInt(newvalue);			
+	{
+		g_showJumps = bool:StringToInt(newvalue);	
+	}
 }
 
 public Action:OnClientCommand(client, args)
@@ -206,6 +208,7 @@ public Action:Command_WorldRecord(client, args)
 public Action:Command_Delete(client, args)
 {
 	CreateDeleteMenu(client, client);
+	
 	return Plugin_Handled;
 }
 
@@ -228,7 +231,9 @@ public Action:Command_PersonalRecord(client, args)
 		new bool:ml = false;
 
 		if (ProcessTargetString(name, 0, targets, sizeof(targets), COMMAND_FILTER_NO_BOTS|COMMAND_FILTER_NO_IMMUNITY, targetName, sizeof(targetName), ml) > 0)
+		{
 			target = targets[0];
+		}
 	}
 
 	if (target == -1)
@@ -256,6 +261,7 @@ public Action:Command_PersonalRecord(client, args)
 public Action:Command_ReloadCache(client, args)
 {
 	RefreshCache();
+	
 	return Plugin_Handled;
 }
 
@@ -343,7 +349,8 @@ LoadDifficulties()
 public OnAdminMenuReady(Handle:topmenu)
 {
 	// Block this from being called twice
-	if (topmenu == hTopMenu) {
+	if (topmenu == hTopMenu) 
+	{
 		return;
 	}
  
@@ -383,9 +390,12 @@ public AdminMenu_CategoryHandler(Handle:topmenu,
 			String:buffer[],
 			maxlength)
 {
-	if (action == TopMenuAction_DisplayTitle) {
+	if (action == TopMenuAction_DisplayTitle)
+	{
 		Format(buffer, maxlength, "%t", "Timer Management");
-	} else if (action == TopMenuAction_DisplayOption) {
+	} 
+	else if (action == TopMenuAction_DisplayOption) 
+	{
 		Format(buffer, maxlength, "%t", "Timer Management");
 	}
 }
@@ -397,9 +407,12 @@ public AdminMenu_DeleteMapRecords(Handle:topmenu,
 			String:buffer[],
 			maxlength)
 {
-	if (action == TopMenuAction_DisplayOption) {
+	if (action == TopMenuAction_DisplayOption) 
+	{
 		Format(buffer, maxlength, "%t", "Delete Map Records");
-	} else if (action == TopMenuAction_SelectOption) {
+	} 
+	else if (action == TopMenuAction_SelectOption) 
+	{
 		decl String:map[32];
 		GetCurrentMap(map, sizeof(map));
 		
@@ -414,9 +427,12 @@ public AdminMenu_DeleteRecord(Handle:topmenu,
 			String:buffer[],
 			maxlength)
 {
-	if (action == TopMenuAction_DisplayOption) {
+	if (action == TopMenuAction_DisplayOption) 
+	{
 		Format(buffer, maxlength, "%t", "Delete Player Record");
-	} else if (action == TopMenuAction_SelectOption) {
+	} 
+	else if (action == TopMenuAction_SelectOption) 
+	{
 		DisplaySelectPlayerMenu(param);
 	}
 }
@@ -433,13 +449,17 @@ DisplaySelectPlayerMenu(client)
 	for (new cache = 0; cache < g_cacheCount; cache++)
 	{
 		if (g_cache[cache][Ignored])
+		{
 			continue;
+		}
 		
 		decl String:text[92];
 		Format(text, sizeof(text), "%d. %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
 		
 		if (g_showJumps)
+		{
 			Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Jumps], "Jumps", client);
+		}
 
 		AddMenuItem(menu, g_cache[cache][Auth], text);
 		items++;
@@ -474,7 +494,9 @@ public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
 		for (new cache = 0; cache < g_cacheCount; cache++)
 		{
 			if (StrEqual(g_cache[cache][Auth], info))
+			{
 				g_cache[cache][Ignored] = true;
+			}
 		}
 	}
 }
@@ -556,16 +578,18 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 
 ConnectSQL(bool:refreshCache)
 {
-    if (g_hSQL != INVALID_HANDLE)
-        CloseHandle(g_hSQL);
+	if (g_hSQL != INVALID_HANDLE)
+	{
+		CloseHandle(g_hSQL);
+	}
 	
-    g_hSQL = INVALID_HANDLE;
+	g_hSQL = INVALID_HANDLE;
 
-    if (SQL_CheckConfig("timer"))
+	if (SQL_CheckConfig("timer"))
 	{
 		SQL_TConnect(ConnectSQLCallback, "timer", refreshCache);
 	}
-    else
+	else
 	{
 		Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
 	}
@@ -593,7 +617,9 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	SQL_GetDriverIdent(owner, driver, sizeof(driver));
 	
 	if (StrEqual(driver, "mysql", false))
+	{
 		SQL_FastQuery(hndl, "SET NAMES 'utf8'");
+	}
 
 	g_hSQL = CloneHandle(hndl);
 
@@ -651,16 +677,18 @@ CreateWRMenu(client, difficulty)
 	SetMenuTitle(menu, "%T", "World Record Menu Title", client, g_currentMap);
 	
 	if (g_timerPhysics)
+	{
 		SetMenuExitBackButton(menu, true);
+	}
 	else
+	{
 		SetMenuExitButton(menu, true);
+	}
 		
 	new items = 0; 
 
 	for (new cache = 0; cache < g_cacheCount; cache++)
-	{
-		// PrintToChatAll("%d", g_cache[cache][RecordPhysicsDifficulty]);
-		
+	{	
 		if (difficulty == -1 || g_cache[cache][RecordPhysicsDifficulty] == difficulty)
 		{
 			decl String:id[5];
@@ -670,7 +698,9 @@ CreateWRMenu(client, difficulty)
 			Format(text, sizeof(text), "%d. %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
 			
 			if (g_showJumps)
+			{
 				Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Jumps], "Jumps", client);
+			}
 			
 			AddMenuItem(menu, id, text);
 			items++;
@@ -678,18 +708,21 @@ CreateWRMenu(client, difficulty)
 	}
 
 	if (items == 0)
-	{
-		CloseHandle(menu);
-		
+	{	
 		if (difficulty == -1)
+		{
 			PrintToChat(client, PLUGIN_PREFIX, "No Records");	
+		}
 		else
+		{
 			PrintToChat(client, PLUGIN_PREFIX, "No Difficulty Records");
+		}
+		
+		CloseHandle(menu);
+		return;
 	}
-	else
-	{
-		DisplayMenu(menu, client, MENU_TIME_FOREVER);
-	}
+
+	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 
 public MenuHandler_WR(Handle:menu, MenuAction:action, param1, param2)
@@ -703,7 +736,9 @@ public MenuHandler_WR(Handle:menu, MenuAction:action, param1, param2)
 		if (param2 == MenuCancel_ExitBack) 
 		{
 			if (g_timerPhysics)
+			{
 				CreateDifficultyMenu(param1);
+			}
 		}
 	} 
 	else if (action == MenuAction_Select) 
@@ -727,7 +762,7 @@ CreatePlayerInfoMenu(client, id, bool:back)
 		{
 			decl String:difficulty[5];
 			IntToString(g_cache[cache][RecordPhysicsDifficulty], difficulty, sizeof(difficulty));
-					
+
 			decl String:text[92];
 
 			SetMenuTitle(menu, "%T\n \n", "Record Info", client);
@@ -757,7 +792,9 @@ CreatePlayerInfoMenu(client, id, bool:back)
 			}
 	
 			if (back)
-				AddMenuItem(menu, difficulty, "Back");			
+			{
+				AddMenuItem(menu, difficulty, "Back");
+			}
 
 			break;
 		}
@@ -770,9 +807,11 @@ CreatePlayerInfoMenu(client, id, bool:back)
 ConsoleWR(client, difficulty)
 {
 	if (g_timerPhysics)
+	{
 		PrintToConsole(client, "difficulty: %s", g_difficulties[difficulty][Name]);
+	}
 	
-	PrintToConsole(client, "map       : %s\n", g_currentMap);
+	PrintToConsole(client, "map: %s\n", g_currentMap);
 
 	PrintToConsole(client, "# rank\tname\t\t\tsteamid\t\t\ttime\t\tjumps");
 
@@ -845,13 +884,17 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 		new String:difficulty[32];	
 		
 		if (g_timerPhysics)
+		{
 			Timer_GetDifficultyName(SQL_FetchInt(hndl, 3), difficulty, sizeof(difficulty));
+		}
 
 		decl String:value[92];
 		Format(value, sizeof(value), "%s %s", time, difficulty);
 		
 		if (g_showJumps)
+		{
 			Format(value, sizeof(value), "%s %T: %d", value, "Jumps", client, SQL_FetchInt(hndl, 2));
+		}
 			
 		AddMenuItem(menu, id, value);
 	}

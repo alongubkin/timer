@@ -1,8 +1,7 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <loghelper>
-#include <smlib>
+#include <sdktools>
 #include <timer>
 
 public Plugin:myinfo =
@@ -27,7 +26,7 @@ public Action:ScoutCommand(client, args)
 	{
 		if (GetPlayerWeaponSlot(client, 0) == -1)
 		{
-			Client_GiveWeapon(client, "weapon_scout");
+			GivePlayerItem(client, "weapon_scout");
 		}
 		else
 		{
@@ -43,13 +42,14 @@ public Action:USPCommand(client, args)
 	{
 		if (GetPlayerWeaponSlot(client, 1) == -1)
 		{
-			Client_GiveWeapon(client, "weapon_usp");
+			GivePlayerItem(client, "weapon_usp");
 		}
 		else
 		{
 			PrintToChat(client, "Drop your secondary weapon.");
 		}
 	}
+	
 	return Plugin_Handled;
 }
 
@@ -59,12 +59,13 @@ public Action:AWPCommand(client, args)
 	{
 		if (GetPlayerWeaponSlot(client, 0) == -1)
 		{
-			Client_GiveWeapon(client, "weapon_awp");
+			GivePlayerItem(client, "weapon_awp");
 		}
 		else
 		{
 			PrintToChat(client, "Drop your primary weapon.");
 		}
 	}
+
 	return Plugin_Handled;
 }

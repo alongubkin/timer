@@ -13,7 +13,7 @@
 /**
  * Global Variables
  */
-new String:g_currentMap[64];
+new String:g_currentMap[32];
 new bool:g_timerPhysics = false;
 
 new Handle:g_showSpeedCvar = INVALID_HANDLE;
@@ -105,21 +105,37 @@ public OnLibraryRemoved(const String:name[])
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
 	if (cvar == g_showSpeedCvar)
+	{
 		g_showSpeed = bool:StringToInt(newvalue);
+	}
 	else if (cvar == g_showJumpsCvar)
+	{
 		g_showJumps = bool:StringToInt(newvalue);
+	}
 	else if (cvar == g_showTimeCvar)
+	{
 		g_showTime = bool:StringToInt(newvalue);
+	}
 	else if (cvar == g_showDifficultyCvar)
+	{
 		g_showDifficulty = bool:StringToInt(newvalue);
+	}
 	else if (cvar == g_showBestTimesCvar)
+	{
 		g_showBestTimes = bool:StringToInt(newvalue);	
+	}
 	else if (cvar == g_showNameCvar)
+	{
 		g_showName = bool:StringToInt(newvalue);	
+	}
 	else if (cvar == g_fragsCvar)
+	{
 		g_frags = bool:StringToInt(newvalue);
+	}
 	else if (cvar == g_jumpsDeathCvar)
-		g_jumpsDeath = bool:StringToInt(newvalue);		
+	{
+		g_jumpsDeath = bool:StringToInt(newvalue);
+	}
 }
 
 public Action:HUDTimer(Handle:timer)
@@ -127,7 +143,9 @@ public Action:HUDTimer(Handle:timer)
 	for (new client = 1; client <= MaxClients; client++)
 	{
 		if (IsClientInGame(client))
+		{
 			UpdateHUD(client);
+		}
 	}
 
 	return Plugin_Continue;
@@ -136,8 +154,10 @@ public Action:HUDTimer(Handle:timer)
 UpdateHUD(client)
 {
 	if (!g_showTime && !g_showJumps && !g_showSpeed && !g_showBestTimes && !g_showDifficulty && !g_showName)
+	{
 		return;
-		
+	}
+
 	new target = client;
 	new t;
 	
@@ -150,7 +170,9 @@ UpdateHUD(client)
 			t = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
 
 			if (IsClientInGame(t) && !IsFakeClient(t))
+			{
 				target = t;
+			}
 		}		
 	}
 
@@ -190,7 +212,9 @@ UpdateHUD(client)
 		if (g_showJumps)
 		{
 			if (g_showTime)
+			{
 				Format(hintText, sizeof(hintText), "%s\n", hintText);
+			}
 				
 			Format(hintText, sizeof(hintText), "%s%t: %d", hintText, "Jumps", jumps);
 		}
@@ -202,7 +226,9 @@ UpdateHUD(client)
 		GetEntPropVector(target, Prop_Data, "m_vecVelocity", fVelocity);	
 		
 		if (enabled && (g_showTime || g_showJumps))
+		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
+		}
 		
 		Format(hintText, sizeof(hintText), "%s%t: %d u/s", hintText, "HUD Speed", 
 				RoundToFloor(SquareRoot(Pow(fVelocity[0],2.0)+Pow(fVelocity[1],2.0))));
@@ -219,7 +245,9 @@ UpdateHUD(client)
 		Timer_SecondsToTime(bestTime, buffer, sizeof(buffer), false);	
 		
 		if ((enabled && (g_showTime || g_showJumps)) || g_showSpeed)
+		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
+		}
 			
 		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "HUD Best Times", buffer);
 	}
@@ -230,7 +258,9 @@ UpdateHUD(client)
 		Timer_GetDifficultyName(Timer_GetClientDifficulty(target), difficulty, sizeof(difficulty));
 		
 		if ((enabled && (g_showTime || g_showJumps)) || g_showSpeed || g_showBestTimes)
+		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
+		}
 			
 		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "HUD Difficulty", difficulty);
 	}
@@ -241,7 +271,9 @@ UpdateHUD(client)
 		GetClientName(target, name, sizeof(name));
 		
 		if ((enabled && (g_showTime || g_showJumps)) || g_showSpeed || g_showBestTimes || g_showDifficulty)
+		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
+		}
 	
 		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "Player", name);	
 	}

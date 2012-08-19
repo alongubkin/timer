@@ -177,7 +177,9 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
 	if (g_timers[client][Enabled] && !g_timers[client][IsPaused])
+	{
 		g_timers[client][Jumps]++;
+	}
 	
 	return Plugin_Continue;
 }
@@ -185,13 +187,16 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 public Action:Event_StopTimer(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	StopTimer(GetClientOfUserId(GetEventInt(event, "userid")));
+	
 	return Plugin_Continue;
 }
 
 public Action:Command_Restart(client, args)
 {
 	if (g_restartEnabled)
+	{
 		RestartTimer(client);
+	}
 	
 	return Plugin_Handled;
 }
@@ -199,24 +204,30 @@ public Action:Command_Restart(client, args)
 public Action:Command_Stop(client, args)
 {
 	if (g_stopEnabled)
+	{
 		StopTimer(client);
-		
+	}
+	
 	return Plugin_Handled;
 }
 
 public Action:Command_Pause(client, args)
 {
 	if (g_pauseResumeEnabled)
+	{
 		PauseTimer(client);
-		
+	}
+	
 	return Plugin_Handled;
 }
 
 public Action:Command_Resume(client, args)
 {
 	if (g_pauseResumeEnabled)
+	{
 		ResumeTimer(client);
-		
+	}
+	
 	return Plugin_Handled;
 }
 
@@ -228,13 +239,21 @@ public FpsMaxCallback(QueryCookie:cookie, client, ConVarQueryResult:result, cons
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
 	if (cvar == g_restartEnabledCvar)
+	{
 		g_restartEnabled = bool:StringToInt(newvalue);
+	}
 	else if (cvar == g_stopEnabledCvar)
+	{
 		g_stopEnabled = bool:StringToInt(newvalue);
+	}
 	else if (cvar == g_pauseResumeEnabledCvar)
+	{
 		g_pauseResumeEnabled = bool:StringToInt(newvalue);	
+	}
 	else if (cvar == g_showJumpsInMsg)
-		g_showjumps = bool:StringToInt(newvalue);			
+	{
+		g_showjumps = bool:StringToInt(newvalue);	
+	}
 }
 
 /**
@@ -243,10 +262,14 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 bool:StartTimer(client)
 {
 	if (!IsPlayerAlive(client))
+	{
 		return false;
+	}
 	
 	if (g_timers[client][Enabled])
+	{
 		return false;
+	}
 		
 	g_timers[client][Enabled] = true;
 	g_timers[client][StartTime] = GetGameTime();
@@ -268,10 +291,14 @@ bool:StartTimer(client)
 bool:StopTimer(client, bool:stopPaused = true)
 {
 	if (!g_timers[client][Enabled])
+	{
 		return false;
+	}
 	
 	if (!stopPaused && g_timers[client][IsPaused])
+	{
 		return false;
+	}
 	
 	g_timers[client][Enabled] = false;
 	g_timers[client][EndTime] = GetGameTime();
@@ -286,7 +313,9 @@ bool:StopTimer(client, bool:stopPaused = true)
 bool:RestartTimer(client)
 {
 	if (!IsPlayerAlive(client))
+	{
 		return false;
+	}
 	
 	Call_StartForward(g_timerRestartForward);
 	Call_PushCell(client);
@@ -298,10 +327,14 @@ bool:RestartTimer(client)
 bool:PauseTimer(client)
 {
 	if (!IsPlayerAlive(client))
+	{
 		return false;
+	}
 		
 	if (!g_timers[client][Enabled] || g_timers[client][IsPaused])
+	{
 		return false;
+	}
 	
 	g_timers[client][IsPaused] = true;
 	g_timers[client][PauseStartTime] = GetGameTime();
@@ -324,10 +357,14 @@ bool:PauseTimer(client)
 bool:ResumeTimer(client)
 {
 	if (!IsPlayerAlive(client))
+	{
 		return false;
+	}
 		
 	if (!g_timers[client][Enabled] || !g_timers[client][IsPaused])
+	{
 		return false;
+	}
 	
 	g_timers[client][IsPaused] = false;
 	g_timers[client][PauseTotalTime] += GetGameTime() - g_timers[client][PauseStartTime];
@@ -349,7 +386,9 @@ bool:ResumeTimer(client)
 bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 {
 	if (!IsClientInGame(client))
+	{
 		return false;
+	}
 		
 	if (g_bestTimeCache[client][IsCached])
 	{			
@@ -406,7 +445,9 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 ClearCache()
 {
 	for (new client = 1; client <= MaxClients; client++)
+	{
 		ClearClientCache(client);
+	}
 }
 
 ClearClientCache(client)
@@ -419,10 +460,14 @@ ClearClientCache(client)
 FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
 {
 	if (!IsClientInGame(client))
+	{
 		return;
+	}
 		
 	if (!IsPlayerAlive(client))
+	{
 		return;
+	}
 		
 	new Float:LastTime;
 	new LastJumps;
@@ -518,23 +563,29 @@ public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:
 Float:CalculateTime(client)
 {
 	if (g_timers[client][Enabled] && g_timers[client][IsPaused])
+	{
 		return g_timers[client][PauseStartTime] - g_timers[client][StartTime] - g_timers[client][PauseTotalTime];
+	}
 	else
-		return (g_timers[client][Enabled] ? GetGameTime() : g_timers[client][EndTime]) - g_timers[client][StartTime] - g_timers[client][PauseTotalTime];	
+	{
+		return (g_timers[client][Enabled] ? GetGameTime() : g_timers[client][EndTime]) - g_timers[client][StartTime] - g_timers[client][PauseTotalTime];
+	}
 }
 
 ConnectSQL()
 {
-    if (g_hSQL != INVALID_HANDLE)
-        CloseHandle(g_hSQL);
+	if (g_hSQL != INVALID_HANDLE)
+	{
+		CloseHandle(g_hSQL);
+	}
 	
-    g_hSQL = INVALID_HANDLE;
+	g_hSQL = INVALID_HANDLE;
 
-    if (SQL_CheckConfig("timer"))
+	if (SQL_CheckConfig("timer"))
 	{
 		SQL_TConnect(ConnectSQLCallback, "timer");
 	}
-    else
+	else
 	{
 		Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
 	}
