@@ -143,6 +143,8 @@ stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precis
 		mins = RoundToFloor(t / 60.0);
 		t %= 60;
 	}
+	
+	Format(buffer, maxlength, "");
 
 	if (hour)
 	{
