@@ -14,8 +14,8 @@
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-core.txt"
 
 /** 
- * Global Enums
- */
+* Global Enums
+*/
 enum Timer
 {
 	Enabled,
@@ -39,8 +39,8 @@ enum BestTimeCacheEntity
 }
 
 /**
- * Global Variables
- */
+* Global Variables
+*/
 new Handle:g_hSQL;
 
 new String:g_currentMap[32];
@@ -68,11 +68,11 @@ new g_iVelocity;
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] Core",
-    author      = "alongub | Glite",
-    description = "Core component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] Core",
+	author      = "alongub | Glite",
+	description = "Core component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
@@ -170,8 +170,8 @@ public OnMapEnd()
 }
 
 /**
- * Events
- */
+* Events
+*/
 public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -257,8 +257,8 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 }
 
 /**
- * Core Functionality
- */
+* Core Functionality
+*/
 bool:StartTimer(client)
 {
 	if (!IsPlayerAlive(client))
@@ -270,7 +270,7 @@ bool:StartTimer(client)
 	{
 		return false;
 	}
-		
+	
 	g_timers[client][Enabled] = true;
 	g_timers[client][StartTime] = GetGameTime();
 	g_timers[client][EndTime] = -1.0;
@@ -306,7 +306,7 @@ bool:StopTimer(client, bool:stopPaused = true)
 	Call_StartForward(g_timerStoppedForward);
 	Call_PushCell(client);
 	Call_Finish();
-		
+	
 	return true;
 }
 
@@ -330,7 +330,7 @@ bool:PauseTimer(client)
 	{
 		return false;
 	}
-		
+	
 	if (!g_timers[client][Enabled] || g_timers[client][IsPaused])
 	{
 		return false;
@@ -360,7 +360,7 @@ bool:ResumeTimer(client)
 	{
 		return false;
 	}
-		
+	
 	if (!g_timers[client][Enabled] || !g_timers[client][IsPaused])
 	{
 		return false;
@@ -389,7 +389,7 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 	{
 		return false;
 	}
-		
+	
 	if (g_bestTimeCache[client][IsCached])
 	{			
 		time = g_bestTimeCache[client][Time];
@@ -463,12 +463,12 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 	{
 		return;
 	}
-		
+	
 	if (!IsPlayerAlive(client))
 	{
 		return;
 	}
-		
+	
 	new Float:LastTime;
 	new LastJumps;
 	decl String:TimeDiff[32];
@@ -492,7 +492,6 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 		{
 			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
 			Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
-
 		}
 	}
 	else
@@ -715,8 +714,8 @@ public Native_ForceReloadBestRoundCache(Handle:plugin, numParams)
 }
 
 /**
- * Utils methods
- */
+* Utils methods
+*/
 stock GetClientAbsVelocity(client, Float:vecVelocity[3])
 {
 	for (new x = 0; x < 3; x++)

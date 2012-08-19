@@ -1,18 +1,18 @@
 #if defined _timer_physics_included
- #endinput
+#endinput
 #endif
 #define _timer_physics_included
 
 enum PhysicsDifficulty
 {
-    Id,
-    String:Name[32],
-    bool:IsDefault,
-    Float:Stamina,
-    Float:Gravity,
-    bool:PreventAD,
-    bool:PreventBack,
-    bool:Auto
+	Id,
+	String:Name[32],
+	bool:IsDefault,
+	Float:Stamina,
+	Float:Gravity,
+	bool:PreventAD,
+	bool:PreventBack,
+	bool:Auto
 }
 
 /**

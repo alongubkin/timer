@@ -10,11 +10,11 @@ new g_iWeaponOwner[2048];
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] Player Visibility",
-    author      = "alongub | Glite",
-    description = "Player visibility component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] Player Visibility",
+	author      = "alongub | Glite",
+	description = "Player visibility component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()
@@ -74,12 +74,12 @@ public Hook_WeaponDrop(client, weapon)
 
 public Action:Hook_SetTransmit(entity, client) 
 { 
-    return !(client != entity && (0 < entity <= MaxClients) && g_hide[client]) ? Plugin_Continue : Plugin_Handled; 
+	return !(client != entity && (0 < entity <= MaxClients) && g_hide[client]) ? Plugin_Continue : Plugin_Handled; 
 }
 
 public Action:Hook_SetTransmitWeapon(entity, client) 
 { 
-    return !(g_iWeaponOwner[entity] && g_iWeaponOwner[entity] != client && g_hide[client]) ? Plugin_Continue : Plugin_Handled; 
+	return !(g_iWeaponOwner[entity] && g_iWeaponOwner[entity] != client && g_hide[client]) ? Plugin_Continue : Plugin_Handled; 
 }
 
 public Action:HideCommand(client, args)

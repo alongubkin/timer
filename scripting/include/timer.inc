@@ -1,5 +1,5 @@
 #if defined _timer_included
- #endinput
+#endinput
 #endif
 #define _timer_included
 
@@ -10,20 +10,20 @@
 
 enum MapZoneType
 {
-    Start,
-    End,
-    Glitch1,
-    Glitch2,
-    Glitch3
+	Start,
+	End,
+	Glitch1,
+	Glitch2,
+	Glitch3
 }
 
 enum MapZone
 {
-    Id,
-    MapZoneType:Type,
-    String:Map[32],
-    Float:Point1[3],
-    Float:Point2[3]
+	Id,
+	MapZoneType:Type,
+	String:Map[32],
+	Float:Point1[3],
+	Float:Point2[3]
 }
 
 /**
@@ -135,14 +135,14 @@ stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precis
 	if (t >= 3600)
 	{
 		hour = RoundToFloor(t / 3600.0);
-		t = t % 3600;
-    }
+		t %= 3600;
+	}
 	
 	if (t >= 60)
 	{
 		mins = RoundToFloor(t / 60.0);
-		t = t % 60;
-    }
+		t %= 60;
+	}
 
 	if (hour)
 	{

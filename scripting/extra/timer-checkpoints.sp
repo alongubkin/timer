@@ -16,8 +16,8 @@ enum Checkpoint
 }
 
 /**
- * Global Variables
- */
+* Global Variables
+*/
 new Handle:g_hSQL;
 
 new String:g_currentMap[32];
@@ -32,11 +32,11 @@ new g_currentCheckpoint[MAXPLAYERS+1];
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] Checkpoints",
-    author      = "alongub | Glite",
-    description = "Checkpoints component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] Checkpoints",
+	author      = "alongub | Glite",
+	description = "Checkpoints component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()
@@ -157,7 +157,7 @@ public LoadCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[], 
 		g_checkpoints[g_checkpointCount][Position][2] = SQL_FetchFloat(hndl, 5);
 
 		g_checkpoints[g_checkpointCount][Order] = SQL_FetchInt(hndl, 6);
-	
+		
 		g_checkpointCount++;
 	}
 	
@@ -251,10 +251,10 @@ ClearCheckpoints(client)
 	{
 		decl String:auth[32];
 		GetClientAuthString(client, auth, sizeof(auth));
-			
+		
 		decl String:query[384];
 		Format(query, sizeof(query), "DELETE FROM checkpoints WHERE auth = '%s' AND map = '%s';", auth, g_currentMap);
-	
+		
 		SQL_TQuery(g_hSQL, ClearCheckpointsCallback, query, client, DBPrio_Normal);
 	}
 }

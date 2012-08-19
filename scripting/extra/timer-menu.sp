@@ -5,11 +5,11 @@
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] Menu",
-    author      = "alongub | Glite",
-    description = "Menu component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] Menu",
+	author      = "alongub | Glite",
+	description = "Menu component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()
@@ -39,7 +39,7 @@ OpenMenu(client)
 	AddMenuItem(menu, "sm_scout", "!scout - Spawns a scout");
 	AddMenuItem(menu, "sm_usp", "!usp - Spawns a usp");
 	AddMenuItem(menu, "sm_awp", "!awp - Spawns a awp");
-		
+	
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
 }
 

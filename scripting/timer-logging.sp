@@ -16,11 +16,11 @@ static String:g_current_date[20];
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] Logging",
-    author      = "alongub | Glite",
-    description = "Logging component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] Logging",
+	author      = "alongub | Glite",
+	description = "Logging component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart() 
@@ -34,7 +34,7 @@ public OnPluginStart()
 	{
 		CreateLogFileOrTurnOffLogging();
 	}
-		
+	
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -50,9 +50,9 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	CreateNative("Timer_LogInfo",     Timer_LogInfo_);
 	CreateNative("Timer_LogDebug",    Timer_LogDebug_);
 	CreateNative("Timer_LogTrace",    Timer_LogTrace_);
-    
+	
 	RegPluginLibrary("timer-logging");
-    
+	
 	return APLRes_Success;
 }
 
@@ -67,12 +67,12 @@ public OnLibraryAdded(const String:name[])
 LoadConfig() 
 {
 	new Handle:kv = CreateKeyValues("root");
-    
+	
 	decl String:path[100];
 	BuildPath(Path_SM, path, sizeof(path), "configs/timer/logging.cfg");
-    
+	
 	if (!FileToKeyValues(kv, path))
-    {
+	{
 		CloseHandle(kv);
 		SetFailState("Can't read config file %s", path);
 	}
@@ -96,17 +96,17 @@ public Action:OnCheckDate(Handle:timer)
 {
 	decl String:new_date[20];
 	FormatTime(new_date, sizeof(new_date), "%Y-%m-%d", GetTime());
-    
+	
 	if (g_log_level > Timer_LogLevelNone && !StrEqual(new_date, g_current_date)) 
-    {
+	{
 		strcopy(g_current_date, sizeof(g_current_date), new_date);
-        
+		
 		if (g_log_file != INVALID_HANDLE) 
-        {
+		{
 			WriteMessageToLog(INVALID_HANDLE, Timer_LogLevelInfo, "Date changed; switching log file", true);
 			CloseLogFile();
 		}
-        
+		
 		CreateLogFileOrTurnOffLogging();
 	}
 }
@@ -124,15 +124,15 @@ bool:CreateLogFileOrTurnOffLogging()
 	decl String:filename[128];
 	new pos = BuildPath(Path_SM, filename, sizeof(filename), "logs/");
 	FormatTime(filename[pos], sizeof(filename)-pos, "timer_%Y-%m-%d.log", GetTime());
-    
+	
 	if ((g_log_file = OpenFile(filename, "a")) == INVALID_HANDLE) 
-    {
+	{
 		g_log_level = Timer_LogLevelNone;
 		LogError("Can't create timer log file");
 		return false;
 	}
 	else 
-    {
+	{
 		WriteMessageToLog(INVALID_HANDLE, Timer_LogLevelInfo, "Logging started", true);
 		return true;
 	}
@@ -147,17 +147,17 @@ public Timer_Log_(Handle:plugin, num_params)
 {
 	new Timer_LogLevel:log_level = Timer_LogLevel:GetNativeCell(1);
 	if (g_log_level >= log_level) 
-    {
+	{
 		decl String:message[10000], written;
 		FormatNativeString(0, 2, 3, sizeof(message), written, message);
-        
+		
 		if (g_log_file != INVALID_HANDLE)
 		{
 			WriteMessageToLog(plugin, log_level, message);
 		}
-            
+		
 		if (log_level == Timer_LogLevelError && g_log_errors_to_SM) 
-        {
+		{
 			ReplaceString(message, sizeof(message), "%", "%%");
 			LogError(message);
 		}
@@ -167,17 +167,17 @@ public Timer_Log_(Handle:plugin, num_params)
 public Timer_LogError_(Handle:plugin, num_params) 
 {
 	if (g_log_level >= Timer_LogLevelError) 
-    {
+	{
 		decl String:message[10000], written;
 		FormatNativeString(0, 1, 2, sizeof(message), written, message);
-        
+		
 		if (g_log_file != INVALID_HANDLE)
-        {
+		{
 			WriteMessageToLog(plugin, Timer_LogLevelError, message);
-        }
-         
+		}
+		
 		if (g_log_errors_to_SM) 
-        {
+		{
 			ReplaceString(message, sizeof(message), "%", "%%");
 			LogError(message);
 		}
@@ -187,7 +187,7 @@ public Timer_LogError_(Handle:plugin, num_params)
 public Timer_LogWarning_(Handle:plugin, num_params) 
 {
 	if (g_log_level >= Timer_LogLevelWarning && g_log_file != INVALID_HANDLE) 
-    {
+	{
 		decl String:message[10000], written;
 		FormatNativeString(0, 1, 2, sizeof(message), written, message);
 		WriteMessageToLog(plugin, Timer_LogLevelWarning, message);
@@ -197,7 +197,7 @@ public Timer_LogWarning_(Handle:plugin, num_params)
 public Timer_LogInfo_(Handle:plugin, num_params) 
 {
 	if (g_log_level >= Timer_LogLevelInfo && g_log_file != INVALID_HANDLE) 
-    {
+	{
 		decl String:message[10000], written;
 		FormatNativeString(0, 1, 2, sizeof(message), written, message);
 		WriteMessageToLog(plugin, Timer_LogLevelInfo, message);
@@ -207,7 +207,7 @@ public Timer_LogInfo_(Handle:plugin, num_params)
 public Timer_LogDebug_(Handle:plugin, num_params) 
 {
 	if (g_log_level >= Timer_LogLevelDebug && g_log_file != INVALID_HANDLE) 
-    {
+	{
 		decl String:message[10000], written;
 		FormatNativeString(0, 1, 2, sizeof(message), written, message);
 		WriteMessageToLog(plugin, Timer_LogLevelDebug, message);
@@ -217,7 +217,7 @@ public Timer_LogDebug_(Handle:plugin, num_params)
 public Timer_LogTrace_(Handle:plugin, num_params) 
 {
 	if (g_log_level >= Timer_LogLevelTrace && g_log_file != INVALID_HANDLE) 
-    {
+	{
 		decl String:message[10000], written;
 		FormatNativeString(0, 1, 2, sizeof(message), written, message);
 		WriteMessageToLog(plugin, Timer_LogLevelTrace, message);
@@ -229,7 +229,7 @@ WriteMessageToLog(Handle:plugin, Timer_LogLevel:log_level, const String:message[
 	decl String:log_line[10000];
 	PrepareLogLine(plugin, log_level, message, log_line);
 	WriteFileString(g_log_file, log_line, false);
-    
+	
 	if (log_level <= g_log_flush_level || force_flush)
 	{
 		FlushFile(g_log_file);

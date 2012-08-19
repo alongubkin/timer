@@ -1,12 +1,13 @@
 #if defined _timer_logging_included
- #endinput
+#endinput
 #endif
 #define _timer_logging_included
 
 /**
  * Logging levels
  */
-enum Timer_LogLevel {
+enum Timer_LogLevel 
+{
 	Timer_LogLevelNone = 0,  /**< Logging disabled */
 	Timer_LogLevelError,     /**< Log only errors */
 	Timer_LogLevelWarning,   /**< Log errors and warnings */

@@ -9,11 +9,11 @@ new tsCount, ctsCount;
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] Bhop",
-    author      = "alongub | Glite",
-    description = "Bhop component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] Bhop",
+	author      = "alongub | Glite",
+	description = "Bhop component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()

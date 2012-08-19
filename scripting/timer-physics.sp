@@ -29,11 +29,11 @@ new bool:g_auto[MAXPLAYERS+1];
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] Physics",
-    author      = "alongub | Glite",
-    description = "Physics component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] Physics",
+	author      = "alongub | Glite",
+	description = "Physics component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
@@ -171,7 +171,7 @@ LoadDifficulties()
 		g_difficulties[g_difficultyCount][PreventAD] = bool:KvGetNum(kv, "prevent_ad", 0);
 		g_difficulties[g_difficultyCount][PreventBack] = bool:KvGetNum(kv, "prevent_back", 0);
 		g_difficulties[g_difficultyCount][Auto] = bool:KvGetNum(kv, "auto", 0);
-        
+		
 		if (g_difficulties[g_difficultyCount][IsDefault])
 		{
 			g_defaultDifficulty = g_difficulties[g_difficultyCount][Id];
@@ -246,24 +246,24 @@ ApplyDifficulty(client)
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {	
 	if (g_preventAD[client] && IsPlayerAlive(client))
-    {
-        if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT))
+	{
+		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT))
 		{
 			return Plugin_Handled;
 		}
-    }
+	}
 	
 	if (g_preventBack[client] && IsPlayerAlive(client))
-    {
-        if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_BACK))
+	{
+		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_BACK))
 		{
 			return Plugin_Handled;
 		}
-    }
+	}
 
 	
 	if (g_auto[client] && IsPlayerAlive(client))
-    {
+	{
 		if (buttons & IN_JUMP)
 		{
 			if (!(GetEntityFlags(client) & FL_ONGROUND))
@@ -277,7 +277,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 				}
 			}
 		}
-    }
+	}
 	
 	return Plugin_Continue;
 }

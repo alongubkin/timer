@@ -11,8 +11,8 @@
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-hud.txt"
 
 /**
- * Global Variables
- */
+* Global Variables
+*/
 new String:g_currentMap[32];
 new bool:g_timerPhysics = false;
 
@@ -36,11 +36,11 @@ new bool:g_jumpsDeath = false;
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] HUD",
-    author      = "alongub | Glite",
-    description = "HUD component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] HUD",
+	author      = "alongub | Glite",
+	description = "HUD component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()
@@ -67,7 +67,7 @@ public OnPluginStart()
 	HookConVarChange(g_jumpsDeathCvar, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-hud");
-		
+	
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
@@ -78,6 +78,8 @@ public OnMapStart()
 {
 	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
 	StringToLower(g_currentMap);
+	
+	PrecacheSound("UI/hint.wav");
 	
 	CreateTimer(0.25, HUDTimer, _, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
 }
@@ -215,7 +217,7 @@ UpdateHUD(client)
 			{
 				Format(hintText, sizeof(hintText), "%s\n", hintText);
 			}
-				
+			
 			Format(hintText, sizeof(hintText), "%s%t: %d", hintText, "Jumps", jumps);
 		}
 	}
@@ -231,7 +233,7 @@ UpdateHUD(client)
 		}
 		
 		Format(hintText, sizeof(hintText), "%s%t: %d u/s", hintText, "HUD Speed", 
-				RoundToFloor(SquareRoot(Pow(fVelocity[0],2.0)+Pow(fVelocity[1],2.0))));
+		RoundToFloor(SquareRoot(Pow(fVelocity[0],2.0)+Pow(fVelocity[1],2.0))));
 	}
 	
 	if (g_showBestTimes)
@@ -248,7 +250,7 @@ UpdateHUD(client)
 		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 		}
-			
+		
 		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "HUD Best Times", buffer);
 	}
 	
@@ -261,7 +263,7 @@ UpdateHUD(client)
 		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 		}
-			
+		
 		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "HUD Difficulty", difficulty);
 	}
 	
@@ -274,7 +276,7 @@ UpdateHUD(client)
 		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 		}
-	
+		
 		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "Player", name);	
 	}
 	

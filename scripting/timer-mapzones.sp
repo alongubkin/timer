@@ -16,8 +16,8 @@
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-mapzones.txt"
 
 /**
- * Global Enums
- */
+* Global Enums
+*/
 enum MapZoneEditor
 {
 	Step,
@@ -26,8 +26,8 @@ enum MapZoneEditor
 }
 
 /**
- * Global Variables
- */
+* Global Variables
+*/
 new Handle:g_hSQL;
 
 new Handle:g_startMapZoneColor = INVALID_HANDLE;
@@ -56,11 +56,11 @@ new bool:g_timerWorldRecord = false;
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] MapZones",
-    author      = "alongub | Glite",
-    description = "Map Zones component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] MapZones",
+	author      = "alongub | Glite",
+	description = "Map Zones component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()
@@ -159,42 +159,42 @@ public OnAdminMenuReady(Handle:topmenu)
 	{
 		return;
 	}
- 
+
 	// Save the Handle
 	hTopMenu = topmenu;
 	
 	if ((oMapZoneMenu = FindTopMenuCategory(topmenu, "Timer Management")) == INVALID_TOPMENUOBJECT)
 	{
 		oMapZoneMenu = AddToTopMenu(hTopMenu,
-			"Timer Management",
-			TopMenuObject_Category,
-			AdminMenu_CategoryHandler,
-			INVALID_TOPMENUOBJECT);
+		"Timer Management",
+		TopMenuObject_Category,
+		AdminMenu_CategoryHandler,
+		INVALID_TOPMENUOBJECT);
 	}
 
 	AddToTopMenu(hTopMenu, 
-		"timer_mapzones_add",
-		TopMenuObject_Item,
-		AdminMenu_AddMapZone,
-		oMapZoneMenu,
-		"timer_mapzones_add",
-		ADMFLAG_RCON);
+	"timer_mapzones_add",
+	TopMenuObject_Item,
+	AdminMenu_AddMapZone,
+	oMapZoneMenu,
+	"timer_mapzones_add",
+	ADMFLAG_RCON);
 
 	AddToTopMenu(hTopMenu, 
-		"timer_mapzones_remove",
-		TopMenuObject_Item,
-		AdminMenu_RemoveMapZone,
-		oMapZoneMenu,
-		"timer_mapzones_remove",
-		ADMFLAG_RCON);
+	"timer_mapzones_remove",
+	TopMenuObject_Item,
+	AdminMenu_RemoveMapZone,
+	oMapZoneMenu,
+	"timer_mapzones_remove",
+	ADMFLAG_RCON);
 
 	AddToTopMenu(hTopMenu, 
-		"timer_mapzones_remove_all",
-		TopMenuObject_Item,
-		AdminMenu_RemoveAllMapZones,
-		oMapZoneMenu,
-		"timer_mapzones_remove_all",
-		ADMFLAG_RCON);
+	"timer_mapzones_remove_all",
+	TopMenuObject_Item,
+	AdminMenu_RemoveAllMapZones,
+	oMapZoneMenu,
+	"timer_mapzones_remove_all",
+	ADMFLAG_RCON);
 
 }
 
@@ -335,7 +335,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	{
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `mapzone` (`id` INTEGER PRIMARY KEY, `type` INTEGER NOT NULL, `point1_x` float NOT NULL, `point1_y` float NOT NULL, `point1_z` float NOT NULL, `point2_x` float NOT NULL, `point2_y` float NOT NULL, `point2_z` float NOT NULL, `map` varchar(32) NOT NULL);");
 	}
-		
+	
 	g_reconnectCounter = 1;
 }
 
@@ -361,11 +361,11 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 }
 
 public AdminMenu_CategoryHandler(Handle:topmenu, 
-			TopMenuAction:action,
-			TopMenuObject:object_id,
-			param,
-			String:buffer[],
-			maxlength)
+TopMenuAction:action,
+TopMenuObject:object_id,
+param,
+String:buffer[],
+maxlength)
 {
 	if (action == TopMenuAction_DisplayTitle) 
 	{
@@ -378,11 +378,11 @@ public AdminMenu_CategoryHandler(Handle:topmenu,
 }
 
 public AdminMenu_AddMapZone(Handle:topmenu, 
-			TopMenuAction:action,
-			TopMenuObject:object_id,
-			param,
-			String:buffer[],
-			maxlength)
+TopMenuAction:action,
+TopMenuObject:object_id,
+param,
+String:buffer[],
+maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
@@ -397,11 +397,11 @@ public AdminMenu_AddMapZone(Handle:topmenu,
 }
 
 public AdminMenu_RemoveMapZone(Handle:topmenu, 
-			TopMenuAction:action,
-			TopMenuObject:object_id,
-			param,
-			String:buffer[],
-			maxlength)
+TopMenuAction:action,
+TopMenuObject:object_id,
+param,
+String:buffer[],
+maxlength)
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
@@ -414,11 +414,11 @@ public AdminMenu_RemoveMapZone(Handle:topmenu,
 }
 
 public AdminMenu_RemoveAllMapZones(Handle:topmenu, 
-			TopMenuAction:action,
-			TopMenuObject:object_id,
-			param,
-			String:buffer[],
-			maxlength)
+TopMenuAction:action,
+TopMenuObject:object_id,
+param,
+String:buffer[],
+maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
@@ -491,17 +491,17 @@ DisplaySelectPointMenu(client, n)
 {
 	new Handle:panel = CreatePanel();
 
- 	decl String:message[255];
+	decl String:message[255];
 	decl String:first[32], String:second[32];
 	Format(first, sizeof(first), "%t", "FIRST");
 	Format(second, sizeof(second), "%t", "SECOND");
 	
- 	Format(message, sizeof(message), "%t", "Point Select Panel", (n == 1) ? first : second);
+	Format(message, sizeof(message), "%t", "Point Select Panel", (n == 1) ? first : second);
 
- 	DrawPanelItem(panel, message, ITEMDRAW_RAWLINE);
+	DrawPanelItem(panel, message, ITEMDRAW_RAWLINE);
 
 	Format(message, sizeof(message), "%t", "Cancel");
- 	DrawPanelItem(panel, message);
+	DrawPanelItem(panel, message);
 
 	SendPanelToClient(panel, client, PointSelect, 540);
 	CloseHandle(panel);
@@ -788,7 +788,7 @@ IsInsideBox(Float:fPCords[3], Float:fbsx, Float:fbsy, Float:fbsz, Float:fbex, Fl
 	{
 		bX = true;
 	}
-		
+	
 	if (fbsy > fbey && fpy <= fbsy && fpy >= fbey)
 	{
 		bY = true;
@@ -806,7 +806,7 @@ IsInsideBox(Float:fPCords[3], Float:fbsx, Float:fbsy, Float:fbsz, Float:fbex, Fl
 	{
 		bZ = true;
 	}
-		
+	
 	if (bX && bY && bZ)
 	{
 		return true;
@@ -945,11 +945,11 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 		TE_SetupBeamPoints(fLeftBottomFront,fLeftBottomBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 		TE_SetupBeamPoints(fLeftBottomFront,lefttopfront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 
-	
+		
 		TE_SetupBeamPoints(fRightBottomBack,fLeftBottomBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 		TE_SetupBeamPoints(fRightBottomBack,fRightBottomFront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 		TE_SetupBeamPoints(fRightBottomBack,fRightTopBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-	
+		
 		TE_SetupBeamPoints(fRightBottomFront,righttopfront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 		TE_SetupBeamPoints(fLeftBottomBack,fLeftTopBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 	}

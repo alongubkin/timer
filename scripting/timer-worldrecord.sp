@@ -14,8 +14,8 @@
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-worldrecord.txt"
 
 /**
- * Global Enums
- */
+* Global Enums
+*/
 enum RecordCache
 {
 	Id,
@@ -28,8 +28,8 @@ enum RecordCache
 }
 
 /**
- * Global Variables
- */
+* Global Variables
+*/
 new Handle:g_hSQL;
 
 new String:g_currentMap[32];
@@ -54,11 +54,11 @@ new bool:g_showJumps = true;
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] World Record",
-    author      = "alongub | Glite",
-    description = "World Record component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] World Record",
+	author      = "alongub | Glite",
+	description = "World Record component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
@@ -353,42 +353,42 @@ public OnAdminMenuReady(Handle:topmenu)
 	{
 		return;
 	}
- 
+
 	// Save the Handle
 	hTopMenu = topmenu;
-		
+	
 	if ((oMapZoneMenu = FindTopMenuCategory(topmenu, "Timer Management")) == INVALID_TOPMENUOBJECT)
 	{
 		oMapZoneMenu = AddToTopMenu(hTopMenu,
-			"Timer Management",
-			TopMenuObject_Category,
-			AdminMenu_CategoryHandler,
-			INVALID_TOPMENUOBJECT);
+		"Timer Management",
+		TopMenuObject_Category,
+		AdminMenu_CategoryHandler,
+		INVALID_TOPMENUOBJECT);
 	}
-		
+	
 	AddToTopMenu(hTopMenu, 
-		"timer_delete",
-		TopMenuObject_Item,
-		AdminMenu_DeleteRecord,
-		oMapZoneMenu,
-		"timer_delete",
-		ADMFLAG_RCON);
-		
+	"timer_delete",
+	TopMenuObject_Item,
+	AdminMenu_DeleteRecord,
+	oMapZoneMenu,
+	"timer_delete",
+	ADMFLAG_RCON);
+	
 	AddToTopMenu(hTopMenu, 
-		"timer_deletemaprecords",
-		TopMenuObject_Item,
-		AdminMenu_DeleteMapRecords,
-		oMapZoneMenu,
-		"timer_deletemaprecords",
-		ADMFLAG_RCON);		
+	"timer_deletemaprecords",
+	TopMenuObject_Item,
+	AdminMenu_DeleteMapRecords,
+	oMapZoneMenu,
+	"timer_deletemaprecords",
+	ADMFLAG_RCON);		
 }
 
 public AdminMenu_CategoryHandler(Handle:topmenu, 
-			TopMenuAction:action,
-			TopMenuObject:object_id,
-			param,
-			String:buffer[],
-			maxlength)
+TopMenuAction:action,
+TopMenuObject:object_id,
+param,
+String:buffer[],
+maxlength)
 {
 	if (action == TopMenuAction_DisplayTitle)
 	{
@@ -401,11 +401,11 @@ public AdminMenu_CategoryHandler(Handle:topmenu,
 }
 
 public AdminMenu_DeleteMapRecords(Handle:topmenu, 
-			TopMenuAction:action,
-			TopMenuObject:object_id,
-			param,
-			String:buffer[],
-			maxlength)
+TopMenuAction:action,
+TopMenuObject:object_id,
+param,
+String:buffer[],
+maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
@@ -421,11 +421,11 @@ public AdminMenu_DeleteMapRecords(Handle:topmenu,
 }
 
 public AdminMenu_DeleteRecord(Handle:topmenu, 
-			TopMenuAction:action,
-			TopMenuObject:object_id,
-			param,
-			String:buffer[],
-			maxlength)
+TopMenuAction:action,
+TopMenuObject:object_id,
+param,
+String:buffer[],
+maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
@@ -559,7 +559,7 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 	}
 	
 	g_cacheCount = 0;
-		
+	
 	while (SQL_FetchRow(hndl))
 	{
 		g_cache[g_cacheCount][Id] = SQL_FetchInt(hndl, 0);
@@ -572,7 +572,7 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 		
 		g_cacheCount++;
 	}
-		
+	
 	g_cacheLoaded = true;
 }
 
@@ -684,7 +684,7 @@ CreateWRMenu(client, difficulty)
 	{
 		SetMenuExitButton(menu, true);
 	}
-		
+	
 	new items = 0; 
 
 	for (new cache = 0; cache < g_cacheCount; cache++)
@@ -745,7 +745,7 @@ public MenuHandler_WR(Handle:menu, MenuAction:action, param1, param2)
 	{
 		decl String:info[32];		
 		GetMenuItem(menu, param2, info, sizeof(info));
-			
+		
 		CreatePlayerInfoMenu(param1, StringToInt(info), true);
 	}
 }
@@ -790,7 +790,7 @@ CreatePlayerInfoMenu(client, id, bool:back)
 				Format(text, sizeof(text), "%T: %s", "Physics Difficulty", client, difficultyName);
 				AddMenuItem(menu, difficulty, text);
 			}
-	
+			
 			if (back)
 			{
 				AddMenuItem(menu, difficulty, "Back");
@@ -820,11 +820,11 @@ ConsoleWR(client, difficulty)
 		if (!g_timerPhysics || g_cache[cache][RecordPhysicsDifficulty] == difficulty)
 		{
 			PrintToConsole(client, "# %d\t%s\t%s\t%s\t%d",
-				cache + 1,
-				g_cache[cache][Name],
-				g_cache[cache][Auth],
-				g_cache[cache][TimeString],
-				g_cache[cache][Jumps]);		
+			cache + 1,
+			g_cache[cache][Name],
+			g_cache[cache][Auth],
+			g_cache[cache][TimeString],
+			g_cache[cache][Jumps]);		
 		}
 	}	
 }
@@ -839,7 +839,7 @@ CreateDeleteMenu(client, target)
 	{
 		decl String:auth[32];
 		GetClientAuthString(target, auth, sizeof(auth));
-			
+		
 		decl String:query[384];
 		Format(query, sizeof(query), "SELECT id, time, jumps, physicsdifficulty, auth FROM `round` WHERE map = '%s' AND auth = '%s' ORDER BY physicsdifficulty, time, jumps", g_currentMap, auth);	
 		
@@ -863,7 +863,7 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 	
 	decl String:auth[32];
 	GetClientAuthString(client, auth, sizeof(auth));
-			
+	
 	while (SQL_FetchRow(hndl))
 	{
 		decl String:steamid[32];
@@ -895,7 +895,7 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 		{
 			Format(value, sizeof(value), "%s %T: %d", value, "Jumps", client, SQL_FetchInt(hndl, 2));
 		}
-			
+		
 		AddMenuItem(menu, id, value);
 	}
 
@@ -913,7 +913,7 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 	{
 		decl String:info[32];		
 		GetMenuItem(menu, param2, info, sizeof(info));
-			
+		
 		decl String:query[384];
 		Format(query, sizeof(query), "DELETE FROM `round` WHERE id = %s", info);	
 

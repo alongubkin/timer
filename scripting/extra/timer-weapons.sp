@@ -6,11 +6,11 @@
 
 public Plugin:myinfo =
 {
-    name        = "[Timer] Weapons",
-    author      = "alongub | Glite",
-    description = "Weapons component for [Timer]",
-    version     = PL_VERSION,
-    url         = "https://github.com/alongubkin/timer"
+	name        = "[Timer] Weapons",
+	author      = "alongub | Glite",
+	description = "Weapons component for [Timer]",
+	version     = PL_VERSION,
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()
