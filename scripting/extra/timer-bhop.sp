@@ -26,6 +26,8 @@ public OnPluginStart()
 
 public OnMapStart()
 {
+	ctsCount = tsCount = 0;
+	
 	new maxEnt = GetMaxEntities();
 	decl String:sClassName[64];
 	for (new i = MaxClients; i < maxEnt; i++)

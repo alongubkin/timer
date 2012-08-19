@@ -41,7 +41,7 @@ new g_difficultyCount = 0;
 new Handle:hTopMenu = INVALID_HANDLE;
 new TopMenuObject:oMapZoneMenu;
 
-new g_cache[100][RecordCache];
+new g_cache[2048][RecordCache];
 new g_cacheCount = 0;
 new bool:g_cacheLoaded = false;
 
