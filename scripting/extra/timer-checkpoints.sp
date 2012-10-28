@@ -131,7 +131,7 @@ LoadCheckpoints()
 		decl String:query[384];
 		Format(query, sizeof(query), "SELECT id, auth, map, position_x, position_y, position_z, `order` FROM `checkpoints` WHERE map = '%s' ORDER BY `order` ASC", g_currentMap);
 
-		SQL_TQuery(g_hSQL, LoadCheckpointsCallback, query, _, DBPrio_Normal);
+		SQL_TQuery(g_hSQL, LoadCheckpointsCallback, query, _, DBPrio_Low);
 	}
 }
 
@@ -255,7 +255,7 @@ ClearCheckpoints(client)
 		decl String:query[384];
 		Format(query, sizeof(query), "DELETE FROM checkpoints WHERE auth = '%s' AND map = '%s';", auth, g_currentMap);
 		
-		SQL_TQuery(g_hSQL, ClearCheckpointsCallback, query, client, DBPrio_Normal);
+		SQL_TQuery(g_hSQL, ClearCheckpointsCallback, query, client, DBPrio_High);
 	}
 }
 
@@ -305,7 +305,7 @@ SaveCheckpoint(client)
 			decl String:query[384];
 			Format(query, sizeof(query), "INSERT INTO checkpoints (auth, map, position_x, position_y, position_z, `order`) VALUES ('%s', '%s', %f, %f, %f, %d)", auth, g_currentMap, position[0], position[1], position[2], order);
 
-			SQL_TQuery(g_hSQL, SaveCheckpointCallback, query, client, DBPrio_Normal);
+			SQL_TQuery(g_hSQL, SaveCheckpointCallback, query, client, DBPrio_High);
 		}
 		else
 		{

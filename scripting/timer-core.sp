@@ -553,7 +553,7 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	decl String:query[256];
 	Format(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax, flashbangs) VALUES ('%s', '%s', %f, %d, %d, '%s', %d, %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax, flashbangs);
 	
-	SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_Normal);
+	SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_High);
 	
 	decl String:sTimeString[32];
 	Timer_SecondsToTime(time, sTimeString, sizeof(sTimeString), true);
@@ -604,7 +604,7 @@ GetTotalRank(const String:map[])
 	decl String:query[384];
 	Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", map, map);
 	
-	SQL_TQuery(g_hSQL, GetTotalRankCallback, query, _, DBPrio_Normal);
+	SQL_TQuery(g_hSQL, GetTotalRankCallback, query, _, DBPrio_Low);
 }
 
 public GetTotalRankCallback(Handle:owner, Handle:hndl, const String:error[], any:data)

@@ -151,7 +151,7 @@ public OnClientAuthorized(client, const String:auth[])
 	decl String:query[256];
 	Format(query, sizeof(query), "UPDATE round SET name = '%s' WHERE auth = '%s';", safeName, auth);
 
-	SQL_TQuery(g_hSQL, ChangeNameCallback, query, _, DBPrio_Normal);
+	SQL_TQuery(g_hSQL, ChangeNameCallback, query, _, DBPrio_Low);
 }
 
 public ChangeNameCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -289,7 +289,7 @@ public Action:Command_DeleteRecord_All(client, args)
 	decl String:query[384];
 	Format(query, sizeof(query), "DELETE FROM round WHERE auth = '%s'", auth);
 
-	SQL_TQuery(g_hSQL, DeleteRecordsCallback, query, _, DBPrio_Normal);
+	SQL_TQuery(g_hSQL, DeleteRecordsCallback, query, _, DBPrio_High);
 	
 	return Plugin_Handled;
 }
@@ -308,7 +308,7 @@ public Action:Command_DeleteRecord(client, args)
 	decl String:query[384];
 	Format(query, sizeof(query), "DELETE FROM round WHERE auth = '%s' AND map = '%s'", auth, g_currentMap);
 
-	SQL_TQuery(g_hSQL, DeleteRecordsCallback, query, _, DBPrio_Normal);
+	SQL_TQuery(g_hSQL, DeleteRecordsCallback, query, _, DBPrio_High);
 	
 	return Plugin_Handled;
 }
@@ -489,7 +489,7 @@ public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
 		decl String:query[384];
 		Format(query, sizeof(query), "DELETE FROM `round` WHERE auth = '%s' AND map = '%s'", info, g_currentMap);
 
-		SQL_TQuery(g_hSQL, DeletePlayersRecordCallback, query, param1, DBPrio_Normal);
+		SQL_TQuery(g_hSQL, DeletePlayersRecordCallback, query, param1, DBPrio_High);
 		
 		for (new cache = 0; cache < g_cacheCount; cache++)
 		{
@@ -518,7 +518,7 @@ DeleteMapRecords(const String:map[])
 	decl String:query[384];
 	Format(query, sizeof(query), "DELETE FROM `round` WHERE map = '%s'", map);	
 
-	SQL_TQuery(g_hSQL, DeleteMapRecordsCallback, query, _, DBPrio_Normal);
+	SQL_TQuery(g_hSQL, DeleteMapRecordsCallback, query, _, DBPrio_High);
 }
 
 public DeleteMapRecordsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -546,7 +546,7 @@ RefreshCache()
 		decl String:query[384];
 		Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name, MAX(m.flashbangs) flashbangs FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
 		
-		SQL_TQuery(g_hSQL, RefreshCacheCallback, query, _, DBPrio_Normal);
+		SQL_TQuery(g_hSQL, RefreshCacheCallback, query, _, DBPrio_Low);
 	}
 }
 
@@ -937,7 +937,7 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 		decl String:query[384];
 		Format(query, sizeof(query), "DELETE FROM `round` WHERE id = %s", info);	
 
-		SQL_TQuery(g_hSQL, DeleteRecordCallback, query, param1, DBPrio_Normal);
+		SQL_TQuery(g_hSQL, DeleteRecordCallback, query, param1, DBPrio_High);
 	}
 }
 
