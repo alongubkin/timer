@@ -45,30 +45,30 @@ enum BestTimeCacheEntity
 */
 new Handle:g_hSQL;
 
-new String:g_currentMap[32];
-new g_reconnectCounter = 0;
+new String:g_sCurrentMap[32];
+new g_iReconnectCounter = 0;
 
 new g_timers[MAXPLAYERS+1][Timer];
 new g_bestTimeCache[MAXPLAYERS+1][BestTimeCacheEntity];
 
-new Handle:g_timerStartedForward;
-new Handle:g_timerStoppedForward;
-new Handle:g_timerRestartForward;
+new Handle:g_hTimerStartedForward;
+new Handle:g_hTimerStoppedForward;
+new Handle:g_hTimerRestartForward;
 
-new Handle:g_restartEnabledCvar = INVALID_HANDLE;
-new Handle:g_stopEnabledCvar = INVALID_HANDLE;
-new Handle:g_pauseResumeEnabledCvar = INVALID_HANDLE;
-new Handle:g_showJumpsInMsg = INVALID_HANDLE;
-new Handle:g_showFlashbangsInMsg = INVALID_HANDLE;
+new Handle:g_hCvarRestartEnabled = INVALID_HANDLE;
+new Handle:g_hCvarStopEnabled = INVALID_HANDLE;
+new Handle:g_hCvarPauseResumeEnabled = INVALID_HANDLE;
+new Handle:g_hCvarShowJumps = INVALID_HANDLE;
+new Handle:g_hCvarShowFlashbangs = INVALID_HANDLE;
 
-new bool:g_restartEnabled = true;
-new bool:g_stopEnabled = true;
-new bool:g_pauseResumeEnabled = true;
-new bool:g_showjumps = true;
-new bool:g_showflashbangs = false;
+new bool:g_bRestartEnabled = true;
+new bool:g_bStopEnabled = true;
+new bool:g_bPauseResumeEnabled = true;
+new bool:g_bShowJumps = true;
+new bool:g_bShowFlashbangs = false;
 
-new bool:g_timerPhysics = false;
-new g_iVelocity;
+new bool:g_bTimerPhysics = false;
+new g_fVelocity;
 
 public Plugin:myinfo =
 {
@@ -98,12 +98,12 @@ public OnPluginStart()
 {
 	CreateConVar("timer_version", PL_VERSION, "Timer Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 	
-	g_timerStartedForward = CreateGlobalForward("OnTimerStarted", ET_Event, Param_Cell);
-	g_timerStoppedForward = CreateGlobalForward("OnTimerStopped", ET_Event, Param_Cell);
-	g_timerRestartForward = CreateGlobalForward("OnTimerRestart", ET_Event, Param_Cell);
+	g_hTimerStartedForward = CreateGlobalForward("OnTimerStarted", ET_Event, Param_Cell);
+	g_hTimerStoppedForward = CreateGlobalForward("OnTimerStopped", ET_Event, Param_Cell);
+	g_hTimerRestartForward = CreateGlobalForward("OnTimerRestart", ET_Event, Param_Cell);
 
-	g_iVelocity = FindSendPropInfo("CBasePlayer", "m_vecVelocity[0]");
-	g_timerPhysics = LibraryExists("timer-physics");
+	g_fVelocity = FindSendPropInfo("CBasePlayer", "m_vecVelocity[0]");
+	g_bTimerPhysics = LibraryExists("timer-physics");
 	
 	LoadTranslations("timer.phrases");
 	
@@ -122,17 +122,17 @@ public OnPluginStart()
 	RegConsoleCmd("sm_pause", Command_Pause);
 	RegConsoleCmd("sm_resume", Command_Resume);
 	
-	g_restartEnabledCvar = CreateConVar("timer_restart_enabled", "1", "Whether or not players can restart their timers.");
-	g_stopEnabledCvar = CreateConVar("timer_stop_enabled", "1", "Whether or not players can stop their timers.");
-	g_pauseResumeEnabledCvar = CreateConVar("timer_pauseresume_enabled", "1", "Whether or not players can resume or pause their timers.");
-	g_showJumpsInMsg = CreateConVar("timer_showjumpsinfinishmessage", "1", "Whether or not players will see jumps in finish message.");
-	g_showFlashbangsInMsg = CreateConVar("timer_showflashbangsinfinishmessage", "0", "Whether or not players will see flashbangs in finish message.");
+	g_hCvarRestartEnabled = CreateConVar("timer_restart_enabled", "1", "Whether or not players can restart their timers.");
+	g_hCvarStopEnabled = CreateConVar("timer_stop_enabled", "1", "Whether or not players can stop their timers.");
+	g_hCvarPauseResumeEnabled = CreateConVar("timer_pauseresume_enabled", "1", "Whether or not players can resume or pause their timers.");
+	g_hCvarShowJumps = CreateConVar("timer_showjumpsinfinishmessage", "1", "Whether or not players will see jumps in finish message.");
+	g_hCvarShowFlashbangs = CreateConVar("timer_showflashbangsinfinishmessage", "0", "Whether or not players will see flashbangs in finish message.");
 	
-	HookConVarChange(g_restartEnabledCvar, Action_OnSettingsChange);
-	HookConVarChange(g_stopEnabledCvar, Action_OnSettingsChange);	
-	HookConVarChange(g_pauseResumeEnabledCvar, Action_OnSettingsChange);
-	HookConVarChange(g_showJumpsInMsg, Action_OnSettingsChange);
-	HookConVarChange(g_showFlashbangsInMsg, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarRestartEnabled, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarStopEnabled, Action_OnSettingsChange);	
+	HookConVarChange(g_hCvarPauseResumeEnabled, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarShowFlashbangs, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-core");
 	
@@ -146,7 +146,7 @@ public OnLibraryAdded(const String:name[])
 {
 	if (StrEqual(name, "timer-physics"))
 	{
-		g_timerPhysics = true;
+		g_bTimerPhysics = true;
 	}
 	else if (StrEqual(name, "updater"))
 	{
@@ -158,7 +158,7 @@ public OnLibraryRemoved(const String:name[])
 {
 	if (StrEqual(name, "timer-physics"))
 	{
-		g_timerPhysics = false;
+		g_bTimerPhysics = false;
 	}
 }
 
@@ -166,8 +166,8 @@ public OnMapStart()
 {	
 	ConnectSQL();
 	
-	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
-	StringToLower(g_currentMap);
+	GetCurrentMap(g_sCurrentMap, sizeof(g_sCurrentMap));
+	StringToLower(g_sCurrentMap);
 	
 	ClearCache();
 }
@@ -219,7 +219,7 @@ public Action:Event_WeaponFire(Handle:event, const String:name[], bool:dontBroad
 
 public Action:Command_Restart(client, args)
 {
-	if (g_restartEnabled)
+	if (g_bRestartEnabled)
 	{
 		RestartTimer(client);
 	}
@@ -229,7 +229,7 @@ public Action:Command_Restart(client, args)
 
 public Action:Command_Stop(client, args)
 {
-	if (g_stopEnabled)
+	if (g_bStopEnabled)
 	{
 		StopTimer(client);
 	}
@@ -239,7 +239,7 @@ public Action:Command_Stop(client, args)
 
 public Action:Command_Pause(client, args)
 {
-	if (g_pauseResumeEnabled)
+	if (g_bPauseResumeEnabled)
 	{
 		PauseTimer(client);
 	}
@@ -249,7 +249,7 @@ public Action:Command_Pause(client, args)
 
 public Action:Command_Resume(client, args)
 {
-	if (g_pauseResumeEnabled)
+	if (g_bPauseResumeEnabled)
 	{
 		ResumeTimer(client);
 	}
@@ -264,27 +264,26 @@ public FpsMaxCallback(QueryCookie:cookie, client, ConVarQueryResult:result, cons
 
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
-	if (cvar == g_restartEnabledCvar)
+	if (cvar == g_hCvarRestartEnabled)
 	{
-		g_restartEnabled = bool:StringToInt(newvalue);
+		g_bRestartEnabled = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_stopEnabledCvar)
+	else if (cvar == g_hCvarStopEnabled)
 	{
-		g_stopEnabled = bool:StringToInt(newvalue);
+		g_bStopEnabled = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_pauseResumeEnabledCvar)
+	else if (cvar == g_hCvarPauseResumeEnabled)
 	{
-		g_pauseResumeEnabled = bool:StringToInt(newvalue);	
+		g_bPauseResumeEnabled = bool:StringToInt(newvalue);	
 	}
-	else if (cvar == g_showJumpsInMsg)
+	else if (cvar == g_hCvarShowJumps)
 	{
-		g_showjumps = bool:StringToInt(newvalue);	
+		g_bShowJumps = bool:StringToInt(newvalue);	
 	}
-	else if (cvar == g_showFlashbangsInMsg)
+	else if (cvar == g_hCvarShowFlashbangs)
 	{
-		g_showflashbangs = bool:StringToInt(newvalue);	
+		g_bShowFlashbangs = bool:StringToInt(newvalue);	
 	}
-
 }
 
 /**
@@ -313,7 +312,7 @@ bool:StartTimer(client)
 	
 	QueryClientConVar(client, "fps_max", FpsMaxCallback, client);
 	
-	Call_StartForward(g_timerStartedForward);
+	Call_StartForward(g_hTimerStartedForward);
 	Call_PushCell(client);
 	Call_Finish();
 	
@@ -335,7 +334,7 @@ bool:StopTimer(client, bool:stopPaused = true)
 	g_timers[client][Enabled] = false;
 	g_timers[client][EndTime] = GetGameTime();
 
-	Call_StartForward(g_timerStoppedForward);
+	Call_StartForward(g_hTimerStoppedForward);
 	Call_PushCell(client);
 	Call_Finish();
 	
@@ -349,7 +348,7 @@ bool:RestartTimer(client)
 		return false;
 	}
 	
-	Call_StartForward(g_timerRestartForward);
+	Call_StartForward(g_hTimerRestartForward);
 	Call_PushCell(client);
 	Call_Finish();
 	
@@ -506,36 +505,36 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 		return;
 	}
 	
-	new Float:LastTime;
-	new LastJumps, LastFlashbangs;
-	decl String:TimeDiff[32];
-	decl String:buffer[32];
+	new Float:fLastTime;
+	new iLastJumps, iLastFlashbangs;
+	decl String:sTimeDiff[32];
+	decl String:sBuffer[32];
 	
-	if (Timer_GetBestRound(client, map, LastTime, LastJumps, LastFlashbangs))
+	if (Timer_GetBestRound(client, map, fLastTime, iLastJumps, iLastFlashbangs))
 	{
-		LastTime -= time;			
-		if(LastTime < 0.0)
+		fLastTime -= time;			
+		if(fLastTime < 0.0)
 		{	
-			LastTime *= -1.0;
-			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
-			Format(TimeDiff, sizeof(TimeDiff), "+%s", buffer);
+			fLastTime *= -1.0;
+			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
+			Format(sTimeDiff, sizeof(sTimeDiff), "+%s", sBuffer);
 		}
-		else if(LastTime > 0.0)
+		else if(fLastTime > 0.0)
 		{
-			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
-			Format(TimeDiff, sizeof(TimeDiff), "-%s", buffer);
+			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
+			Format(sTimeDiff, sizeof(sTimeDiff), "-%s", sBuffer);
 		}
-		else if(LastTime == 0.0)
+		else if(fLastTime == 0.0)
 		{
-			Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
-			Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
+			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
+			Format(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
 		}
 	}
 	else
 	{
-		LastTime = 0.0;
-		Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
-		Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
+		fLastTime = 0.0;
+		Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
+		Format(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
 	}
 	
 	decl String:auth[32];
@@ -552,34 +551,34 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	
 	SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_Normal);
 	
-	decl String:TimeString[32];
-	Timer_SecondsToTime(time, TimeString, sizeof(TimeString), true);
+	decl String:sTimeString[32];
+	Timer_SecondsToTime(time, sTimeString, sizeof(sTimeString), true);
 	
-	decl String:Message[256];
+	decl String:sMessage[256];
 	
-	Format(Message, sizeof(Message), PLUGIN_PREFIX, "Round Finish Message", name, TimeString, TimeDiff);
+	Format(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish sMessage", name, sTimeString, sTimeDiff);
 	
-	if (g_showjumps)
+	if (g_bShowJumps)
 	{
-		Format(Message, sizeof(Message), "%s %t", Message, "Jumps Message", jumps);
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Jumps sMessage", jumps);
 	}
 	
-	if (g_showflashbangs)
+	if (g_bShowFlashbangs)
 	{
-		Format(Message, sizeof(Message), "%s %t", Message, "Flashbangs Message", flashbangs);
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Flashbangs sMessage", flashbangs);
 	}
 	
-	if (g_timerPhysics)
+	if (g_bTimerPhysics)
 	{
 		new String:difficulty[32];
 		Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
 		
-		Format(Message, sizeof(Message), "%s %t", Message, "Difficulty Message", difficulty);
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Difficulty sMessage", difficulty);
 	}
 	
-	Format(Message, sizeof(Message), "%s.", Message);
+	Format(sMessage, sizeof(sMessage), "%s.", sMessage);
 	
-	PrintToChatAll(Message);
+	PrintToChatAll(sMessage);
 	
 }
 
@@ -627,7 +626,7 @@ ConnectSQL()
 
 public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
-	if (g_reconnectCounter >= 5)
+	if (g_iReconnectCounter >= 5)
 	{
 		Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
 		return;
@@ -637,7 +636,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	{
 		Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
 		
-		g_reconnectCounter++;
+		g_iReconnectCounter++;
 		ConnectSQL();
 		
 		return;
@@ -658,7 +657,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` INTEGER PRIMARY KEY, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` INTEGER NOT NULL, `physicsdifficulty` INTEGER NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` INTEGER NOT NULL, `flashbangs` INTEGER NOT NULL);");
 	}
 	
-	g_reconnectCounter = 1;
+	g_iReconnectCounter = 1;
 }
 
 public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -667,7 +666,7 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	{
 		Timer_LogError(error);
 		
-		g_reconnectCounter++;
+		g_iReconnectCounter++;
 		ConnectSQL();
 
 		return;
@@ -758,6 +757,6 @@ stock GetClientAbsVelocity(client, Float:vecVelocity[3])
 {
 	for (new x = 0; x < 3; x++)
 	{
-		vecVelocity[x] = GetEntDataFloat(client, g_iVelocity + (x*4));
+		vecVelocity[x] = GetEntDataFloat(client, g_fVelocity + (x*4));
 	}
 }

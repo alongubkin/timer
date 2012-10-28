@@ -2,39 +2,39 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <timer>
+#include <fTimer>
 
 #undef REQUIRE_PLUGIN
-#include <timer-physics>
+#include <fTimer-physics>
 #include <updater>
 
-#define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-hud.txt"
+#define UPDATE_URL "http://dl.dropbox.com/u/16304603/fTimer/updateinfo-fTimer-hud.txt"
 
 /**
 * Global Variables
 */
-new String:g_currentMap[32];
-new bool:g_timerPhysics = false;
+new String:g_sCurrentMap[32];
+new bool:g_bTimerPhysics = false;
 
-new Handle:g_showSpeedCvar = INVALID_HANDLE;
-new Handle:g_showJumpsCvar = INVALID_HANDLE;
-new Handle:g_showFlashbansCvar = INVALID_HANDLE;
-new Handle:g_showTimeCvar = INVALID_HANDLE;
-new Handle:g_showDifficultyCvar = INVALID_HANDLE;
-new Handle:g_showBestTimesCvar = INVALID_HANDLE;
-new Handle:g_showNameCvar = INVALID_HANDLE;
-new Handle:g_fragsCvar = INVALID_HANDLE;
-new Handle:g_jumpsDeathCvar = INVALID_HANDLE;
+new Handle:g_hCvarShowSpeed = INVALID_HANDLE;
+new Handle:g_hCvarShowJumps = INVALID_HANDLE;
+new Handle:g_hCvarShowFlashbans = INVALID_HANDLE;
+new Handle:g_hCvarShowTime = INVALID_HANDLE;
+new Handle:g_hCvarShowDifficulty = INVALID_HANDLE;
+new Handle:g_hcvarShowBestTimes = INVALID_HANDLE;
+new Handle:g_hCvarShowName = INVALID_HANDLE;
+new Handle:g_hCvarTimeByKills = INVALID_HANDLE;
+new Handle:g_hCvarJumpsByDeaths = INVALID_HANDLE;
 
-new bool:g_showSpeed = true;
-new bool:g_showJumps = true;
-new bool:g_showFlashbangs = false;
-new bool:g_showTime = true;
-new bool:g_showDifficulty = true;
-new bool:g_showBestTimes = true;
-new bool:g_showName = true;
-new bool:g_frags = false;
-new bool:g_jumpsDeath = false;
+new bool:g_bShowSpeed = true;
+new bool:g_bShowJumps = true;
+new bool:g_bShowFlashbangs = false;
+new bool:g_bShowTime = true;
+new bool:g_bShowDifficulty = true;
+new bool:g_bShowBestTimes = true;
+new bool:g_bShowName = true;
+new bool:g_bTimeByKills = false;
+new bool:g_bJumpsByDeaths = false;
 
 public Plugin:myinfo =
 {
@@ -42,35 +42,35 @@ public Plugin:myinfo =
 	author      = "alongub | Glite",
 	description = "HUD component for [Timer]",
 	version     = PL_VERSION,
-	url         = "https://github.com/alongubkin/timer"
+	url         = "https://github.com/alongubkin/fTimer"
 };
 
 public OnPluginStart()
 {
-	g_timerPhysics = LibraryExists("timer-physics");
-	LoadTranslations("timer.phrases");
+	g_bTimerPhysics = LibraryExists("fTimer-physics");
+	LoadTranslations("fTimer.phrases");
 	
-	g_showSpeedCvar = CreateConVar("timer_hud_speed", "1", "Whether or not speed is shown in the HUD.");
-	g_showJumpsCvar = CreateConVar("timer_hud_jumps", "1", "Whether or not jump count is shown in the HUD.");
-	g_showFlashbansCvar = CreateConVar("timer_hud_flashbangs", "0", "Whether or not flashbang count is shown in the HUD.");
-	g_showTimeCvar = CreateConVar("timer_hud_time", "1", "Whether or not time is shown in the HUD.");
-	g_showDifficultyCvar = CreateConVar("timer_hud_difficulty", "1", "Whether or not difficulty is shown in the HUD, if the timer-physics module is enabled.");
-	g_showBestTimesCvar = CreateConVar("timer_hud_besttimes", "1", "Whether or not best times for this map is shown in the HUD.");
-	g_showNameCvar = CreateConVar("timer_hud_name", "1", "Whether or not spectating player's name is shown in the HUD.");
-	g_fragsCvar = CreateConVar("timer_frags", "0", "Whether or not players' score should be his current timer.");
-	g_jumpsDeathCvar = CreateConVar("timer_jumps_death", "0", "Whether or not players' death count should be their jump count.");
+	g_hCvarShowSpeed = CreateConVar("fTimer_hud_speed", "1", "Whether or not speed is shown in the HUD.");
+	g_hCvarShowJumps = CreateConVar("fTimer_hud_iJumps", "1", "Whether or not jump count is shown in the HUD.");
+	g_hCvarShowFlashbans = CreateConVar("fTimer_hud_iFlashbangs", "0", "Whether or not flashbang count is shown in the HUD.");
+	g_hCvarShowTime = CreateConVar("fTimer_hud_fTime", "1", "Whether or not fTime is shown in the HUD.");
+	g_hCvarShowDifficulty = CreateConVar("fTimer_hud_sDifficulty", "1", "Whether or not difficulty is shown in the HUD, if the fTimer-physics module is bEnabled.");
+	g_hcvarShowBestTimes = CreateConVar("fTimer_hud_bestfTimes", "1", "Whether or not best fTimes for this map is shown in the HUD.");
+	g_hCvarShowName = CreateConVar("fTimer_hud_name", "1", "Whether or not spectating player's name is shown in the HUD.");
+	g_hCvarTimeByKills = CreateConVar("fTimer_frags", "0", "Whether or not players' score should be his current fTimer.");
+	g_hCvarJumpsByDeaths = CreateConVar("fTimer_iJumps_death", "0", "Whether or not players' death count should be their jump count.");
 
-	HookConVarChange(g_showSpeedCvar, Action_OnSettingsChange);
-	HookConVarChange(g_showJumpsCvar, Action_OnSettingsChange);	
-	HookConVarChange(g_showFlashbansCvar, Action_OnSettingsChange);
-	HookConVarChange(g_showTimeCvar, Action_OnSettingsChange);
-	HookConVarChange(g_showDifficultyCvar, Action_OnSettingsChange);	
-	HookConVarChange(g_showBestTimesCvar, Action_OnSettingsChange);
-	HookConVarChange(g_showNameCvar, Action_OnSettingsChange);
-	HookConVarChange(g_fragsCvar, Action_OnSettingsChange);	
-	HookConVarChange(g_jumpsDeathCvar, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarShowSpeed, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);	
+	HookConVarChange(g_hCvarShowFlashbans, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarShowTime, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarShowDifficulty, Action_OnSettingsChange);	
+	HookConVarChange(g_hcvarShowBestTimes, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarShowName, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarTimeByKills, Action_OnSettingsChange);	
+	HookConVarChange(g_hCvarJumpsByDeaths, Action_OnSettingsChange);
 	
-	AutoExecConfig(true, "timer-hud");
+	AutoExecConfig(true, "fTimer-hud");
 	
 	if (LibraryExists("updater"))
 	{
@@ -80,8 +80,8 @@ public OnPluginStart()
 
 public OnMapStart() 
 {
-	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
-	StringToLower(g_currentMap);
+	GetCurrentMap(g_sCurrentMap, sizeof(g_sCurrentMap));
+	StringToLower(g_sCurrentMap);
 	
 	PrecacheSound("UI/hint.wav");
 	
@@ -90,9 +90,9 @@ public OnMapStart()
 
 public OnLibraryAdded(const String:name[])
 {
-	if (StrEqual(name, "timer-physics"))
+	if (StrEqual(name, "fTimer-physics"))
 	{
-		g_timerPhysics = true;
+		g_bTimerPhysics = true;
 	}
 	else if (StrEqual(name, "updater"))
 	{
@@ -102,53 +102,53 @@ public OnLibraryAdded(const String:name[])
 
 public OnLibraryRemoved(const String:name[])
 {
-	if (StrEqual(name, "timer-physics"))
+	if (StrEqual(name, "fTimer-physics"))
 	{
-		g_timerPhysics = false;
+		g_bTimerPhysics = false;
 	}
 }
 
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
-	if (cvar == g_showSpeedCvar)
+	if (cvar == g_hCvarShowSpeed)
 	{
-		g_showSpeed = bool:StringToInt(newvalue);
+		g_bShowSpeed = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_showJumpsCvar)
+	else if (cvar == g_hCvarShowJumps)
 	{
-		g_showJumps = bool:StringToInt(newvalue);
+		g_bShowJumps = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_showFlashbansCvar)
+	else if (cvar == g_hCvarShowFlashbans)
 	{
-		g_showFlashbangs = bool:StringToInt(newvalue);
+		g_bShowFlashbangs = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_showTimeCvar)
+	else if (cvar == g_hCvarShowTime)
 	{
-		g_showTime = bool:StringToInt(newvalue);
+		g_bShowTime = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_showDifficultyCvar)
+	else if (cvar == g_hCvarShowDifficulty)
 	{
-		g_showDifficulty = bool:StringToInt(newvalue);
+		g_bShowDifficulty = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_showBestTimesCvar)
+	else if (cvar == g_hcvarShowBestTimes)
 	{
-		g_showBestTimes = bool:StringToInt(newvalue);	
+		g_bShowBestTimes = bool:StringToInt(newvalue);	
 	}
-	else if (cvar == g_showNameCvar)
+	else if (cvar == g_hCvarShowName)
 	{
-		g_showName = bool:StringToInt(newvalue);	
+		g_bShowName = bool:StringToInt(newvalue);	
 	}
-	else if (cvar == g_fragsCvar)
+	else if (cvar == g_hCvarTimeByKills)
 	{
-		g_frags = bool:StringToInt(newvalue);
+		g_bTimeByKills = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_jumpsDeathCvar)
+	else if (cvar == g_hCvarJumpsByDeaths)
 	{
-		g_jumpsDeath = bool:StringToInt(newvalue);
+		g_bJumpsByDeaths = bool:StringToInt(newvalue);
 	}
 }
 
-public Action:HUDTimer(Handle:timer)
+public Action:HUDTimer(Handle:fTimer)
 {
 	for (new client = 1; client <= MaxClients; client++)
 	{
@@ -163,7 +163,7 @@ public Action:HUDTimer(Handle:timer)
 
 UpdateHUD(client)
 {
-	if (!g_showTime && !g_showJumps && !g_showFlashbangs && !g_showSpeed && !g_showBestTimes && !g_showDifficulty && !g_showName)
+	if (!g_bShowTime && !g_bShowJumps && !g_bShowFlashbangs && !g_bShowSpeed && !g_bShowBestTimes && !g_bShowDifficulty && !g_bShowName)
 	{
 		return;
 	}
@@ -186,121 +186,121 @@ UpdateHUD(client)
 		}		
 	}
 
-	new bool:enabled;
-	new Float:time;
-	new jumps;
-	new fpsmax;
-	new flashbangs;
+	new bool:bEnabled;
+	new Float:fTime;
+	new iJumps;
+	new iFpsMax;
+	new iFlashbangs;
 
-	Timer_GetClientTimer(target, enabled, time, jumps, fpsmax, flashbangs);
+	Timer_GetClientTimer(target, bEnabled, fTime, iJumps, iFpsMax, iFlashbangs);
 	
-	if (enabled && (g_frags || g_jumpsDeath) && client == target)
+	if (bEnabled && (g_bTimeByKills || g_bJumpsByDeaths) && client == target)
 	{		
-		if (g_frags)
+		if (g_bTimeByKills)
 		{
-			new roundedTime = RoundToFloor(time);
+			new roundedTime = RoundToFloor(fTime);
 			SetEntProp(target, Prop_Data, "m_iFrags", (roundedTime / 60) * 100 + (roundedTime % 60));
 		}
 		
-		if (g_jumpsDeath)
+		if (g_bJumpsByDeaths)
 		{
-			SetEntProp(target, Prop_Data, "m_iDeaths", jumps);		
+			SetEntProp(target, Prop_Data, "m_iDeaths", iJumps);		
 		}
 	}
 	
-	new String:hintText[256];
+	new String:sHintText[256];
 	
-	if (enabled)
+	if (bEnabled)
 	{
-		if (g_showTime)
+		if (g_bShowTime)
 		{
-			new String:timeString[32];
-			Timer_SecondsToTime(time, timeString, sizeof(timeString), false);
+			new String:sTimeString[32];
+			Timer_SecondsToTime(fTime, sTimeString, sizeof(sTimeString), false);
 			
-			Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "Time", timeString);
+			Format(sHintText, sizeof(sHintText), "%s%t: %s", sHintText, "Time", sTimeString);
 		}	
 		
-		if (g_showJumps)
+		if (g_bShowJumps)
 		{
-			if (g_showTime)
+			if (g_bShowTime)
 			{
-				Format(hintText, sizeof(hintText), "%s\n", hintText);
+				Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 			}
 			
-			Format(hintText, sizeof(hintText), "%s%t: %d", hintText, "Jumps", jumps);
+			Format(sHintText, sizeof(sHintText), "%s%t: %d", sHintText, "Jumps", iJumps);
 		}
 		
-		if (g_showFlashbangs)
+		if (g_bShowFlashbangs)
 		{
-			if (g_showTime || g_showJumps)
+			if (g_bShowTime || g_bShowJumps)
 			{
-				Format(hintText, sizeof(hintText), "%s\n", hintText);
+				Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 			}
 			
-			Format(hintText, sizeof(hintText), "%s%t: %d", hintText, "Flashbangs", flashbangs);
+			Format(sHintText, sizeof(sHintText), "%s%t: %d", sHintText, "Flashbangs", iFlashbangs);
 		}
 	}
 	
-	if (g_showSpeed)
+	if (g_bShowSpeed)
 	{
 		decl Float:fVelocity[3];
 		GetEntPropVector(target, Prop_Data, "m_vecVelocity", fVelocity);	
 		
-		if (enabled && (g_showTime || g_showJumps || g_showFlashbangs))
+		if (bEnabled && (g_bShowTime || g_bShowJumps || g_bShowFlashbangs))
 		{
-			Format(hintText, sizeof(hintText), "%s\n", hintText);
+			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(hintText, sizeof(hintText), "%s%t: %d u/s", hintText, "HUD Speed", 
+		Format(sHintText, sizeof(sHintText), "%s%t: %d u/s", sHintText, "HUD Speed", 
 		RoundToFloor(SquareRoot(Pow(fVelocity[0],2.0)+Pow(fVelocity[1],2.0))));
 	}
 	
-	if (g_showBestTimes)
+	if (g_bShowBestTimes)
 	{
-		new Float:bestTime;
-		new bestJumps;
-		new bestFlashbangs;
+		new Float:fBestTime;
+		new iBestJumps;
+		new iBestFlashbangs;
 		
-		Timer_GetBestRound(target, g_currentMap, bestTime, bestJumps, bestFlashbangs);	
+		Timer_GetBestRound(target, g_sCurrentMap, fBestTime, iBestJumps, iBestFlashbangs);	
 		
-		new String:buffer[32];
-		Timer_SecondsToTime(bestTime, buffer, sizeof(buffer), false);	
+		new String:sBuffer[32];
+		Timer_SecondsToTime(fBestTime, sBuffer, sizeof(sBuffer), false);	
 		
-		if ((enabled && (g_showTime || g_showJumps || g_showFlashbangs)) || g_showSpeed)
+		if ((bEnabled && (g_bShowTime || g_bShowJumps || g_bShowFlashbangs)) || g_bShowSpeed)
 		{
-			Format(hintText, sizeof(hintText), "%s\n", hintText);
+			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "HUD Best Times", buffer);
+		Format(sHintText, sizeof(sHintText), "%s%t: %s", sHintText, "HUD Best Times", sBuffer);
 	}
 	
-	if (g_timerPhysics && g_showDifficulty) 
+	if (g_bTimerPhysics && g_bShowDifficulty) 
 	{
-		decl String:difficulty[32];
-		Timer_GetDifficultyName(Timer_GetClientDifficulty(target), difficulty, sizeof(difficulty));
+		decl String:sDifficulty[32];
+		Timer_GetDifficultyName(Timer_GetClientDifficulty(target), sDifficulty, sizeof(sDifficulty));
 		
-		if ((enabled && (g_showTime || g_showJumps || g_showFlashbangs)) || g_showSpeed || g_showBestTimes)
+		if ((bEnabled && (g_bShowTime || g_bShowJumps || g_bShowFlashbangs)) || g_bShowSpeed || g_bShowBestTimes)
 		{
-			Format(hintText, sizeof(hintText), "%s\n", hintText);
+			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "HUD Difficulty", difficulty);
+		Format(sHintText, sizeof(sHintText), "%s%t: %s", sHintText, "HUD Difficulty", sDifficulty);
 	}
 	
-	if (g_showName && target == t)
+	if (g_bShowName && target == t)
 	{
-		decl String:name[MAX_NAME_LENGTH];
-		GetClientName(target, name, sizeof(name));
+		decl String:sName[MAX_NAME_LENGTH];
+		GetClientName(target, sName, sizeof(sName));
 		
-		if ((enabled && (g_showTime || g_showJumps || g_showFlashbangs)) || g_showSpeed || g_showBestTimes || g_showDifficulty)
+		if ((bEnabled && (g_bShowTime || g_bShowJumps || g_bShowFlashbangs)) || g_bShowSpeed || g_bShowBestTimes || g_bShowDifficulty)
 		{
-			Format(hintText, sizeof(hintText), "%s\n", hintText);
+			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "Player", name);
+		Format(sHintText, sizeof(sHintText), "%s%t: %s", sHintText, "Player", sName);
 	}
 	
-	PrintHintText(client, hintText);
+	PrintHintText(client, sHintText);
 	
 	StopSound(client, SNDCHAN_STATIC, "UI/hint.wav");
 }
