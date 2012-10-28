@@ -60,6 +60,11 @@
 		"pt"			"Pulos"
 	}
 
+	"Flashbangs"
+	{
+		"pt"			"Flashbangs**"
+	}
+
 	"HUD Speed"
 	{
 		"pt"			"Velocidade"

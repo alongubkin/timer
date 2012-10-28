@@ -22,6 +22,7 @@ enum RecordCache
 	String:Name[32],
 	String:TimeString[16],
 	Jumps,
+	Flashbangs,
 	String:RecordPhysicsDifficulty[32],
 	String:Auth[32],
 	bool:Ignored
@@ -50,7 +51,9 @@ new bool:g_timerPhysics = false;
 new g_deleteMenuSelection[MAXPLAYERS+1];
 
 new Handle:g_showJumpCvar = INVALID_HANDLE;
+new Handle:g_showFlashbangsCvar = INVALID_HANDLE;
 new bool:g_showJumps = true;
+new bool:g_showFlashbangs = false;
 
 public Plugin:myinfo =
 {
@@ -87,7 +90,9 @@ public OnPluginStart()
 	RegAdminCmd("sm_deleterecord", Command_DeleteRecord, ADMFLAG_RCON, "sm_deleterecord STEAM_ID");
 	
 	g_showJumpCvar = CreateConVar("timer_showjumps", "1", "Whether or not jumps will be shown in some of the WR menus.");
+	g_showFlashbangsCvar = CreateConVar("timer_showflashbangs", "0", "Whether or not flashbangs will be shown in some of the WR menus.");
 	HookConVarChange(g_showJumpCvar, Action_OnSettingsChange);
+	HookConVarChange(g_showFlashbangsCvar, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-worldrecord");
 	
@@ -165,8 +170,13 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 {
 	if (cvar == g_showJumpCvar)
 	{
-		g_showJumps = bool:StringToInt(newvalue);	
+		g_showJumps = bool:StringToInt(newvalue);
 	}
+	else if (cvar == g_showFlashbangsCvar)
+	{
+		g_showFlashbangs = bool:StringToInt(newvalue);
+	}
+
 }
 
 public Action:OnClientCommand(client, args)
@@ -383,12 +393,7 @@ public OnAdminMenuReady(Handle:topmenu)
 	ADMFLAG_RCON);		
 }
 
-public AdminMenu_CategoryHandler(Handle:topmenu, 
-TopMenuAction:action,
-TopMenuObject:object_id,
-param,
-String:buffer[],
-maxlength)
+public AdminMenu_CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
 	if (action == TopMenuAction_DisplayTitle)
 	{
@@ -400,12 +405,7 @@ maxlength)
 	}
 }
 
-public AdminMenu_DeleteMapRecords(Handle:topmenu, 
-TopMenuAction:action,
-TopMenuObject:object_id,
-param,
-String:buffer[],
-maxlength)
+public AdminMenu_DeleteMapRecords(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
@@ -420,12 +420,7 @@ maxlength)
 	}
 }
 
-public AdminMenu_DeleteRecord(Handle:topmenu, 
-TopMenuAction:action,
-TopMenuObject:object_id,
-param,
-String:buffer[],
-maxlength)
+public AdminMenu_DeleteRecord(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
@@ -459,6 +454,11 @@ DisplaySelectPlayerMenu(client)
 		if (g_showJumps)
 		{
 			Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Jumps], "Jumps", client);
+		}
+		
+		if (g_showFlashbangs)
+		{
+			Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Flashbangs], "Flashbangs", client);
 		}
 
 		AddMenuItem(menu, g_cache[cache][Auth], text);
@@ -544,7 +544,7 @@ RefreshCache()
 	else
 	{	
 		decl String:query[384];
-		Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
+		Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name, MAX(m.flashbangs) flashbangs FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
 		
 		SQL_TQuery(g_hSQL, RefreshCacheCallback, query, _, DBPrio_Normal);
 	}
@@ -568,6 +568,7 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 		g_cache[g_cacheCount][Jumps] = SQL_FetchInt(hndl, 3);
 		g_cache[g_cacheCount][RecordPhysicsDifficulty] = SQL_FetchInt(hndl, 4);
 		SQL_FetchString(hndl, 5, g_cache[g_cacheCount][Name], 32);
+		g_cache[g_cacheCount][Flashbangs] = SQL_FetchInt(hndl, 6);
 		g_cache[g_cacheCount][Ignored] = false;
 		
 		g_cacheCount++;
@@ -702,6 +703,11 @@ CreateWRMenu(client, difficulty)
 				Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Jumps], "Jumps", client);
 			}
 			
+			if (g_showFlashbangs)
+			{
+				Format(text, sizeof(text), "%s (%d %T)", text, g_cache[cache][Flashbangs], "Flashbangs", client);
+			}
+			
 			AddMenuItem(menu, id, text);
 			items++;
 		}
@@ -782,6 +788,12 @@ CreatePlayerInfoMenu(client, id, bool:back)
 				AddMenuItem(menu, difficulty, text);
 			}
 			
+			if (g_showFlashbangs)
+			{
+				Format(text, sizeof(text), "%T: %d", "Flashbangs", client, g_cache[cache][Flashbangs]);
+				AddMenuItem(menu, difficulty, text);
+			}
+			
 			if (g_timerPhysics)
 			{
 				decl String:difficultyName[32];
@@ -813,18 +825,19 @@ ConsoleWR(client, difficulty)
 	
 	PrintToConsole(client, "map: %s\n", g_currentMap);
 
-	PrintToConsole(client, "# rank\tname\t\t\tsteamid\t\t\ttime\t\tjumps");
+	PrintToConsole(client, "# rank\tname\t\t\tsteamid\t\t\ttime\t\tjumps\t\tflashbangs");
 
 	for (new cache = 0; cache < g_cacheCount; cache++)
 	{
 		if (!g_timerPhysics || g_cache[cache][RecordPhysicsDifficulty] == difficulty)
 		{
-			PrintToConsole(client, "# %d\t%s\t%s\t%s\t%d",
+			PrintToConsole(client, "# %d\t%s\t%s\t%s\t%d\t%d",
 			cache + 1,
 			g_cache[cache][Name],
 			g_cache[cache][Auth],
 			g_cache[cache][TimeString],
-			g_cache[cache][Jumps]);		
+			g_cache[cache][Jumps],
+			g_cache[cache][Flashbangs]);		
 		}
 	}	
 }
@@ -841,7 +854,7 @@ CreateDeleteMenu(client, target)
 		GetClientAuthString(target, auth, sizeof(auth));
 		
 		decl String:query[384];
-		Format(query, sizeof(query), "SELECT id, time, jumps, physicsdifficulty, auth FROM `round` WHERE map = '%s' AND auth = '%s' ORDER BY physicsdifficulty, time, jumps", g_currentMap, auth);	
+		Format(query, sizeof(query), "SELECT id, time, jumps, physicsdifficulty, auth, flashbangs FROM `round` WHERE map = '%s' AND auth = '%s' ORDER BY physicsdifficulty, time, jumps, flashbangs", g_currentMap, auth);	
 		
 		g_deleteMenuSelection[client] = target;
 		SQL_TQuery(g_hSQL, CreateDeleteMenuCallback, query, client, DBPrio_Normal);
@@ -895,6 +908,11 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 		{
 			Format(value, sizeof(value), "%s %T: %d", value, "Jumps", client, SQL_FetchInt(hndl, 2));
 		}
+
+		if (g_showJumps)
+		{
+			Format(value, sizeof(value), "%s %T: %d", value, "Flashbangs", client, SQL_FetchInt(hndl, 5));
+		}	
 		
 		AddMenuItem(menu, id, value);
 	}

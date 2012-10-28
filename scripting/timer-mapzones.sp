@@ -728,11 +728,12 @@ public Action:PlayerTracker(Handle:timer)
 						if (Timer_Stop(client, false))
 						{
 							new bool:enabled = false;
-							new jumps = 0;
+							new jumps;
 							new Float:time;
 							new fpsmax;
+							new flashbangs;
 
-							if (Timer_GetClientTimer(client, enabled, time, jumps, fpsmax))
+							if (Timer_GetClientTimer(client, enabled, time, jumps, fpsmax, flashbangs))
 							{
 								new difficulty = 0;
 								if (g_timerPhysics)
@@ -740,7 +741,7 @@ public Action:PlayerTracker(Handle:timer)
 									difficulty = Timer_GetClientDifficulty(client);
 								}
 
-								Timer_FinishRound(client, g_currentMap, time, jumps, difficulty, fpsmax);
+								Timer_FinishRound(client, g_currentMap, time, jumps, flashbangs, difficulty, fpsmax);
 								
 								if (g_timerWorldRecord)
 								{

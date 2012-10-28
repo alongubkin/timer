@@ -22,6 +22,7 @@ enum Timer
 	Float:StartTime,
 	Float:EndTime,
 	Jumps,
+	Flashbangs,
 	bool:IsPaused,
 	Float:PauseStartTime,
 	Float:PauseLastOrigin[3],
@@ -35,6 +36,7 @@ enum BestTimeCacheEntity
 {
 	IsCached,
 	Jumps,
+	Flashbangs,
 	Float:Time
 }
 
@@ -57,11 +59,13 @@ new Handle:g_restartEnabledCvar = INVALID_HANDLE;
 new Handle:g_stopEnabledCvar = INVALID_HANDLE;
 new Handle:g_pauseResumeEnabledCvar = INVALID_HANDLE;
 new Handle:g_showJumpsInMsg = INVALID_HANDLE;
+new Handle:g_showFlashbangsInMsg = INVALID_HANDLE;
 
 new bool:g_restartEnabled = true;
 new bool:g_stopEnabled = true;
 new bool:g_pauseResumeEnabled = true;
 new bool:g_showjumps = true;
+new bool:g_showflashbangs = false;
 
 new bool:g_timerPhysics = false;
 new g_iVelocity;
@@ -109,6 +113,8 @@ public OnPluginStart()
 	HookEvent("player_spawn", Event_StopTimer);
 	HookEvent("player_disconnect", Event_StopTimer);
 	HookEvent("player_connect", Event_StopTimer);
+	HookEvent("weapon_fire", Event_WeaponFire);
+	
 	
 	RegConsoleCmd("sm_restart", Command_Restart);
 	RegConsoleCmd("sm_r", Command_Restart);
@@ -120,11 +126,13 @@ public OnPluginStart()
 	g_stopEnabledCvar = CreateConVar("timer_stop_enabled", "1", "Whether or not players can stop their timers.");
 	g_pauseResumeEnabledCvar = CreateConVar("timer_pauseresume_enabled", "1", "Whether or not players can resume or pause their timers.");
 	g_showJumpsInMsg = CreateConVar("timer_showjumpsinfinishmessage", "1", "Whether or not players will see jumps in finish message.");
+	g_showFlashbangsInMsg = CreateConVar("timer_showflashbangsinfinishmessage", "0", "Whether or not players will see flashbangs in finish message.");
 	
 	HookConVarChange(g_restartEnabledCvar, Action_OnSettingsChange);
 	HookConVarChange(g_stopEnabledCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_pauseResumeEnabledCvar, Action_OnSettingsChange);
 	HookConVarChange(g_showJumpsInMsg, Action_OnSettingsChange);
+	HookConVarChange(g_showFlashbangsInMsg, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-core");
 	
@@ -187,6 +195,24 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 public Action:Event_StopTimer(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	StopTimer(GetClientOfUserId(GetEventInt(event, "userid")));
+	
+	return Plugin_Continue;
+}
+
+public Action:Event_WeaponFire(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+
+	if (g_timers[client][Enabled] && !g_timers[client][IsPaused])
+	{
+		decl String:weapon[32];
+		GetEventString(event, "weapon", weapon, sizeof(weapon));
+		
+		if (StrEqual(weapon, "flashbang"))
+		{
+			g_timers[client][Flashbangs]++;
+		}
+	}
 	
 	return Plugin_Continue;
 }
@@ -254,6 +280,11 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 	{
 		g_showjumps = bool:StringToInt(newvalue);	
 	}
+	else if (cvar == g_showFlashbangsInMsg)
+	{
+		g_showflashbangs = bool:StringToInt(newvalue);	
+	}
+
 }
 
 /**
@@ -275,6 +306,7 @@ bool:StartTimer(client)
 	g_timers[client][StartTime] = GetGameTime();
 	g_timers[client][EndTime] = -1.0;
 	g_timers[client][Jumps] = 0;
+	g_timers[client][Flashbangs] = 0;
 	g_timers[client][IsPaused] = false;
 	g_timers[client][PauseStartTime] = 0.0;
 	g_timers[client][PauseTotalTime] = 0.0;
@@ -383,7 +415,7 @@ bool:ResumeTimer(client)
 	return true;
 }
 
-bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
+bool:GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs)
 {
 	if (!IsClientInGame(client))
 	{
@@ -394,6 +426,7 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 	{			
 		time = g_bestTimeCache[client][Time];
 		jumps = g_bestTimeCache[client][Jumps];
+		flashbangs = g_bestTimeCache[client][Flashbangs];
 		
 		return true;
 	}
@@ -402,7 +435,7 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 	GetClientAuthString(client, auth, sizeof(auth));
 	
 	decl String:query[255], String:error[255];
-	Format(query, sizeof(query), "SELECT id, map, auth, time, jumps FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", auth, map);
+	Format(query, sizeof(query), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", auth, map);
 	
 	SQL_LockDatabase(g_hSQL);
 
@@ -422,10 +455,12 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 	{			
 		time = SQL_FetchFloat(hQuery, 3);
 		jumps = SQL_FetchInt(hQuery, 4);
+		flashbangs = SQL_FetchInt(hQuery, 5);
 		
 		g_bestTimeCache[client][IsCached] = true;
 		g_bestTimeCache[client][Time] = time;
 		g_bestTimeCache[client][Jumps] = jumps;
+		g_bestTimeCache[client][Flashbangs] = flashbangs;
 		
 		CloseHandle(hQuery);
 	}
@@ -433,7 +468,8 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps)
 	{
 		g_bestTimeCache[client][IsCached] = true;
 		g_bestTimeCache[client][Time] = 0.0;
-		g_bestTimeCache[client][Jumps] = 0;			
+		g_bestTimeCache[client][Jumps] = 0;	
+		g_bestTimeCache[client][Flashbangs] = 0;
 		
 		CloseHandle(hQuery);
 		return false;
@@ -454,10 +490,11 @@ ClearClientCache(client)
 {
 	g_bestTimeCache[client][IsCached] = false;
 	g_bestTimeCache[client][Jumps] = 0;
+	g_bestTimeCache[client][Flashbangs] = 0;
 	g_bestTimeCache[client][Time] = 0.0;	
 }
 
-FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax)
+FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDifficulty, fpsmax)
 {
 	if (!IsClientInGame(client))
 	{
@@ -470,11 +507,11 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 	}
 	
 	new Float:LastTime;
-	new LastJumps;
+	new LastJumps, LastFlashbangs;
 	decl String:TimeDiff[32];
 	decl String:buffer[32];
 	
-	if(Timer_GetBestRound(client, map, LastTime, LastJumps))
+	if (Timer_GetBestRound(client, map, LastTime, LastJumps, LastFlashbangs))
 	{
 		LastTime -= time;			
 		if(LastTime < 0.0)
@@ -500,7 +537,7 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 		Timer_SecondsToTime(LastTime, buffer, sizeof(buffer), true);
 		Format(TimeDiff, sizeof(TimeDiff), "%s", buffer);
 	}
-
+	
 	decl String:auth[32];
 	GetClientAuthString(client, auth, sizeof(auth));
 
@@ -511,41 +548,39 @@ FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fp
 	SQL_EscapeString(g_hSQL, name, safeName, 2 * strlen(name) + 1);
 
 	decl String:query[256];
-	Format(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax) VALUES ('%s', '%s', %f, %d, %d, '%s', %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax);
+	Format(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax, flashbangs) VALUES ('%s', '%s', %f, %d, %d, '%s', %d, %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax, flashbangs);
 	
 	SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_Normal);
 	
 	decl String:TimeString[32];
 	Timer_SecondsToTime(time, TimeString, sizeof(TimeString), true);
 	
-	if(g_showjumps)
+	decl String:Message[256];
+	
+	Format(Message, sizeof(Message), PLUGIN_PREFIX, "Round Finish Message", name, TimeString, TimeDiff);
+	
+	if (g_showjumps)
 	{
-		if (g_timerPhysics)
-		{
-			new String:difficulty[32];
-			Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
-			
-			PrintToChatAll(PLUGIN_PREFIX, "Round Finish Difficulty", name, TimeString, TimeDiff, difficulty, jumps);
-		}
-		else
-		{
-			PrintToChatAll(PLUGIN_PREFIX, "Round Finish", name, TimeString, TimeDiff, jumps);		
-		}
+		Format(Message, sizeof(Message), "%s %t", Message, "Jumps Message", jumps);
 	}
-	else
+	
+	if (g_showflashbangs)
 	{
-		if (g_timerPhysics)
-		{
-			new String:difficulty[32];
-			Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
-			
-			PrintToChatAll(PLUGIN_PREFIX, "Round Finish Difficulty Without Jumps", name, TimeString, TimeDiff, difficulty);
-		}
-		else
-		{
-			PrintToChatAll(PLUGIN_PREFIX, "Round Finish Without Jumps", name, TimeString, TimeDiff);
-		}
+		Format(Message, sizeof(Message), "%s %t", Message, "Flashbangs Message", flashbangs);
 	}
+	
+	if (g_timerPhysics)
+	{
+		new String:difficulty[32];
+		Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
+		
+		Format(Message, sizeof(Message), "%s %t", Message, "Difficulty Message", difficulty);
+	}
+	
+	Format(Message, sizeof(Message), "%s.", Message);
+	
+	PrintToChatAll(Message);
+	
 }
 
 public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
@@ -616,11 +651,11 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	if (StrEqual(driver, "mysql", false))
 	{
 		SQL_FastQuery(g_hSQL, "SET NAMES  'utf8'");
-		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` int(11) NOT NULL AUTO_INCREMENT, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` int(11) NOT NULL, `physicsdifficulty` int(11) NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` int(11) NOT NULL, PRIMARY KEY (`id`));");
+		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` int(11) NOT NULL AUTO_INCREMENT, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` int(11) NOT NULL, `physicsdifficulty` int(11) NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` int(11) NOT NULL, `flashbangs` int(11) NOT NULL, PRIMARY KEY (`id`));");
 	}
 	else if (StrEqual(driver, "sqlite", false))
 	{
-		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` INTEGER PRIMARY KEY, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` INTEGER NOT NULL, `physicsdifficulty` INTEGER NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` INTEGER NOT NULL);");
+		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` INTEGER PRIMARY KEY, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` INTEGER NOT NULL, `physicsdifficulty` INTEGER NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` INTEGER NOT NULL, `flashbangs` INTEGER NOT NULL);");
 	}
 	
 	g_reconnectCounter = 1;
@@ -666,14 +701,15 @@ public Native_GetBestRound(Handle:plugin, numParams)
 	GetNativeString(2, map, sizeof(map));
 	
 	new Float:time;
-	new jumps;
+	new jumps, flashbangs;
 	
-	new bool:success = GetBestRound(GetNativeCell(1), map, time, jumps);
+	new bool:success = GetBestRound(GetNativeCell(1), map, time, jumps, flashbangs);
 
 	if (success)
 	{
 		SetNativeCellRef(3, time);
 		SetNativeCellRef(4, jumps);
+		SetNativeCellRef(5, flashbangs);
 		
 		return true;
 	}
@@ -689,6 +725,7 @@ public Native_GetClientTimer(Handle:plugin, numParams)
 	SetNativeCellRef(3, CalculateTime(client));
 	SetNativeCellRef(4, g_timers[client][Jumps]);
 	SetNativeCellRef(5, g_timers[client][FpsMax]);	
+	SetNativeCellRef(6, g_timers[client][Flashbangs]);
 
 	return true;
 }
@@ -702,10 +739,11 @@ public Native_FinishRound(Handle:plugin, numParams)
 	
 	new Float:time = GetNativeCell(3);
 	new jumps = GetNativeCell(4);
-	new physicsDifficulty = GetNativeCell(5);
-	new fpsmax = GetNativeCell(6);
+	new flashbangs = GetNativeCell(5);
+	new physicsDifficulty = GetNativeCell(6);
+	new fpsmax = GetNativeCell(7);
 
-	FinishRound(client, map, time, jumps, physicsDifficulty, fpsmax);
+	FinishRound(client, map, time, jumps, flashbangs, physicsDifficulty, fpsmax);
 }
 
 public Native_ForceReloadBestRoundCache(Handle:plugin, numParams)

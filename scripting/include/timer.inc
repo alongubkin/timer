@@ -88,10 +88,11 @@ native bool:Timer_Restart(client);
  * @param map			
  * @param time			A reference to the time of the round.
  * @param jumps			A reference to the count of the jumps in that round.
+ * @param flashbangs	A reference to the count of the flashbangs in that round.
  *
  * @return True on success, false on failure.
  */
-native bool:Timer_GetBestRound(client, const String:map[], &Float:time, &jumps);
+native bool:Timer_GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs);
 
 /**
  * Gets the current active timer for a player
@@ -104,7 +105,7 @@ native bool:Timer_GetBestRound(client, const String:map[], &Float:time, &jumps);
  *
  * @return True on success, false on failure.
  */
-native bool:Timer_GetClientTimer(client, &enabled, &Float:time, &jumps, &fpsmax);
+native bool:Timer_GetClientTimer(client, &enabled, &Float:time, &jumps, &fpsmax, &flashbangs);
 
 /**
  * Finishes a round.
@@ -113,11 +114,12 @@ native bool:Timer_GetClientTimer(client, &enabled, &Float:time, &jumps, &fpsmax)
  * @param map			The map of the round.
  * @param time			The time of the round, in seconds.
  * @param jumps			The count of the jumps in that round.
+ * @param flashbangs	The count of the flashbangs in that round.
  * @param fpsmax		The fpsmax value of the client.
  *
  * @noreturn
  */
-native Timer_FinishRound(client, const String:map[], Float:time, jumps, physicsDifficulty, fpsmax);
+native Timer_FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDifficulty, fpsmax);
 
 /**
  * Reloads the best round cache.

@@ -1,23 +1,23 @@
 "Phrases"
 {
-	"Round Finish"
+	"Round Finish Message"
 	{
-		"ru"			"{1} прошел карту с результатом {2}({3}) и {4} прыжками(ом)."
+		"ru"			"{1} прошел карту с результатом {2}({3})"
 	}
 	
-	"Round Finish Difficulty"
+	"Jumps Message"
 	{
-		"ru"			"{1} прошел карту с результатом {2}({3}) и {5} прыжками(ом) на сложности {4}."
+		"ru"			"и {1} прыжками"
 	}
 	
-	"Round Finish Without Jumps"
+	"Flashbangs Message"
 	{
-		"ru"			"{1} прошел карту с результатом {2}({3})."
+		"ru"			"с {1} флешкой(ами)"
 	}
 	
-	"Round Finish Difficulty Without Jumps"
+	"Difficulty Message"
 	{
-		"ru"			"{1} прошел карту с результатом {2}({3}) на сложности {4}."
+		"ru"			"на сложности {1}"
 	}
 
 	"Point Select Panel"
@@ -58,6 +58,11 @@
 	"Jumps"
 	{
 		"ru"			"Прыжки"
+	}
+	
+	"Flashbangs"
+	{
+		"ru"			"Флешки"
 	}
 	
 	"HUD Speed"

@@ -18,6 +18,7 @@ new bool:g_timerPhysics = false;
 
 new Handle:g_showSpeedCvar = INVALID_HANDLE;
 new Handle:g_showJumpsCvar = INVALID_HANDLE;
+new Handle:g_showFlashbansCvar = INVALID_HANDLE;
 new Handle:g_showTimeCvar = INVALID_HANDLE;
 new Handle:g_showDifficultyCvar = INVALID_HANDLE;
 new Handle:g_showBestTimesCvar = INVALID_HANDLE;
@@ -27,6 +28,7 @@ new Handle:g_jumpsDeathCvar = INVALID_HANDLE;
 
 new bool:g_showSpeed = true;
 new bool:g_showJumps = true;
+new bool:g_showFlashbangs = false;
 new bool:g_showTime = true;
 new bool:g_showDifficulty = true;
 new bool:g_showBestTimes = true;
@@ -50,6 +52,7 @@ public OnPluginStart()
 	
 	g_showSpeedCvar = CreateConVar("timer_hud_speed", "1", "Whether or not speed is shown in the HUD.");
 	g_showJumpsCvar = CreateConVar("timer_hud_jumps", "1", "Whether or not jump count is shown in the HUD.");
+	g_showFlashbansCvar = CreateConVar("timer_hud_flashbangs", "0", "Whether or not flashbang count is shown in the HUD.");
 	g_showTimeCvar = CreateConVar("timer_hud_time", "1", "Whether or not time is shown in the HUD.");
 	g_showDifficultyCvar = CreateConVar("timer_hud_difficulty", "1", "Whether or not difficulty is shown in the HUD, if the timer-physics module is enabled.");
 	g_showBestTimesCvar = CreateConVar("timer_hud_besttimes", "1", "Whether or not best times for this map is shown in the HUD.");
@@ -59,6 +62,7 @@ public OnPluginStart()
 
 	HookConVarChange(g_showSpeedCvar, Action_OnSettingsChange);
 	HookConVarChange(g_showJumpsCvar, Action_OnSettingsChange);	
+	HookConVarChange(g_showFlashbansCvar, Action_OnSettingsChange);
 	HookConVarChange(g_showTimeCvar, Action_OnSettingsChange);
 	HookConVarChange(g_showDifficultyCvar, Action_OnSettingsChange);	
 	HookConVarChange(g_showBestTimesCvar, Action_OnSettingsChange);
@@ -114,6 +118,10 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 	{
 		g_showJumps = bool:StringToInt(newvalue);
 	}
+	else if (cvar == g_showFlashbansCvar)
+	{
+		g_showFlashbangs = bool:StringToInt(newvalue);
+	}
 	else if (cvar == g_showTimeCvar)
 	{
 		g_showTime = bool:StringToInt(newvalue);
@@ -155,7 +163,7 @@ public Action:HUDTimer(Handle:timer)
 
 UpdateHUD(client)
 {
-	if (!g_showTime && !g_showJumps && !g_showSpeed && !g_showBestTimes && !g_showDifficulty && !g_showName)
+	if (!g_showTime && !g_showJumps && !g_showFlashbangs && !g_showSpeed && !g_showBestTimes && !g_showDifficulty && !g_showName)
 	{
 		return;
 	}
@@ -182,8 +190,9 @@ UpdateHUD(client)
 	new Float:time;
 	new jumps;
 	new fpsmax;
+	new flashbangs;
 
-	Timer_GetClientTimer(target, enabled, time, jumps, fpsmax);
+	Timer_GetClientTimer(target, enabled, time, jumps, fpsmax, flashbangs);
 	
 	if (enabled && (g_frags || g_jumpsDeath) && client == target)
 	{		
@@ -209,7 +218,7 @@ UpdateHUD(client)
 			Timer_SecondsToTime(time, timeString, sizeof(timeString), false);
 			
 			Format(hintText, sizeof(hintText), "%s%t: %s", hintText, "Time", timeString);
-		}
+		}	
 		
 		if (g_showJumps)
 		{
@@ -220,6 +229,16 @@ UpdateHUD(client)
 			
 			Format(hintText, sizeof(hintText), "%s%t: %d", hintText, "Jumps", jumps);
 		}
+		
+		if (g_showFlashbangs)
+		{
+			if (g_showTime || g_showJumps)
+			{
+				Format(hintText, sizeof(hintText), "%s\n", hintText);
+			}
+			
+			Format(hintText, sizeof(hintText), "%s%t: %d", hintText, "Flashbangs", flashbangs);
+		}
 	}
 	
 	if (g_showSpeed)
@@ -227,7 +246,7 @@ UpdateHUD(client)
 		decl Float:fVelocity[3];
 		GetEntPropVector(target, Prop_Data, "m_vecVelocity", fVelocity);	
 		
-		if (enabled && (g_showTime || g_showJumps))
+		if (enabled && (g_showTime || g_showJumps || g_showFlashbangs))
 		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 		}
@@ -240,13 +259,14 @@ UpdateHUD(client)
 	{
 		new Float:bestTime;
 		new bestJumps;
+		new bestFlashbangs;
 		
-		Timer_GetBestRound(target, g_currentMap, bestTime, bestJumps);	
+		Timer_GetBestRound(target, g_currentMap, bestTime, bestJumps, bestFlashbangs);	
 		
 		new String:buffer[32];
 		Timer_SecondsToTime(bestTime, buffer, sizeof(buffer), false);	
 		
-		if ((enabled && (g_showTime || g_showJumps)) || g_showSpeed)
+		if ((enabled && (g_showTime || g_showJumps || g_showFlashbangs)) || g_showSpeed)
 		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 		}
@@ -259,7 +279,7 @@ UpdateHUD(client)
 		decl String:difficulty[32];
 		Timer_GetDifficultyName(Timer_GetClientDifficulty(target), difficulty, sizeof(difficulty));
 		
-		if ((enabled && (g_showTime || g_showJumps)) || g_showSpeed || g_showBestTimes)
+		if ((enabled && (g_showTime || g_showJumps || g_showFlashbangs)) || g_showSpeed || g_showBestTimes)
 		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 		}
@@ -272,7 +292,7 @@ UpdateHUD(client)
 		decl String:name[MAX_NAME_LENGTH];
 		GetClientName(target, name, sizeof(name));
 		
-		if ((enabled && (g_showTime || g_showJumps)) || g_showSpeed || g_showBestTimes || g_showDifficulty)
+		if ((enabled && (g_showTime || g_showJumps || g_showFlashbangs)) || g_showSpeed || g_showBestTimes || g_showDifficulty)
 		{
 			Format(hintText, sizeof(hintText), "%s\n", hintText);
 		}
