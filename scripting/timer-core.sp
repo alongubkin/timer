@@ -51,6 +51,8 @@ new g_iReconnectCounter = 0;
 new g_timers[MAXPLAYERS+1][Timer];
 new g_bestTimeCache[MAXPLAYERS+1][BestTimeCacheEntity];
 
+new g_iTotalRankCache;
+
 new Handle:g_hTimerStartedForward;
 new Handle:g_hTimerStoppedForward;
 new Handle:g_hTimerRestartForward;
@@ -90,6 +92,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	CreateNative("Timer_GetClientTimer", Native_GetClientTimer);
 	CreateNative("Timer_FinishRound", Native_FinishRound);
 	CreateNative("Timer_ForceReloadBestRoundCache", Native_ForceReloadBestRoundCache);
+	CreateNative("Timer_GetTotalRank", Native_GetTotalRank);
 
 	return APLRes_Success;
 }
@@ -170,6 +173,7 @@ public OnMapStart()
 	StringToLower(g_sCurrentMap);
 	
 	ClearCache();
+	GetTotalRank(g_sCurrentMap);
 }
 
 public OnMapEnd()
@@ -591,6 +595,27 @@ public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:
 	}
 
 	g_bestTimeCache[client][IsCached] = false;
+	
+	GetTotalRank(g_sCurrentMap);
+}
+
+GetTotalRank(const String:map[])
+{
+	decl String:query[384];
+	Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", map, map);
+	
+	SQL_TQuery(g_hSQL, GetTotalRankCallback, query, _, DBPrio_Normal);
+}
+
+public GetTotalRankCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{
+	if (hndl == INVALID_HANDLE)
+	{
+		Timer_LogError("SQL Error on GetTotalRank: %s", error);
+		return;
+	}
+
+	g_iTotalRankCache = SQL_GetRowCount(hndl);
 }
 
 Float:CalculateTime(client)
@@ -677,6 +702,11 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 		Timer_LogError("SQL Error on CreateSQLTable: %s", error);
 		return;
 	}
+}
+
+public Native_GetTotalRank(Handle:plugin, numParams)
+{
+	return g_iTotalRankCache;
 }
 
 public Native_TimerStart(Handle:plugin, numParams)

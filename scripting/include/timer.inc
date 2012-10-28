@@ -128,6 +128,13 @@ native Timer_FinishRound(client, const String:map[], Float:time, jumps, flashban
  */
 native Timer_ForceReloadBestRoundCache();
 
+/**
+ * Returns total rank on current map.
+ *
+ * @return Integer number of total rank.
+ */
+native Timer_GetTotalRank();
+
 stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precision = true)
 {
 	new t = RoundToFloor(seconds);
@@ -192,7 +199,7 @@ public __pl_timer_SetNTVOptional()
 	MarkNativeAsOptional("Timer_Restart");
 	MarkNativeAsOptional("Timer_GetBestRound");
 	MarkNativeAsOptional("Timer_GetClientTimer");
-	MarkNativeAsOptional("Timer_GetMapDifficulty");
 	MarkNativeAsOptional("Timer_FinishRound");
 	MarkNativeAsOptional("Timer_ForceReloadBestRoundCache");
+	MarkNativeAsOptional("Timer_GetTotalRank");
 }

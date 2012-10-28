@@ -2,10 +2,10 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <fTimer>
+#include <timer>
 
 #undef REQUIRE_PLUGIN
-#include <fTimer-physics>
+#include <timer-physics>
 #include <updater>
 
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/fTimer/updateinfo-fTimer-hud.txt"
