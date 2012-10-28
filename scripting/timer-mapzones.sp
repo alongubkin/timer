@@ -772,7 +772,8 @@ public Action:PlayerTracker(Handle:timer)
 	return Plugin_Continue;
 }
 
-IsInsideBox(Float:fPCords[3], Float:fbsx, Float:fbsy, Float:fbsz, Float:fbex, Float:fbey, Float:fbez){
+IsInsideBox(Float:fPCords[3], Float:fbsx, Float:fbsy, Float:fbsz, Float:fbex, Float:fbey, Float:fbez)
+{
 	new Float:fpx = fPCords[0];
 	new Float:fpy = fPCords[1];
 	new Float:fpz = fPCords[2];
@@ -969,23 +970,11 @@ ParseColor(const String:color[], result[])
 
 StopPrespeed(client)
 {
-	new Float:fVelocity[3];
-	new String:Weapon[32];
+	new Float:vecVelocity[3];
 	
-	GetEntPropVector(client, Prop_Data, "m_vecVelocity", fVelocity);
-	GetClientWeapon(client, Weapon, sizeof(Weapon));
-	new speed = RoundToFloor(SquareRoot(Pow(fVelocity[0],2.0)+Pow(fVelocity[1],2.0)));
-	if (StrEqual(Weapon, "weapon_scout"))
+	GetEntPropVector(client, Prop_Data, "m_vecVelocity", vecVelocity);
+	if (SquareRoot(Pow(vecVelocity[0], 2.0) + Pow(vecVelocity[1], 2.0)) > (GetEntPropFloat(client, Prop_Data, "m_flMaxspeed") * 1.115 + 0.5))
 	{
-		if (speed > 289)
-		{
-			fVelocity[0] = fVelocity[1] = fVelocity[2] = 0.0;
-			TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fVelocity);
-		}	
-	}
-	else if (speed > 279)
-	{
-		fVelocity[0] = fVelocity[1] = fVelocity[2] = 0.0;
-		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, fVelocity);
-	}
+		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, Float:{0.0, 0.0, 0.0});
+	}	
 }
