@@ -574,6 +574,8 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 		g_cacheCount++;
 	}
 	
+	Timer_ForceReloadBestRoundCache();
+	
 	g_cacheLoaded = true;
 }
 
