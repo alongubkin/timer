@@ -8,7 +8,7 @@
 #include <timer-physics>
 #include <updater>
 
-#define UPDATE_URL "http://dl.dropbox.com/u/16304603/fTimer/updateinfo-fTimer-hud.txt"
+#define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-hud.txt"
 
 /**
 * Global Variables
@@ -42,23 +42,23 @@ public Plugin:myinfo =
 	author      = "alongub | Glite",
 	description = "HUD component for [Timer]",
 	version     = PL_VERSION,
-	url         = "https://github.com/alongubkin/fTimer"
+	url         = "https://github.com/alongubkin/timer"
 };
 
 public OnPluginStart()
 {
-	g_bTimerPhysics = LibraryExists("fTimer-physics");
-	LoadTranslations("fTimer.phrases");
+	g_bTimerPhysics = LibraryExists("timer-physics");
+	LoadTranslations("timer.phrases");
 	
-	g_hCvarShowSpeed = CreateConVar("fTimer_hud_speed", "1", "Whether or not speed is shown in the HUD.");
-	g_hCvarShowJumps = CreateConVar("fTimer_hud_iJumps", "1", "Whether or not jump count is shown in the HUD.");
-	g_hCvarShowFlashbans = CreateConVar("fTimer_hud_iFlashbangs", "0", "Whether or not flashbang count is shown in the HUD.");
-	g_hCvarShowTime = CreateConVar("fTimer_hud_fTime", "1", "Whether or not fTime is shown in the HUD.");
-	g_hCvarShowDifficulty = CreateConVar("fTimer_hud_sDifficulty", "1", "Whether or not difficulty is shown in the HUD, if the fTimer-physics module is bEnabled.");
-	g_hcvarShowBestTimes = CreateConVar("fTimer_hud_bestfTimes", "1", "Whether or not best fTimes for this map is shown in the HUD.");
-	g_hCvarShowName = CreateConVar("fTimer_hud_name", "1", "Whether or not spectating player's name is shown in the HUD.");
-	g_hCvarTimeByKills = CreateConVar("fTimer_frags", "0", "Whether or not players' score should be his current fTimer.");
-	g_hCvarJumpsByDeaths = CreateConVar("fTimer_iJumps_death", "0", "Whether or not players' death count should be their jump count.");
+	g_hCvarShowSpeed = CreateConVar("timer_hud_speed", "1", "Whether or not speed is shown in the HUD.");
+	g_hCvarShowJumps = CreateConVar("timer_hud_jumps", "1", "Whether or not jump count is shown in the HUD.");
+	g_hCvarShowFlashbans = CreateConVar("timer_hud_flashbangs", "0", "Whether or not flashbang count is shown in the HUD.");
+	g_hCvarShowTime = CreateConVar("timer_hud_time", "1", "Whether or not fTime is shown in the HUD.");
+	g_hCvarShowDifficulty = CreateConVar("timer_hud_difficulty", "1", "Whether or not difficulty is shown in the HUD, if the timer-physics module is enabled.");
+	g_hcvarShowBestTimes = CreateConVar("timer_hud_besttimes", "1", "Whether or not best times for this map is shown in the HUD.");
+	g_hCvarShowName = CreateConVar("timer_hud_name", "1", "Whether or not spectating player's name is shown in the HUD.");
+	g_hCvarTimeByKills = CreateConVar("timer_frags", "0", "Whether or not players' score should be his current timer.");
+	g_hCvarJumpsByDeaths = CreateConVar("timer_jumps_death", "0", "Whether or not players' death count should be their jump count.");
 
 	HookConVarChange(g_hCvarShowSpeed, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);	
@@ -70,7 +70,7 @@ public OnPluginStart()
 	HookConVarChange(g_hCvarTimeByKills, Action_OnSettingsChange);	
 	HookConVarChange(g_hCvarJumpsByDeaths, Action_OnSettingsChange);
 	
-	AutoExecConfig(true, "fTimer-hud");
+	AutoExecConfig(true, "timer-hud");
 	
 	if (LibraryExists("updater"))
 	{
@@ -90,7 +90,7 @@ public OnMapStart()
 
 public OnLibraryAdded(const String:name[])
 {
-	if (StrEqual(name, "fTimer-physics"))
+	if (StrEqual(name, "timer-physics"))
 	{
 		g_bTimerPhysics = true;
 	}
@@ -102,7 +102,7 @@ public OnLibraryAdded(const String:name[])
 
 public OnLibraryRemoved(const String:name[])
 {
-	if (StrEqual(name, "fTimer-physics"))
+	if (StrEqual(name, "timer-physics"))
 	{
 		g_bTimerPhysics = false;
 	}
@@ -148,7 +148,7 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 	}
 }
 
-public Action:HUDTimer(Handle:fTimer)
+public Action:HUDTimer(Handle:timer)
 {
 	for (new client = 1; client <= MaxClients; client++)
 	{

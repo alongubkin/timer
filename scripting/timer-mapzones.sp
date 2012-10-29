@@ -229,7 +229,7 @@ LoadMapZones()
 	decl String:query[255];
 	Format(query, sizeof(query), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_currentMap);
 	
-	SQL_TQuery(g_hSQL, LoadMapZonesCallback, query, _, DBPrio_Normal);	
+	SQL_TQuery(g_hSQL, LoadMapZonesCallback, query, _, DBPrio_Low);	
 }
 
 public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -457,7 +457,7 @@ DeleteMapZone(client)
 			decl String:query[256];
 			Format(query, sizeof(query), "DELETE FROM mapzone WHERE id = %d", g_mapZones[zone][Id]);
 
-			SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_Normal);	
+			SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_High);	
 			break;
 		}
 	}
@@ -468,7 +468,7 @@ DeleteAllMapZones(client)
 	decl String:query[256];
 	Format(query, sizeof(query), "DELETE FROM mapzone WHERE map = '%s'", g_currentMap);
 
-	SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_Normal);
+	SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_High);
 }
 
 public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
