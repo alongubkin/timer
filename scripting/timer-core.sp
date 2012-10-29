@@ -560,16 +560,16 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	
 	decl String:sMessage[256];
 	
-	Format(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish sMessage", name, sTimeString, sTimeDiff);
+	Format(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish Message", name, sTimeString, sTimeDiff);
 	
 	if (g_bShowJumps)
 	{
-		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Jumps sMessage", jumps);
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Jumps Message", jumps);
 	}
 	
 	if (g_bShowFlashbangs)
 	{
-		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Flashbangs sMessage", flashbangs);
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Flashbangs Message", flashbangs);
 	}
 	
 	if (g_bTimerPhysics)
@@ -577,7 +577,7 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 		new String:difficulty[32];
 		Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
 		
-		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Difficulty sMessage", difficulty);
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Difficulty Message", difficulty);
 	}
 	
 	Format(sMessage, sizeof(sMessage), "%s.", sMessage);
