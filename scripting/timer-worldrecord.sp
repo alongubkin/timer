@@ -149,7 +149,7 @@ public OnClientAuthorized(client, const String:auth[])
 	SQL_EscapeString(g_hSQL, name, safeName, 2 * strlen(name) + 1);
 
 	decl String:query[256];
-	Format(query, sizeof(query), "UPDATE round SET name = '%s' WHERE auth = '%s';", safeName, auth);
+	FormatEx(query, sizeof(query), "UPDATE round SET name = '%s' WHERE auth = '%s';", safeName, auth);
 
 	SQL_TQuery(g_hSQL, ChangeNameCallback, query, _, DBPrio_Low);
 }
@@ -287,7 +287,7 @@ public Action:Command_DeleteRecord_All(client, args)
 	GetCmdArgString(auth, sizeof(auth));
 
 	decl String:query[384];
-	Format(query, sizeof(query), "DELETE FROM round WHERE auth = '%s'", auth);
+	FormatEx(query, sizeof(query), "DELETE FROM round WHERE auth = '%s'", auth);
 
 	SQL_TQuery(g_hSQL, DeleteRecordsCallback, query, _, DBPrio_High);
 	
@@ -306,7 +306,7 @@ public Action:Command_DeleteRecord(client, args)
 	GetCmdArgString(auth, sizeof(auth));
 
 	decl String:query[384];
-	Format(query, sizeof(query), "DELETE FROM round WHERE auth = '%s' AND map = '%s'", auth, g_currentMap);
+	FormatEx(query, sizeof(query), "DELETE FROM round WHERE auth = '%s' AND map = '%s'", auth, g_currentMap);
 
 	SQL_TQuery(g_hSQL, DeleteRecordsCallback, query, _, DBPrio_High);
 	
@@ -397,11 +397,11 @@ public AdminMenu_CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuOb
 {
 	if (action == TopMenuAction_DisplayTitle)
 	{
-		Format(buffer, maxlength, "%t", "Timer Management");
+		FormatEx(buffer, maxlength, "%t", "Timer Management");
 	} 
 	else if (action == TopMenuAction_DisplayOption) 
 	{
-		Format(buffer, maxlength, "%t", "Timer Management");
+		FormatEx(buffer, maxlength, "%t", "Timer Management");
 	}
 }
 
@@ -409,7 +409,7 @@ public AdminMenu_DeleteMapRecords(Handle:topmenu, TopMenuAction:action, TopMenuO
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
-		Format(buffer, maxlength, "%t", "Delete Map Records");
+		FormatEx(buffer, maxlength, "%t", "Delete Map Records");
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
@@ -424,7 +424,7 @@ public AdminMenu_DeleteRecord(Handle:topmenu, TopMenuAction:action, TopMenuObjec
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
-		Format(buffer, maxlength, "%t", "Delete Player Record");
+		FormatEx(buffer, maxlength, "%t", "Delete Player Record");
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
@@ -487,7 +487,7 @@ public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
 		GetMenuItem(menu, param2, info, sizeof(info));
 		
 		decl String:query[384];
-		Format(query, sizeof(query), "DELETE FROM `round` WHERE auth = '%s' AND map = '%s'", info, g_currentMap);
+		FormatEx(query, sizeof(query), "DELETE FROM `round` WHERE auth = '%s' AND map = '%s'", info, g_currentMap);
 
 		SQL_TQuery(g_hSQL, DeletePlayersRecordCallback, query, param1, DBPrio_High);
 		
@@ -516,7 +516,7 @@ public DeletePlayersRecordCallback(Handle:owner, Handle:hndl, const String:error
 DeleteMapRecords(const String:map[]) 
 {
 	decl String:query[384];
-	Format(query, sizeof(query), "DELETE FROM `round` WHERE map = '%s'", map);	
+	FormatEx(query, sizeof(query), "DELETE FROM `round` WHERE map = '%s'", map);	
 
 	SQL_TQuery(g_hSQL, DeleteMapRecordsCallback, query, _, DBPrio_High);
 }
@@ -544,7 +544,7 @@ RefreshCache()
 	else
 	{	
 		decl String:query[384];
-		Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name, MAX(m.flashbangs) flashbangs FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
+		FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name, MAX(m.flashbangs) flashbangs FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
 		
 		SQL_TQuery(g_hSQL, RefreshCacheCallback, query, _, DBPrio_Low);
 	}
@@ -575,6 +575,8 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 	}
 	
 	Timer_ForceReloadBestRoundCache();
+	
+	Timer_GetTotalRank(true);
 	
 	g_cacheLoaded = true;
 }
@@ -775,24 +777,24 @@ CreatePlayerInfoMenu(client, id, bool:back)
 
 			SetMenuTitle(menu, "%T\n \n", "Record Info", client);
 
-			Format(text, sizeof(text), "%T: %s (%s)", "Player Name", client, g_cache[cache][Name], g_cache[cache][Auth]);
+			FormatEx(text, sizeof(text), "%T: %s (%s)", "Player Name", client, g_cache[cache][Name], g_cache[cache][Auth]);
 			AddMenuItem(menu, difficulty, text);
 
-			Format(text, sizeof(text), "%T: #%d on %s", "Rank", client, cache + 1, g_currentMap);
+			FormatEx(text, sizeof(text), "%T: #%d on %s", "Rank", client, cache + 1, g_currentMap);
 			AddMenuItem(menu, difficulty, text);
 
-			Format(text, sizeof(text), "%T: %s", "Time", client, g_cache[cache][TimeString]);
+			FormatEx(text, sizeof(text), "%T: %s", "Time", client, g_cache[cache][TimeString]);
 			AddMenuItem(menu, difficulty, text);
 			
 			if (g_showJumps)
 			{
-				Format(text, sizeof(text), "%T: %d", "Jumps", client, g_cache[cache][Jumps]);
+				FormatEx(text, sizeof(text), "%T: %d", "Jumps", client, g_cache[cache][Jumps]);
 				AddMenuItem(menu, difficulty, text);
 			}
 			
 			if (g_showFlashbangs)
 			{
-				Format(text, sizeof(text), "%T: %d", "Flashbangs", client, g_cache[cache][Flashbangs]);
+				FormatEx(text, sizeof(text), "%T: %d", "Flashbangs", client, g_cache[cache][Flashbangs]);
 				AddMenuItem(menu, difficulty, text);
 			}
 			
@@ -801,7 +803,7 @@ CreatePlayerInfoMenu(client, id, bool:back)
 				decl String:difficultyName[32];
 				Timer_GetDifficultyName(g_cache[cache][RecordPhysicsDifficulty], difficultyName, sizeof(difficultyName));
 				
-				Format(text, sizeof(text), "%T: %s", "Physics Difficulty", client, difficultyName);
+				FormatEx(text, sizeof(text), "%T: %s", "Physics Difficulty", client, difficultyName);
 				AddMenuItem(menu, difficulty, text);
 			}
 			
@@ -856,7 +858,7 @@ CreateDeleteMenu(client, target)
 		GetClientAuthString(target, auth, sizeof(auth));
 		
 		decl String:query[384];
-		Format(query, sizeof(query), "SELECT id, time, jumps, physicsdifficulty, auth, flashbangs FROM `round` WHERE map = '%s' AND auth = '%s' ORDER BY physicsdifficulty, time, jumps, flashbangs", g_currentMap, auth);	
+		FormatEx(query, sizeof(query), "SELECT id, time, jumps, physicsdifficulty, auth, flashbangs FROM `round` WHERE map = '%s' AND auth = '%s' ORDER BY physicsdifficulty, time, jumps, flashbangs", g_currentMap, auth);	
 		
 		g_deleteMenuSelection[client] = target;
 		SQL_TQuery(g_hSQL, CreateDeleteMenuCallback, query, client, DBPrio_Normal);
@@ -904,7 +906,7 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 		}
 
 		decl String:value[92];
-		Format(value, sizeof(value), "%s %s", time, difficulty);
+		FormatEx(value, sizeof(value), "%s %s", time, difficulty);
 		
 		if (g_showJumps)
 		{
@@ -935,7 +937,7 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 		GetMenuItem(menu, param2, info, sizeof(info));
 		
 		decl String:query[384];
-		Format(query, sizeof(query), "DELETE FROM `round` WHERE id = %s", info);	
+		FormatEx(query, sizeof(query), "DELETE FROM `round` WHERE id = %s", info);	
 
 		SQL_TQuery(g_hSQL, DeleteRecordCallback, query, param1, DBPrio_High);
 	}

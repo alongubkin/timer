@@ -133,7 +133,7 @@ native Timer_ForceReloadBestRoundCache();
  *
  * @return Integer number of total rank.
  */
-native Timer_GetTotalRank();
+native Timer_GetTotalRank(bool:update = false);
 
 stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precision = true)
 {

@@ -173,7 +173,6 @@ public OnMapStart()
 	StringToLower(g_sCurrentMap);
 	
 	ClearCache();
-	GetTotalRank(g_sCurrentMap);
 }
 
 public OnMapEnd()
@@ -438,7 +437,7 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs)
 	GetClientAuthString(client, auth, sizeof(auth));
 	
 	decl String:query[255], String:error[255];
-	Format(query, sizeof(query), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", auth, map);
+	FormatEx(query, sizeof(query), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", auth, map);
 	
 	SQL_LockDatabase(g_hSQL);
 
@@ -521,24 +520,24 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 		{	
 			fLastTime *= -1.0;
 			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
-			Format(sTimeDiff, sizeof(sTimeDiff), "+%s", sBuffer);
+			FormatEx(sTimeDiff, sizeof(sTimeDiff), "+%s", sBuffer);
 		}
 		else if(fLastTime > 0.0)
 		{
 			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
-			Format(sTimeDiff, sizeof(sTimeDiff), "-%s", sBuffer);
+			FormatEx(sTimeDiff, sizeof(sTimeDiff), "-%s", sBuffer);
 		}
 		else if(fLastTime == 0.0)
 		{
 			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
-			Format(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
+			FormatEx(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
 		}
 	}
 	else
 	{
 		fLastTime = 0.0;
 		Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
-		Format(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
+		FormatEx(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
 	}
 	
 	decl String:auth[32];
@@ -551,7 +550,7 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	SQL_EscapeString(g_hSQL, name, safeName, 2 * strlen(name) + 1);
 
 	decl String:query[256];
-	Format(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax, flashbangs) VALUES ('%s', '%s', %f, %d, %d, '%s', %d, %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax, flashbangs);
+	FormatEx(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax, flashbangs) VALUES ('%s', '%s', %f, %d, %d, '%s', %d, %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax, flashbangs);
 	
 	SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_High);
 	
@@ -560,7 +559,7 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	
 	decl String:sMessage[256];
 	
-	Format(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish Message", name, sTimeString, sTimeDiff);
+	FormatEx(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish Message", name, sTimeString, sTimeDiff);
 	
 	if (g_bShowJumps)
 	{
@@ -602,7 +601,7 @@ public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:
 GetTotalRank(const String:map[])
 {
 	decl String:query[384];
-	Format(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", map, map);
+	FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", map, map);
 	
 	SQL_TQuery(g_hSQL, GetTotalRankCallback, query, _, DBPrio_Low);
 }
@@ -706,6 +705,11 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 
 public Native_GetTotalRank(Handle:plugin, numParams)
 {
+	new bool:update = bool:GetNativeCell(1);
+	if (update)
+	{
+		GetTotalRank(g_sCurrentMap);
+	}
 	return g_iTotalRankCache;
 }
 
