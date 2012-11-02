@@ -213,4 +213,5 @@ public __pl_timer_SetNTVOptional()
 	MarkNativeAsOptional("Timer_FinishRound");
 	MarkNativeAsOptional("Timer_ForceReloadBestRoundCache");
 	MarkNativeAsOptional("Timer_GetTotalRank");
+	MarkNativeAsOptional("Timer_GetCurrentRank");
 }
