@@ -18,7 +18,7 @@
 */
 enum Timer
 {
-	Enabled,
+	bool:Enabled,
 	Float:StartTime,
 	Float:EndTime,
 	Jumps,
@@ -34,7 +34,7 @@ enum Timer
 
 enum BestTimeCacheEntity
 {
-	IsCached,
+	bool:IsCached,
 	Jumps,
 	Flashbangs,
 	Float:Time
@@ -57,6 +57,7 @@ new g_iCurrentRankCache[MAXPLAYERS+1];
 new Handle:g_hTimerStartedForward;
 new Handle:g_hTimerStoppedForward;
 new Handle:g_hTimerRestartForward;
+new Handle:g_hFinishRoundForward;
 
 new Handle:g_hCvarRestartEnabled = INVALID_HANDLE;
 new Handle:g_hCvarStopEnabled = INVALID_HANDLE;
@@ -106,6 +107,7 @@ public OnPluginStart()
 	g_hTimerStartedForward = CreateGlobalForward("OnTimerStarted", ET_Event, Param_Cell);
 	g_hTimerStoppedForward = CreateGlobalForward("OnTimerStopped", ET_Event, Param_Cell);
 	g_hTimerRestartForward = CreateGlobalForward("OnTimerRestart", ET_Event, Param_Cell);
+	g_hFinishRoundForward = CreateGlobalForward("OnFinishRound", ET_Event, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String, Param_String, Param_Cell, Param_Cell, Param_Cell);
 
 	g_fVelocity = FindSendPropInfo("CBasePlayer", "m_vecVelocity[0]");
 	g_bTimerPhysics = LibraryExists("timer-physics");
@@ -170,6 +172,8 @@ public OnLibraryRemoved(const String:name[])
 public OnMapStart()
 {	
 	ConnectSQL();
+	
+	PrecacheSound("bot/great.wav");
 	
 	GetCurrentMap(g_sCurrentMap, sizeof(g_sCurrentMap));
 	StringToLower(g_sCurrentMap);
@@ -515,12 +519,14 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	new Float:fLastTime;
 	new iLastJumps, iLastFlashbangs;
 	decl String:sTimeDiff[32], String:sBuffer[32];
+	new bool:overwrite = false;
 	
 	if (Timer_GetBestRound(client, map, fLastTime, iLastJumps, iLastFlashbangs))
 	{
 		if(fLastTime == 0.0)
 		{
 			g_bestTimeCache[client][Time] = time;
+			overwrite = true;
 		}
 		fLastTime -= time;			
 		if(fLastTime < 0.0)
@@ -532,6 +538,7 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 		else if(fLastTime > 0.0)
 		{
 			g_bestTimeCache[client][Time] = time;
+			overwrite = true;
 			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
 			FormatEx(sTimeDiff, sizeof(sTimeDiff), "-%s", sBuffer);
 		}
@@ -580,38 +587,23 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	
 	GetTotalRank(g_sCurrentMap);
 	GetCurrentRank(client, g_sCurrentMap);
-
+	
 	decl String:sTimeString[32];
 	Timer_SecondsToTime(time, sTimeString, sizeof(sTimeString), true);
-	
-	decl String:sMessage[256];
-	
-	FormatEx(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish Message", name, sTimeString, sTimeDiff);
-	
-	if (g_bShowJumps)
-	{
-		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Jumps Message", jumps);
-	}
-	
-	if (g_bShowFlashbangs)
-	{
-		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Flashbangs Message", flashbangs);
-	}
-	
-	if (g_bTimerPhysics)
-	{
-		new String:difficulty[32];
-		Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
-		
-		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Difficulty Message", difficulty);
-	}
-	
-	Format(sMessage, sizeof(sMessage), "%s.", sMessage);
-	
-	Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Rank Message", Timer_GetCurrentRank(client, false), Timer_GetTotalRank(false));
-	
-	PrintToChatAll(sMessage);
-	
+
+	Call_StartForward(g_hFinishRoundForward);
+	Call_PushCell(client);
+	Call_PushString(map);
+	Call_PushCell(jumps);
+	Call_PushCell(flashbangs);
+	Call_PushCell(physicsDifficulty);
+	Call_PushCell(fpsmax);
+	Call_PushString(sTimeString);
+	Call_PushString(sTimeDiff);
+	Call_PushCell(Timer_GetCurrentRank(client, false));
+	Call_PushCell(Timer_GetTotalRank(false));
+	Call_PushCell(overwrite);
+	Call_Finish();
 }
 
 GetTotalRank(const String:map[])
@@ -749,6 +741,45 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	
 	GetTotalRank(g_sCurrentMap);
 }
+
+public OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDifficulty, fpsmax, const String:timeString[], const String:timeDiffString[], position, totalrank, bool:overwrite)
+{
+	decl String:sMessage[256], String:name[MAX_NAME_LENGTH];
+	GetClientName(client, name, sizeof(name));
+	
+	FormatEx(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish Message", name, timeString, timeDiffString);
+	
+	if (g_bShowJumps)
+	{
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Jumps Message", jumps);
+	}
+	
+	if (g_bShowFlashbangs)
+	{
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Flashbangs Message", flashbangs);
+	}
+	
+	if (g_bTimerPhysics)
+	{
+		new String:difficulty[32];
+		Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
+		
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Difficulty Message", difficulty);
+	}
+	
+	Format(sMessage, sizeof(sMessage), "%s.", sMessage);
+	
+	Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Rank Message", position, totalrank);
+	
+	PrintToChatAll(sMessage);
+	
+	if (position == 1 && overwrite)
+	{	
+		EmitSoundToAll("bot/great.wav", client, SNDCHAN_WEAPON, SNDLEVEL_RAIDSIREN);
+		PrintToChatAll(PLUGIN_PREFIX, "Record Break Message", name);
+	}
+}
+
 
 public Native_GetTotalRank(Handle:plugin, numParams)
 {

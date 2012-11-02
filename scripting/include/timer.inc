@@ -53,6 +53,9 @@ forward OnTimerStopped(client);
  */
 forward OnTimerRestart(client);
 
+forward OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDifficulty, fpsmax, const String:timeString[], const String:timeDiffString[], position, totalrank, bool:overwrite);
+
+
 /**
  * Starts the timer for a client.
  *

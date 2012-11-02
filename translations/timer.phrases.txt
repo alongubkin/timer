@@ -29,7 +29,12 @@
 		"#format"		"{1:d},{2:d}"
 		"en"			 "Rank: {1}/{2}."
 	}
-
+	
+	"Record Break Message"
+	{
+		"#format"		"{1:s}"
+		"en"			 "{1} brokes map record."
+	}
 	
 	"Point Select Panel"
 	{
