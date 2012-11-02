@@ -122,7 +122,6 @@ public OnPluginStart()
 	HookEvent("player_connect", Event_StopTimer);
 	HookEvent("weapon_fire", Event_WeaponFire);
 	
-	
 	RegConsoleCmd("sm_restart", Command_Restart);
 	RegConsoleCmd("sm_r", Command_Restart);
 	RegConsoleCmd("sm_stop", Command_Stop);
@@ -454,6 +453,12 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs)
 		SQL_GetError(g_hSQL, error, sizeof(error));
 		Timer_LogError("SQL Error on GetBestRound: %s", error);
 		SQL_UnlockDatabase(g_hSQL);
+		
+		g_bestTimeCache[client][IsCached] = true;
+		g_bestTimeCache[client][Time] = 0.0;
+		g_bestTimeCache[client][Jumps] = 0;	
+		g_bestTimeCache[client][Flashbangs] = 0;
+
 		return false;
 	}
 
@@ -519,38 +524,31 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	new Float:fLastTime;
 	new iLastJumps, iLastFlashbangs;
 	decl String:sTimeDiff[32], String:sBuffer[32];
-	new bool:overwrite = false;
+	new bool:bOverwrite = false;
 	
-	if (Timer_GetBestRound(client, map, fLastTime, iLastJumps, iLastFlashbangs))
+	Timer_GetBestRound(client, map, fLastTime, iLastJumps, iLastFlashbangs);
+	
+	if(fLastTime == 0.0)
 	{
-		if(fLastTime == 0.0)
-		{
-			g_bestTimeCache[client][Time] = time;
-			overwrite = true;
-		}
-		fLastTime -= time;			
-		if(fLastTime < 0.0)
-		{
-			fLastTime *= -1.0;
-			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
-			FormatEx(sTimeDiff, sizeof(sTimeDiff), "+%s", sBuffer);
-		}
-		else if(fLastTime > 0.0)
-		{
-			g_bestTimeCache[client][Time] = time;
-			overwrite = true;
-			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
-			FormatEx(sTimeDiff, sizeof(sTimeDiff), "-%s", sBuffer);
-		}
-		else if(fLastTime == 0.0)
-		{
-			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
-			FormatEx(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
-		}
+		g_bestTimeCache[client][Time] = time;
+		bOverwrite = true;
 	}
-	else
+	fLastTime -= time;			
+	if(fLastTime < 0.0)
 	{
-		fLastTime = 0.0;
+		fLastTime *= -1.0;
+		Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
+		FormatEx(sTimeDiff, sizeof(sTimeDiff), "+%s", sBuffer);
+	}
+	else if(fLastTime > 0.0)
+	{
+		g_bestTimeCache[client][Time] = time;
+		bOverwrite = true;
+		Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
+		FormatEx(sTimeDiff, sizeof(sTimeDiff), "-%s", sBuffer);
+	}
+	else if(fLastTime == 0.0)
+	{
 		Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
 		FormatEx(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
 	}
@@ -602,7 +600,7 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	Call_PushString(sTimeDiff);
 	Call_PushCell(Timer_GetCurrentRank(client, false));
 	Call_PushCell(Timer_GetTotalRank(false));
-	Call_PushCell(overwrite);
+	Call_PushCell(bOverwrite);
 	Call_Finish();
 }
 
@@ -767,9 +765,7 @@ public OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDiffi
 		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Difficulty Message", difficulty);
 	}
 	
-	Format(sMessage, sizeof(sMessage), "%s.", sMessage);
-	
-	Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Rank Message", position, totalrank);
+	Format(sMessage, sizeof(sMessage), "%s. %t", sMessage, "Rank Message", position, totalrank);
 	
 	PrintToChatAll(sMessage);
 	
