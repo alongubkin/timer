@@ -72,7 +72,6 @@ new bool:g_bShowJumps = true;
 new bool:g_bShowFlashbangs = false;
 
 new bool:g_bTimerPhysics = false;
-new g_fVelocity;
 
 public Plugin:myinfo =
 {
@@ -109,7 +108,6 @@ public OnPluginStart()
 	g_hTimerRestartForward = CreateGlobalForward("OnTimerRestart", ET_Event, Param_Cell);
 	g_hFinishRoundForward = CreateGlobalForward("OnFinishRound", ET_Event, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String, Param_String, Param_Cell, Param_Cell, Param_Cell);
 
-	g_fVelocity = FindSendPropInfo("CBasePlayer", "m_vecVelocity[0]");
 	g_bTimerPhysics = LibraryExists("timer-physics");
 	
 	LoadTranslations("timer.phrases");
@@ -379,15 +377,15 @@ bool:PauseTimer(client)
 	g_timers[client][PauseStartTime] = GetGameTime();
 	
 	new Float:origin[3];
-	GetClientAbsOrigin(client, origin);
+	GetEntPropVector(client, Prop_Data, "m_vecOrigin", origin);
 	Array_Copy(origin, g_timers[client][PauseLastOrigin], 3);
 	
 	new Float:angles[3];
-	GetClientAbsAngles(client, angles);
+	GetClientEyeAngles(client, angles);
 	Array_Copy(angles, g_timers[client][PauseLastAngles], 3);
 	
 	new Float:velocity[3];
-	GetClientAbsVelocity(client, velocity);
+	GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 	Array_Copy(velocity, g_timers[client][PauseLastVelocity], 3);
 	
 	return true;
@@ -867,15 +865,4 @@ public Native_FinishRound(Handle:plugin, numParams)
 public Native_ForceReloadBestRoundCache(Handle:plugin, numParams)
 {
 	ClearCache();
-}
-
-/**
-* Utils methods
-*/
-stock GetClientAbsVelocity(client, Float:vecVelocity[3])
-{
-	for (new x = 0; x < 3; x++)
-	{
-		vecVelocity[x] = GetEntDataFloat(client, g_fVelocity + (x*4));
-	}
 }
