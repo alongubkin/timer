@@ -52,6 +52,7 @@ new g_timers[MAXPLAYERS+1][Timer];
 new g_bestTimeCache[MAXPLAYERS+1][BestTimeCacheEntity];
 
 new g_iTotalRankCache;
+new g_iCurrentRankCache[MAXPLAYERS+1];
 
 new Handle:g_hTimerStartedForward;
 new Handle:g_hTimerStoppedForward;
@@ -93,6 +94,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	CreateNative("Timer_FinishRound", Native_FinishRound);
 	CreateNative("Timer_ForceReloadBestRoundCache", Native_ForceReloadBestRoundCache);
 	CreateNative("Timer_GetTotalRank", Native_GetTotalRank);
+	CreateNative("Timer_GetCurrentRank", Native_GetCurrentRank);
 
 	return APLRes_Success;
 }
@@ -464,6 +466,8 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs)
 		g_bestTimeCache[client][Jumps] = jumps;
 		g_bestTimeCache[client][Flashbangs] = flashbangs;
 		
+		GetCurrentRank(client, g_sCurrentMap);
+		
 		CloseHandle(hQuery);
 	}
 	else
@@ -510,20 +514,24 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	
 	new Float:fLastTime;
 	new iLastJumps, iLastFlashbangs;
-	decl String:sTimeDiff[32];
-	decl String:sBuffer[32];
+	decl String:sTimeDiff[32], String:sBuffer[32];
 	
 	if (Timer_GetBestRound(client, map, fLastTime, iLastJumps, iLastFlashbangs))
 	{
+		if(fLastTime == 0.0)
+		{
+			g_bestTimeCache[client][Time] = time;
+		}
 		fLastTime -= time;			
 		if(fLastTime < 0.0)
-		{	
+		{
 			fLastTime *= -1.0;
 			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
 			FormatEx(sTimeDiff, sizeof(sTimeDiff), "+%s", sBuffer);
 		}
 		else if(fLastTime > 0.0)
 		{
+			g_bestTimeCache[client][Time] = time;
 			Timer_SecondsToTime(fLastTime, sBuffer, sizeof(sBuffer), true);
 			FormatEx(sTimeDiff, sizeof(sTimeDiff), "-%s", sBuffer);
 		}
@@ -549,11 +557,30 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	decl String:safeName[2 * strlen(name) + 1];
 	SQL_EscapeString(g_hSQL, name, safeName, 2 * strlen(name) + 1);
 
-	decl String:query[256];
+	decl String:query[256], String:error[255];
 	FormatEx(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax, flashbangs) VALUES ('%s', '%s', %f, %d, %d, '%s', %d, %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax, flashbangs);
 	
-	SQL_TQuery(g_hSQL, FinishRoundCallback, query, client, DBPrio_High);
+	SQL_LockDatabase(g_hSQL);
+
+	new Handle:hQuery = SQL_Query(g_hSQL, query);
 	
+	if (hQuery == INVALID_HANDLE)
+	{
+		SQL_GetError(g_hSQL, error, sizeof(error));
+		Timer_LogError("SQL Error on GetTotalRank: %s", error);
+		SQL_UnlockDatabase(g_hSQL);
+		return;
+	}
+
+	SQL_UnlockDatabase(g_hSQL); 
+	
+	CloseHandle(hQuery);
+	
+	g_bestTimeCache[client][IsCached] = false;
+	
+	GetTotalRank(g_sCurrentMap);
+	GetCurrentRank(client, g_sCurrentMap);
+
 	decl String:sTimeString[32];
 	Timer_SecondsToTime(time, sTimeString, sizeof(sTimeString), true);
 	
@@ -581,40 +608,58 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	
 	Format(sMessage, sizeof(sMessage), "%s.", sMessage);
 	
+	Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Rank Message", Timer_GetCurrentRank(client, false), Timer_GetTotalRank(false));
+	
 	PrintToChatAll(sMessage);
 	
 }
 
-public FinishRoundCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
-{
-	if (hndl == INVALID_HANDLE)
-	{
-		Timer_LogError("SQL Error on FinishRound: %s", error);
-		return;
-	}
-
-	g_bestTimeCache[client][IsCached] = false;
-	
-	GetTotalRank(g_sCurrentMap);
-}
-
 GetTotalRank(const String:map[])
 {
-	decl String:query[384];
-	FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", map, map);
+	decl String:query[384], String:error[255];
+	FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth", map, map);
 	
-	SQL_TQuery(g_hSQL, GetTotalRankCallback, query, _, DBPrio_Low);
-}
+	SQL_LockDatabase(g_hSQL);
 
-public GetTotalRankCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
-{
-	if (hndl == INVALID_HANDLE)
+	new Handle:hQuery = SQL_Query(g_hSQL, query);
+	
+	if (hQuery == INVALID_HANDLE)
 	{
+		SQL_GetError(g_hSQL, error, sizeof(error));
 		Timer_LogError("SQL Error on GetTotalRank: %s", error);
+		SQL_UnlockDatabase(g_hSQL);
 		return;
 	}
 
-	g_iTotalRankCache = SQL_GetRowCount(hndl);
+	SQL_UnlockDatabase(g_hSQL); 
+
+	g_iTotalRankCache = SQL_GetRowCount(hQuery);
+	
+	CloseHandle(hQuery);
+}
+
+GetCurrentRank(client, const String:map[])
+{
+	decl String:query[384], String:error[255];
+	FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' AND n.time <= %f GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' AND m.time <= %f GROUP BY m.physicsdifficulty, m.auth", map, g_bestTimeCache[client][Time] + 0.0001, map, g_bestTimeCache[client][Time] + 0.0001);
+
+	SQL_LockDatabase(g_hSQL);
+
+	new Handle:hQuery = SQL_Query(g_hSQL, query);
+	
+	if (hQuery == INVALID_HANDLE)
+	{
+		SQL_GetError(g_hSQL, error, sizeof(error));
+		Timer_LogError("SQL Error on GetCurrentRank: %s", error);
+		SQL_UnlockDatabase(g_hSQL);
+		return;
+	}
+
+	SQL_UnlockDatabase(g_hSQL); 
+	
+	g_iCurrentRankCache[client] = SQL_GetRowCount(hQuery);
+	
+	CloseHandle(hQuery);
 }
 
 Float:CalculateTime(client)
@@ -701,6 +746,8 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 		Timer_LogError("SQL Error on CreateSQLTable: %s", error);
 		return;
 	}
+	
+	GetTotalRank(g_sCurrentMap);
 }
 
 public Native_GetTotalRank(Handle:plugin, numParams)
@@ -711,6 +758,17 @@ public Native_GetTotalRank(Handle:plugin, numParams)
 		GetTotalRank(g_sCurrentMap);
 	}
 	return g_iTotalRankCache;
+}
+
+public Native_GetCurrentRank(Handle:plugin, numParams)
+{
+	new bool:update = bool:GetNativeCell(2);
+	new client = GetNativeCell(1);
+	if (update)
+	{
+		GetCurrentRank(client, g_sCurrentMap);
+	}
+	return g_iCurrentRankCache[client];
 }
 
 public Native_TimerStart(Handle:plugin, numParams)

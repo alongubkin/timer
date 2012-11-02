@@ -135,6 +135,14 @@ native Timer_ForceReloadBestRoundCache();
  */
 native Timer_GetTotalRank(bool:update = false);
 
+/**
+ * Returns current rank of player on current map.
+ *
+ * @return Integer number of current rank.
+ */
+native Timer_GetCurrentRank(client, bool:update = false);
+
+
 stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precision = true)
 {
 	new t = RoundToFloor(seconds);

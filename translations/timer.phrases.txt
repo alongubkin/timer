@@ -24,6 +24,13 @@
 		"en"			 "on {1}"
 	}
 	
+	"Rank Message"
+	{
+		"#format"		"{1:d},{2:d}"
+		"en"			 "Rank: {1}/{2}."
+	}
+
+	
 	"Point Select Panel"
 	{
 		"#format"		"{1:s}"
