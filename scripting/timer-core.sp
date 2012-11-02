@@ -57,6 +57,8 @@ new g_iCurrentRankCache[MAXPLAYERS+1];
 new Handle:g_hTimerStartedForward;
 new Handle:g_hTimerStoppedForward;
 new Handle:g_hTimerRestartForward;
+new Handle:g_hTimerPauseForward;
+new Handle:g_hTimerResumeForward;
 new Handle:g_hFinishRoundForward;
 
 new Handle:g_hCvarRestartEnabled = INVALID_HANDLE;
@@ -89,6 +91,8 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	CreateNative("Timer_Start", Native_TimerStart);
 	CreateNative("Timer_Stop", Native_TimerStop);
 	CreateNative("Timer_Restart", Native_TimerRestart);
+	CreateNative("Timer_Pause", Native_TimerPause);
+	CreateNative("Timer_Resume", Native_TimerResume);
 	CreateNative("Timer_GetBestRound", Native_GetBestRound);
 	CreateNative("Timer_GetClientTimer", Native_GetClientTimer);
 	CreateNative("Timer_FinishRound", Native_FinishRound);
@@ -106,6 +110,8 @@ public OnPluginStart()
 	g_hTimerStartedForward = CreateGlobalForward("OnTimerStarted", ET_Event, Param_Cell);
 	g_hTimerStoppedForward = CreateGlobalForward("OnTimerStopped", ET_Event, Param_Cell);
 	g_hTimerRestartForward = CreateGlobalForward("OnTimerRestart", ET_Event, Param_Cell);
+	g_hTimerPauseForward = CreateGlobalForward("OnTimerPause", ET_Event, Param_Cell);
+	g_hTimerResumeForward = CreateGlobalForward("OnTimerResume", ET_Event, Param_Cell);
 	g_hFinishRoundForward = CreateGlobalForward("OnFinishRound", ET_Event, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String, Param_String, Param_Cell, Param_Cell, Param_Cell);
 
 	g_bTimerPhysics = LibraryExists("timer-physics");
@@ -388,6 +394,10 @@ bool:PauseTimer(client)
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
 	Array_Copy(velocity, g_timers[client][PauseLastVelocity], 3);
 	
+	Call_StartForward(g_hTimerPauseForward);
+	Call_PushCell(client);
+	Call_Finish();
+	
 	return true;
 }
 
@@ -416,6 +426,10 @@ bool:ResumeTimer(client)
 	Array_Copy(g_timers[client][PauseLastVelocity], velocity, 3);
 	
 	TeleportEntity(client, origin, angles, velocity);
+	
+	Call_StartForward(g_hTimerResumeForward);
+	Call_PushCell(client);
+	Call_Finish();
 	
 	return true;
 }
@@ -809,6 +823,16 @@ public Native_TimerStop(Handle:plugin, numParams)
 public Native_TimerRestart(Handle:plugin, numParams)
 {
 	return RestartTimer(GetNativeCell(1));
+}
+
+public Native_TimerPause(Handle:plugin, numParams)
+{
+	return PauseTimer(GetNativeCell(1));
+}
+
+public Native_TimerResume(Handle:plugin, numParams)
+{
+	return ResumeTimer(GetNativeCell(1));
 }
 
 public Native_GetBestRound(Handle:plugin, numParams)

@@ -53,6 +53,42 @@ forward OnTimerStopped(client);
  */
 forward OnTimerRestart(client);
 
+/**
+ * Called when a timer pauses.
+ *
+ * @param client		The owner of the timer.
+ *
+ * @noreturn
+ */
+forward OnTimerPause(client);
+
+/**
+ * Called when a timer continues.
+ *
+ * @param client		The owner of the timer.
+ *
+ * @noreturn
+ */
+forward OnTimerResume(client);
+
+/**
+ * Called when a round finishes.
+ *
+ * @param client			The client who finished the round.
+ * @param map
+ * @param jumps				Number of jumps.
+ * @param flashbangs		Number of flashbangs.
+ * @param physicsDifficulty	Difficulty index.
+ * @param fpsmax			Value of fps_max convar.
+ * @param timeString		Time string.
+ * @param timeDiffString	Time difference string.
+ * @param position			Position of player.
+ * @param totalrank			Total number of player which finished the map.
+ * @param overwrite			Indicates if new round is better than older.
+ *
+ * @noreturn
+ */
+
 forward OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDifficulty, fpsmax, const String:timeString[], const String:timeDiffString[], position, totalrank, bool:overwrite);
 
 
@@ -83,6 +119,24 @@ native bool:Timer_Stop(client, bool:stopPaused = true);
  * @return True on success, false on failure.
  */
 native bool:Timer_Restart(client);
+
+/**
+ * Pauses the timer for a client.
+ *
+ * @param client    	The client to pause the timer for.
+ *
+ * @return True on success, false on failure.
+ */
+native bool:Timer_Pause(client);
+
+/**
+ * Continues the timer for a client.
+ *
+ * @param client    	The client to resume the timer for.
+ *
+ * @return True on success, false on failure.
+ */
+native bool:Timer_Resume(client);
 
 /**
  * Fetches the best round for a player in a specific map.
@@ -208,6 +262,8 @@ public __pl_timer_SetNTVOptional()
 	MarkNativeAsOptional("Timer_Start");
 	MarkNativeAsOptional("Timer_Stop");
 	MarkNativeAsOptional("Timer_Restart");
+	MarkNativeAsOptional("Timer_Pause");
+	MarkNativeAsOptional("Timer_Resume");
 	MarkNativeAsOptional("Timer_GetBestRound");
 	MarkNativeAsOptional("Timer_GetClientTimer");
 	MarkNativeAsOptional("Timer_FinishRound");
