@@ -25,6 +25,7 @@ new g_clientDifficulty[MAXPLAYERS+1];
 
 new bool:g_preventAD[MAXPLAYERS+1];
 new bool:g_preventBack[MAXPLAYERS+1];
+new bool:g_preventForward[MAXPLAYERS+1];
 new bool:g_auto[MAXPLAYERS+1];
 
 public Plugin:myinfo =
@@ -170,6 +171,7 @@ LoadDifficulties()
 		g_difficulties[g_difficultyCount][Gravity] = KvGetFloat(kv, "gravity", 1.0);
 		g_difficulties[g_difficultyCount][PreventAD] = bool:KvGetNum(kv, "prevent_ad", 0);
 		g_difficulties[g_difficultyCount][PreventBack] = bool:KvGetNum(kv, "prevent_back", 0);
+		g_difficulties[g_difficultyCount][PreventForward] = bool:KvGetNum(kv, "prevent_forward", 0);
 		g_difficulties[g_difficultyCount][Auto] = bool:KvGetNum(kv, "auto", 0);
 		
 		if (g_difficulties[g_difficultyCount][IsDefault])
@@ -240,6 +242,7 @@ ApplyDifficulty(client)
 	g_stamina[client] = g_difficulties[difficulty][Stamina];
 	g_preventAD[client] = g_difficulties[difficulty][PreventAD];
 	g_preventBack[client] = g_difficulties[difficulty][PreventBack];
+	g_preventForward[client] = g_difficulties[difficulty][PreventForward];
 	g_auto[client] = g_difficulties[difficulty][Auto];
 }
 
@@ -260,7 +263,14 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 			return Plugin_Handled;
 		}
 	}
-
+	
+	if (g_preventForward[client] && IsPlayerAlive(client))
+	{
+		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_FORWARD))
+		{
+			return Plugin_Handled;
+		}
+	}
 	
 	if (g_auto[client] && IsPlayerAlive(client))
 	{
