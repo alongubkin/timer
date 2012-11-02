@@ -34,6 +34,16 @@ native Timer_GetClientDifficulty(client);
  */
 native Timer_GetDifficultyName(difficulty, String:name[], maxlength);
 
+/**
+ * Indicates if Auto bunnyhop is enabled for client.
+ *
+ * @param client    	The client to check for Auto bunnyhop.
+ *
+ * @return True on success, false on failure.
+ */
+native bool:Timer_AutoBunny(client);
+
+
 public SharedPlugin:__pl_timer_physics = 
 {
 	name = "timer-physics",

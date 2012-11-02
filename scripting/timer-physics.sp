@@ -43,6 +43,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	
 	CreateNative("Timer_GetClientDifficulty", Native_GetClientDifficulty);
 	CreateNative("Timer_GetDifficultyName", Native_GetDifficultyName);
+	CreateNative("Timer_AutoBunny", Native_AutoBunny);
 
 	return APLRes_Success;
 }
@@ -314,4 +315,10 @@ public Native_GetDifficultyName(Handle:plugin, numParams)
 
 	SetNativeString(2, g_difficulties[t][Name], maxlength);
 	return true;
+}
+
+public Native_AutoBunny(Handle:plugin, numParams)
+{
+	new client = GetNativeCell(1);
+	return g_auto[client];
 }
