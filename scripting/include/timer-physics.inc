@@ -59,4 +59,5 @@ public __pl_timer_physics_SetNTVOptional()
 {
 	MarkNativeAsOptional("Timer_GetClientDifficulty");
 	MarkNativeAsOptional("Timer_GetDifficultyName");
+	MarkNativeAsOptional("Timer_AutoBunny");
 }
