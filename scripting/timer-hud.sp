@@ -161,7 +161,7 @@ public Action:HUDTimer(Handle:timer)
 {
 	for (new client = 1; client <= MaxClients; client++)
 	{
-		if (IsClientInGame(client) && client > 0)
+		if (client > 0 && IsClientInGame(client) && !IsClientSourceTV(client) && !IsClientReplay(client))
 		{
 			UpdateHUD(client);
 		}
