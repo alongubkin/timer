@@ -328,7 +328,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	
 	if (StrEqual(driver, "mysql", false))
 	{
-		SQL_TQuery(g_hSQL, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
+		SQL_FastQuery(hndl, "SET NAMES  'utf8'");
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `mapzone` (`id` int(11) NOT NULL AUTO_INCREMENT, `type` int(11) NOT NULL, `point1_x` float NOT NULL, `point1_y` float NOT NULL, `point1_z` float NOT NULL, `point2_x` float NOT NULL, `point2_y` float NOT NULL, `point2_z` float NOT NULL, `map` varchar(32) NOT NULL, PRIMARY KEY (`id`));");
 	}
 	else if (StrEqual(driver, "sqlite", false))
@@ -337,25 +337,6 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	}
 	
 	g_reconnectCounter = 1;
-}
-
-public SetNamesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
-{	
-	if (owner == INVALID_HANDLE)
-	{
-		Timer_LogError(error);
-
-		g_reconnectCounter++;
-		ConnectSQL();
-		
-		return;
-	}
-	
-	if (hndl == INVALID_HANDLE)
-	{
-		Timer_LogError("SQL Error on SetNames: %s", error);
-		return;
-	}
 }
 
 public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
