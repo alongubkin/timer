@@ -733,16 +733,6 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 
 public SetNamesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {	
-	if (owner == INVALID_HANDLE)
-	{
-		Timer_LogError(error);
-		
-		g_iReconnectCounter++;
-		ConnectSQL();
-
-		return;
-	}
-	
 	if (hndl == INVALID_HANDLE)
 	{
 		Timer_LogError("SQL Error on SetNames: %s", error);

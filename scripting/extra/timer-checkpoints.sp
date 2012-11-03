@@ -131,7 +131,7 @@ LoadCheckpoints()
 		decl String:query[384];
 		FormatEx(query, sizeof(query), "SELECT id, auth, map, position_x, position_y, position_z, `order` FROM `checkpoints` WHERE map = '%s' ORDER BY `order` ASC", g_currentMap);
 
-		SQL_TQuery(g_hSQL, LoadCheckpointsCallback, query, _, DBPrio_Low);
+		SQL_TQuery(g_hSQL, LoadCheckpointsCallback, query, _, DBPrio_High);
 	}
 }
 
@@ -220,17 +220,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 }
 
 public SetNamesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
-{	
-	if (owner == INVALID_HANDLE)
-	{
-		Timer_LogError(error);
-		
-		g_reconnectCounter++;
-		ConnectSQL(data);
-
-		return;
-	}
-	
+{
 	if (hndl == INVALID_HANDLE)
 	{
 		Timer_LogError("SQL Error on SetNames: %s", error);
@@ -274,7 +264,7 @@ ClearCheckpoints(client)
 		decl String:query[384];
 		FormatEx(query, sizeof(query), "DELETE FROM checkpoints WHERE auth = '%s' AND map = '%s';", auth, g_currentMap);
 		
-		SQL_TQuery(g_hSQL, ClearCheckpointsCallback, query, client, DBPrio_High);
+		SQL_TQuery(g_hSQL, ClearCheckpointsCallback, query, client, DBPrio_Normal);
 	}
 }
 

@@ -623,7 +623,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	
 	if (StrEqual(driver, "mysql", false))
 	{
-		SQL_TQuery(g_hSQL, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
+		SQL_FastQuery(hndl, "SET NAMES 'utf8'");
 	}
 
 	g_hSQL = CloneHandle(hndl);
@@ -633,25 +633,6 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	if (data)
 	{
 		RefreshCache();	
-	}
-}
-
-public SetNamesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
-{	
-	if (owner == INVALID_HANDLE)
-	{
-		Timer_LogError(error);
-		
-		g_reconnectCounter++;
-		ConnectSQL(data);
-
-		return;
-	}
-	
-	if (hndl == INVALID_HANDLE)
-	{
-		Timer_LogError("SQL Error on SetNames: %s", error);
-		return;
 	}
 }
 
