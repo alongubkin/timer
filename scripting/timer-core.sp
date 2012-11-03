@@ -618,7 +618,7 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 
 GetTotalRank(const String:map[])
 {
-	decl String:query[384], String:error[255];
+	decl String:query[448], String:error[255];
 	FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth", map, map);
 	
 	SQL_LockDatabase(g_hSQL);
@@ -642,7 +642,7 @@ GetTotalRank(const String:map[])
 
 GetCurrentRank(client, const String:map[])
 {
-	decl String:query[384], String:error[255];
+	decl String:query[512], String:error[255];
 	FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' AND n.time <= %f GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' AND m.time <= %f GROUP BY m.physicsdifficulty, m.auth", map, g_bestTimeCache[client][Time] + 0.0001, map, g_bestTimeCache[client][Time] + 0.0001);
 
 	SQL_LockDatabase(g_hSQL);
@@ -749,7 +749,6 @@ public SetNamesCallback(Handle:owner, Handle:hndl, const String:error[], any:dat
 		return;
 	}
 }
-
 
 public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {	

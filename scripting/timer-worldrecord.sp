@@ -543,7 +543,7 @@ RefreshCache()
 	}
 	else
 	{	
-		decl String:query[384];
+		decl String:query[448];
 		FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name, MAX(m.flashbangs) flashbangs FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
 		
 		SQL_TQuery(g_hSQL, RefreshCacheCallback, query, _, DBPrio_Low);
