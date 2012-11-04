@@ -24,7 +24,7 @@ new Handle:g_hCvarShowDifficulty = INVALID_HANDLE;
 new Handle:g_hcvarShowBestTimes = INVALID_HANDLE;
 new Handle:g_hCvarShowName = INVALID_HANDLE;
 new Handle:g_hCvarTimeByKills = INVALID_HANDLE;
-new Handle:g_hCvarJumpsByDeaths = INVALID_HANDLE;
+new Handle:g_hCvarJumpOrFlashbangssByDeaths = INVALID_HANDLE;
 new Handle:g_hCvarThreeAxisSpeed = INVALID_HANDLE;
 
 new bool:g_bShowSpeed = true;
@@ -35,7 +35,7 @@ new bool:g_bShowDifficulty = true;
 new bool:g_bShowBestTimes = true;
 new bool:g_bShowName = true;
 new bool:g_bTimeByKills = false;
-new bool:g_bJumpsByDeaths = false;
+new bool:g_bJumpsOrFlashbangsByDeaths = false;
 new bool:g_bThreeAxisSpeed = false;
 
 public Plugin:myinfo =
@@ -60,7 +60,7 @@ public OnPluginStart()
 	g_hcvarShowBestTimes = CreateConVar("timer_hud_besttimes", "1", "Whether or not best times for this map is shown in the HUD.");
 	g_hCvarShowName = CreateConVar("timer_hud_name", "1", "Whether or not spectating player's name is shown in the HUD.");
 	g_hCvarTimeByKills = CreateConVar("timer_frags", "0", "Whether or not players' score should be his current timer.");
-	g_hCvarJumpsByDeaths = CreateConVar("timer_jumps_death", "0", "Whether or not players' death count should be their jump count.");
+	g_hCvarJumpOrFlashbangssByDeaths = CreateConVar("timer_jumps_death", "0", "Whether or not players' death count should be their jump or flashbang count.");
 	g_hCvarThreeAxisSpeed = CreateConVar("timer_three_axis_speed", "0", "Whether or not Z-axis will be used in speed calculations.");
 
 	HookConVarChange(g_hCvarShowSpeed, Action_OnSettingsChange);
@@ -71,7 +71,7 @@ public OnPluginStart()
 	HookConVarChange(g_hcvarShowBestTimes, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarShowName, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarTimeByKills, Action_OnSettingsChange);	
-	HookConVarChange(g_hCvarJumpsByDeaths, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarJumpOrFlashbangssByDeaths, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarThreeAxisSpeed, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-hud");
@@ -146,9 +146,9 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 	{
 		g_bTimeByKills = bool:StringToInt(newvalue);
 	}
-	else if (cvar == g_hCvarJumpsByDeaths)
+	else if (cvar == g_hCvarJumpOrFlashbangssByDeaths)
 	{
-		g_bJumpsByDeaths = bool:StringToInt(newvalue);
+		g_bJumpsOrFlashbangsByDeaths = bool:StringToInt(newvalue);
 	}
 	else if (cvar == g_hCvarThreeAxisSpeed)
 	{
@@ -203,7 +203,7 @@ UpdateHUD(client)
 
 	Timer_GetClientTimer(target, bEnabled, fTime, iJumps, iFpsMax, iFlashbangs);
 	
-	if (bEnabled && (g_bTimeByKills || g_bJumpsByDeaths) && client == target)
+	if (bEnabled && (g_bTimeByKills || g_bJumpsOrFlashbangsByDeaths) && client == target)
 	{		
 		if (g_bTimeByKills)
 		{
@@ -211,9 +211,18 @@ UpdateHUD(client)
 			SetEntProp(target, Prop_Data, "m_iFrags", (roundedTime / 60) * 100 + (roundedTime % 60));
 		}
 		
-		if (g_bJumpsByDeaths)
+		if (g_bJumpsOrFlashbangsByDeaths)
 		{
-			SetEntProp(target, Prop_Data, "m_iDeaths", iJumps);		
+			if (g_bShowJumps && !g_bShowFlashbangs)
+			{
+				SetEntProp(target, Prop_Data, "m_iDeaths", iJumps);
+			}
+			
+			if (!g_bShowJumps && g_bShowFlashbangs)
+			{
+				SetEntProp(target, Prop_Data, "m_iDeaths", iFlashbangs);
+			}
+
 		}
 	}
 	

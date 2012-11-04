@@ -449,7 +449,7 @@ DisplaySelectPlayerMenu(client)
 		}
 		
 		decl String:text[92];
-		Format(text, sizeof(text), "%d. %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
+		FormatEx(text, sizeof(text), "#%d: %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
 		
 		if (g_showJumps)
 		{
@@ -700,7 +700,7 @@ CreateWRMenu(client, difficulty)
 			IntToString(g_cache[cache][Id], id, sizeof(id));
 			
 			decl String:text[92];
-			Format(text, sizeof(text), "%d. %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
+			FormatEx(text, sizeof(text), "#%d: %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
 			
 			if (g_showJumps)
 			{
@@ -913,7 +913,7 @@ public CreateDeleteMenuCallback(Handle:owner, Handle:hndl, const String:error[],
 			Format(value, sizeof(value), "%s %T: %d", value, "Jumps", client, SQL_FetchInt(hndl, 2));
 		}
 
-		if (g_showJumps)
+		if (g_showFlashbangs)
 		{
 			Format(value, sizeof(value), "%s %T: %d", value, "Flashbangs", client, SQL_FetchInt(hndl, 5));
 		}	
