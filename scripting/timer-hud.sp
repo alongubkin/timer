@@ -195,11 +195,7 @@ UpdateHUD(client)
 		}		
 	}
 
-	new bool:bEnabled;
-	new Float:fTime;
-	new iJumps;
-	new iFpsMax;
-	new iFlashbangs;
+	new bool:bEnabled, Float:fTime, iJumps, iFpsMax, iFlashbangs;
 
 	Timer_GetClientTimer(target, bEnabled, fTime, iJumps, iFpsMax, iFlashbangs);
 	
@@ -276,9 +272,7 @@ UpdateHUD(client)
 	
 	if (g_bShowBestTimes)
 	{
-		new Float:fBestTime;
-		new iBestJumps;
-		new iBestFlashbangs;
+		new Float:fBestTime, iBestJumps, iBestFlashbangs;
 		
 		Timer_GetBestRound(target, g_sCurrentMap, fBestTime, iBestJumps, iBestFlashbangs);	
 		

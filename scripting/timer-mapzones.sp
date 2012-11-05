@@ -30,13 +30,15 @@ enum MapZoneEditor
 */
 new Handle:g_hSQL;
 
-new Handle:g_startMapZoneColor = INVALID_HANDLE;
-new Handle:g_endMapZoneColor = INVALID_HANDLE;
-new Handle:g_startStopPrespeed = INVALID_HANDLE;
+new Handle:g_hCvarStartMapZoneColor = INVALID_HANDLE;
+new Handle:g_hCvarEndMapZoneColor = INVALID_HANDLE;
+new Handle:g_hCvarStopPrespeed = INVALID_HANDLE;
+new Handle:g_hCvarDrawMapZones = INVALID_HANDLE;
 
 new g_startColor[4] = { 0, 255, 0, 255 };
 new g_endColor[4] = { 0, 0, 255, 255 };
-new bool:g_stopPrespeed = false;
+new bool:g_bStopPrespeed = false;
+new bool:g_bDrawMapZones = true;
 
 new String:g_currentMap[32];
 new g_reconnectCounter = 0;
@@ -68,17 +70,19 @@ public OnPluginStart()
 	g_timerPhysics = LibraryExists("timer-physics");
 	g_timerWorldRecord = LibraryExists("timer-worldrecord");
 
-	g_startMapZoneColor = CreateConVar("timer_startcolor", "0 255 0 255", "The color of the start map zone.");
-	g_endMapZoneColor = CreateConVar("timer_endcolor", "0 0 255 255", "The color of the end map zone.");
-	g_startStopPrespeed = CreateConVar("timer_stopprespeeding", "0", "If enabled players won't be able to prespeed in start zone.");
+	g_hCvarStartMapZoneColor = CreateConVar("timer_startcolor", "0 255 0 255", "The color of the start map zone.");
+	g_hCvarEndMapZoneColor = CreateConVar("timer_endcolor", "0 0 255 255", "The color of the end map zone.");
+	g_hCvarStopPrespeed = CreateConVar("timer_stopprespeeding", "0", "If enabled players won't be able to prespeed in start zone.");
+	g_hCvarDrawMapZones = CreateConVar("timer_drawzones", "1", "If enabled map zones will be drawn.");
 	
-	HookConVarChange(g_startMapZoneColor, Action_OnSettingsChange);
-	HookConVarChange(g_endMapZoneColor, Action_OnSettingsChange);	
-	HookConVarChange(g_startStopPrespeed, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarStartMapZoneColor, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarEndMapZoneColor, Action_OnSettingsChange);	
+	HookConVarChange(g_hCvarStopPrespeed, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarDrawMapZones, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-mapzones");
 	
-	g_stopPrespeed = GetConVarBool(g_startStopPrespeed);
+	g_bStopPrespeed = GetConVarBool(g_hCvarStopPrespeed);
 	
 	LoadTranslations("timer.phrases");
 	
@@ -138,18 +142,28 @@ public OnLibraryRemoved(const String:name[])
 
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
-	if (cvar == g_startMapZoneColor)
+	if (cvar == g_hCvarStartMapZoneColor)
 	{
 		ParseColor(newvalue, g_startColor);
 	}
-	else if (cvar == g_endMapZoneColor)
+	else if (cvar == g_hCvarEndMapZoneColor)
 	{
 		ParseColor(newvalue, g_endColor);
 	}
-	else if (cvar == g_startStopPrespeed)
+	else if (cvar == g_hCvarStopPrespeed)
 	{
-		g_stopPrespeed = bool:StringToInt(newvalue);
+		g_bStopPrespeed = bool:StringToInt(newvalue);
 	}
+	else if (cvar == g_hCvarDrawMapZones)
+	{
+		g_bDrawMapZones = bool:StringToInt(newvalue);
+		
+		if (g_bDrawMapZones)
+		{
+			CreateTimer(2.0, DrawZones, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		}
+	}
+
 }
 
 public OnAdminMenuReady(Handle:topmenu)
@@ -259,8 +273,11 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 		
 		g_mapZonesCount++;
 	}
-
-	CreateTimer(2.0, DrawZones, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	
+	if (g_bDrawMapZones)
+	{
+		CreateTimer(2.0, DrawZones, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+	}
 	CreateTimer(0.1, PlayerTracker, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
@@ -369,12 +386,7 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	LoadMapZones();
 }
 
-public AdminMenu_CategoryHandler(Handle:topmenu, 
-TopMenuAction:action,
-TopMenuObject:object_id,
-param,
-String:buffer[],
-maxlength)
+public AdminMenu_CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
 	if (action == TopMenuAction_DisplayTitle) 
 	{
@@ -386,12 +398,7 @@ maxlength)
 	}
 }
 
-public AdminMenu_AddMapZone(Handle:topmenu, 
-TopMenuAction:action,
-TopMenuObject:object_id,
-param,
-String:buffer[],
-maxlength)
+public AdminMenu_AddMapZone(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
@@ -405,12 +412,7 @@ maxlength)
 	}
 }
 
-public AdminMenu_RemoveMapZone(Handle:topmenu, 
-TopMenuAction:action,
-TopMenuObject:object_id,
-param,
-String:buffer[],
-maxlength)
+public AdminMenu_RemoveMapZone(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
@@ -422,12 +424,7 @@ maxlength)
 	}
 }
 
-public AdminMenu_RemoveAllMapZones(Handle:topmenu, 
-TopMenuAction:action,
-TopMenuObject:object_id,
-param,
-String:buffer[],
-maxlength)
+public AdminMenu_RemoveAllMapZones(Handle:topmenu,  TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
@@ -676,6 +673,11 @@ public Action:DrawAdminBox(Handle:timer, any:serial)
 
 public Action:DrawZones(Handle:timer)
 {
+	if (!g_bDrawMapZones)
+	{
+		return Plugin_Stop;
+	}
+	
 	for (new zone = 0; zone < g_mapZonesCount; zone++)
 	{
 		if (g_mapZones[zone][Type] == Start || g_mapZones[zone][Type] == End)
@@ -727,7 +729,7 @@ public Action:PlayerTracker(Handle:timer)
 						Timer_Stop(client, false);
 						Timer_Start(client);
 						
-						if (g_stopPrespeed)
+						if (g_bStopPrespeed)
 						{
 							StopPrespeed(client);
 						}
