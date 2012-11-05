@@ -596,7 +596,7 @@ ConnectSQL(bool:refreshCache)
 	}
 	else
 	{
-		Timer_LogError("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
+		SetFailState("PLUGIN STOPPED - Reason: no config entry found for 'timer' in databases.cfg - PLUGIN STOPPED");
 	}
 }
 
