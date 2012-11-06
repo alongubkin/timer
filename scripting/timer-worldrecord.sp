@@ -42,7 +42,7 @@ new g_difficultyCount = 0;
 new Handle:hTopMenu = INVALID_HANDLE;
 new TopMenuObject:oMapZoneMenu;
 
-new g_cache[2048][RecordCache];
+new g_cache[1024][RecordCache];
 new g_cacheCount = 0;
 new bool:g_cacheLoaded = false;
 
@@ -543,8 +543,8 @@ RefreshCache()
 	}
 	else
 	{	
-		decl String:query[448];
-		FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name, MAX(m.flashbangs) flashbangs FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC", g_currentMap, g_currentMap);	
+		decl String:query[512];
+		FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name, MAX(m.flashbangs) flashbangs FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC LIMIT 0, 1000", g_currentMap, g_currentMap);	
 		
 		SQL_TQuery(g_hSQL, RefreshCacheCallback, query, _, DBPrio_Low);
 	}
