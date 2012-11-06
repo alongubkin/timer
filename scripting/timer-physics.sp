@@ -13,20 +13,20 @@
 
 new Handle:g_cookie;
 
-new Handle:g_joinTeamDifficultyCvar = INVALID_HANDLE;
-new bool:g_joinTeamDifficulty = false;
+new Handle:g_hCvarJoinTeamDifficulty = INVALID_HANDLE;
+new bool:g_bJoinTeamDifficulty = false;
 
 new g_difficulties[32][PhysicsDifficulty];
 new g_difficultyCount = 0;
-new g_defaultDifficulty = 0;
+new g_iDefaultDifficulty = 0;
 
-new Float:g_stamina[MAXPLAYERS+1];
-new g_clientDifficulty[MAXPLAYERS+1];
+new Float:g_fStamina[MAXPLAYERS+1];
+new g_iClientDifficulty[MAXPLAYERS+1];
 
-new bool:g_preventAD[MAXPLAYERS+1];
-new bool:g_preventBack[MAXPLAYERS+1];
-new bool:g_preventForward[MAXPLAYERS+1];
-new bool:g_auto[MAXPLAYERS+1];
+new bool:g_bPreventAD[MAXPLAYERS+1];
+new bool:g_bPreventBack[MAXPLAYERS+1];
+new bool:g_bPreventForward[MAXPLAYERS+1];
+new bool:g_bAuto[MAXPLAYERS+1];
 
 public Plugin:myinfo =
 {
@@ -62,8 +62,8 @@ public OnPluginStart()
 	
 	RegConsoleCmd("sm_difficulty", Command_Difficulty);
 	
-	g_joinTeamDifficultyCvar = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
-	HookConVarChange(g_joinTeamDifficultyCvar, Action_OnSettingsChange);
+	g_hCvarJoinTeamDifficulty = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
+	HookConVarChange(g_hCvarJoinTeamDifficulty, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-physics");
 	
@@ -83,9 +83,9 @@ public OnLibraryAdded(const String:name[])
 
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
-	if (cvar == g_joinTeamDifficultyCvar)
+	if (cvar == g_hCvarJoinTeamDifficulty)
 	{
-		g_joinTeamDifficulty = bool:StringToInt(newvalue);
+		g_bJoinTeamDifficulty = bool:StringToInt(newvalue);
 	}
 }
 
@@ -98,11 +98,11 @@ public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 
 	if (StrEqual(buffer, ""))
 	{
-		g_clientDifficulty[client] = g_defaultDifficulty;
+		g_iClientDifficulty[client] = g_iDefaultDifficulty;
 	}
 	else
 	{
-		g_clientDifficulty[client] = StringToInt(buffer);
+		g_iClientDifficulty[client] = StringToInt(buffer);
 	}
 	
 	ApplyDifficulty(client);
@@ -112,9 +112,9 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-	if (g_stamina[client] != -1.0)
+	if (g_fStamina[client] != -1.0)
 	{
-		SetEntPropFloat(client, Prop_Send, "m_flStamina", g_stamina[client]);
+		SetEntPropFloat(client, Prop_Send, "m_flStamina", g_fStamina[client]);
 	}
 
 	return Plugin_Continue;
@@ -125,7 +125,7 @@ public Action:Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroad
 	new team = GetEventInt(event, "team");
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	
-	if (g_joinTeamDifficulty && team > 1 && client > 0)
+	if (g_bJoinTeamDifficulty && team > 1 && client > 0)
 	{
 		CreateDifficultyMenu(client);
 	}
@@ -177,7 +177,7 @@ LoadDifficulties()
 		
 		if (g_difficulties[g_difficultyCount][IsDefault])
 		{
-			g_defaultDifficulty = g_difficulties[g_difficultyCount][Id];
+			g_iDefaultDifficulty = g_difficulties[g_difficultyCount][Id];
 		}
 		
 		g_difficultyCount++;
@@ -215,7 +215,7 @@ public MenuHandler_Difficulty(Handle:menu, MenuAction:action, param1, param2)
 		decl String:info[32];		
 		GetMenuItem(menu, param2, info, sizeof(info));
 		
-		g_clientDifficulty[param1] = StringToInt(info);
+		g_iClientDifficulty[param1] = StringToInt(info);
 		SetClientCookie(param1, g_cookie, info);
 		ApplyDifficulty(param1);
 
@@ -233,23 +233,23 @@ ApplyDifficulty(client)
 	new difficulty = 0;
 	for (; difficulty < g_difficultyCount; difficulty++)
 	{
-		if (g_difficulties[difficulty][Id] == g_clientDifficulty[client])
+		if (g_difficulties[difficulty][Id] == g_iClientDifficulty[client])
 		{
 			break;
 		}
 	}
 
 	SetEntityGravity(client, g_difficulties[difficulty][Gravity]);
-	g_stamina[client] = g_difficulties[difficulty][Stamina];
-	g_preventAD[client] = g_difficulties[difficulty][PreventAD];
-	g_preventBack[client] = g_difficulties[difficulty][PreventBack];
-	g_preventForward[client] = g_difficulties[difficulty][PreventForward];
-	g_auto[client] = g_difficulties[difficulty][Auto];
+	g_fStamina[client] = g_difficulties[difficulty][Stamina];
+	g_bPreventAD[client] = g_difficulties[difficulty][PreventAD];
+	g_bPreventBack[client] = g_difficulties[difficulty][PreventBack];
+	g_bPreventForward[client] = g_difficulties[difficulty][PreventForward];
+	g_bAuto[client] = g_difficulties[difficulty][Auto];
 }
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {	
-	if (g_preventAD[client] && IsPlayerAlive(client))
+	if (g_bPreventAD[client] && IsPlayerAlive(client))
 	{
 		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT))
 		{
@@ -257,7 +257,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		}
 	}
 	
-	if (g_preventBack[client] && IsPlayerAlive(client))
+	if (g_bPreventBack[client] && IsPlayerAlive(client))
 	{
 		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_BACK))
 		{
@@ -265,7 +265,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		}
 	}
 	
-	if (g_preventForward[client] && IsPlayerAlive(client))
+	if (g_bPreventForward[client] && IsPlayerAlive(client))
 	{
 		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_FORWARD))
 		{
@@ -273,7 +273,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		}
 	}
 	
-	if (g_auto[client] && IsPlayerAlive(client))
+	if (g_bAuto[client] && IsPlayerAlive(client))
 	{
 		if (buttons & IN_JUMP)
 		{
@@ -296,7 +296,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 public Native_GetClientDifficulty(Handle:plugin, numParams)
 {
 	new client = GetNativeCell(1);
-	return g_clientDifficulty[client];
+	return g_iClientDifficulty[client];
 }
 
 public Native_GetDifficultyName(Handle:plugin, numParams)
@@ -320,5 +320,5 @@ public Native_GetDifficultyName(Handle:plugin, numParams)
 public Native_AutoBunny(Handle:plugin, numParams)
 {
 	new client = GetNativeCell(1);
-	return g_auto[client];
+	return g_bAuto[client];
 }

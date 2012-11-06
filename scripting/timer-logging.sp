@@ -7,12 +7,12 @@
 #define PLUGIN_NAME_RESERVED_LENGTH 33
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-logging.txt"
 
-static Handle:g_log_file = INVALID_HANDLE;
-static const String:g_log_level_names[][] = { "     ", "ERROR", "WARN ", "INFO ", "DEBUG", "TRACE" };
-static Timer_LogLevel:g_log_level = Timer_LogLevelNone;
-static Timer_LogLevel:g_log_flush_level = Timer_LogLevelNone;
-static bool:g_log_errors_to_SM = false;
-static String:g_current_date[20];
+static Handle:g_hLogFile = INVALID_HANDLE;
+static const String:g_sLogLevelNames[][] = {"     ", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
+static Timer_LogLevel:g_iLogLevel = Timer_LogLevelNone;
+static Timer_LogLevel:g_iLogFlushLevel = Timer_LogLevelNone;
+static bool:g_bLogErrorsToSM = false;
+static String:g_sCurrentDate[20];
 
 public Plugin:myinfo =
 {
@@ -27,10 +27,10 @@ public OnPluginStart()
 {
 	LoadConfig();
 	
-	FormatTime(g_current_date, sizeof(g_current_date), "%Y-%m-%d", GetTime());
+	FormatTime(g_sCurrentDate, sizeof(g_sCurrentDate), "%Y-%m-%d", GetTime());
 	CreateTimer(1.0, OnCheckDate, INVALID_HANDLE, TIMER_REPEAT);
 	
-	if (g_log_level > Timer_LogLevelNone)
+	if (g_iLogLevel > Timer_LogLevelNone)
 	{
 		CreateLogFileOrTurnOffLogging();
 	}
@@ -68,25 +68,25 @@ LoadConfig()
 {
 	new Handle:kv = CreateKeyValues("root");
 	
-	decl String:path[100];
-	BuildPath(Path_SM, path, sizeof(path), "configs/timer/logging.cfg");
+	decl String:sPath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, sPath, sizeof(sPath), "configs/timer/logging.cfg");
 	
-	if (!FileToKeyValues(kv, path))
+	if (!FileToKeyValues(kv, sPath))
 	{
 		CloseHandle(kv);
-		SetFailState("Can't read config file %s", path);
+		SetFailState("Can't read config file %s", sPath);
 	}
 
-	g_log_level = Timer_LogLevel:KvGetNum(kv, "log_level", 2);
-	g_log_flush_level = Timer_LogLevel:KvGetNum(kv, "log_flush_level", 2);
-	g_log_errors_to_SM = (KvGetNum(kv, "log_errors_to_SM", 1) > 0);
+	g_iLogLevel = Timer_LogLevel:KvGetNum(kv, "log_level", 2);
+	g_iLogFlushLevel = Timer_LogLevel:KvGetNum(kv, "log_flush_level", 2);
+	g_bLogErrorsToSM = bool:KvGetNum(kv, "log_errors_to_SM", 1);
 
 	CloseHandle(kv);
 }
 
 public OnPluginEnd() 
 {
-	if (g_log_file != INVALID_HANDLE)
+	if (g_hLogFile != INVALID_HANDLE)
 	{
 		CloseLogFile();
 	}
@@ -94,14 +94,14 @@ public OnPluginEnd()
 
 public Action:OnCheckDate(Handle:timer)
 {
-	decl String:new_date[20];
-	FormatTime(new_date, sizeof(new_date), "%Y-%m-%d", GetTime());
+	decl String:sNewDate[20];
+	FormatTime(sNewDate, sizeof(sNewDate), "%Y-%m-%d", GetTime());
 	
-	if (g_log_level > Timer_LogLevelNone && !StrEqual(new_date, g_current_date)) 
+	if (g_iLogLevel > Timer_LogLevelNone && !StrEqual(sNewDate, g_sCurrentDate)) 
 	{
-		strcopy(g_current_date, sizeof(g_current_date), new_date);
+		strcopy(g_sCurrentDate, sizeof(g_sCurrentDate), sNewDate);
 		
-		if (g_log_file != INVALID_HANDLE) 
+		if (g_hLogFile != INVALID_HANDLE) 
 		{
 			WriteMessageToLog(INVALID_HANDLE, Timer_LogLevelInfo, "Date changed; switching log file", true);
 			CloseLogFile();
@@ -114,20 +114,20 @@ public Action:OnCheckDate(Handle:timer)
 CloseLogFile() 
 {
 	WriteMessageToLog(INVALID_HANDLE, Timer_LogLevelInfo, "Logging stopped");
-	FlushFile(g_log_file);
-	CloseHandle(g_log_file);
-	g_log_file = INVALID_HANDLE;
+	FlushFile(g_hLogFile);
+	CloseHandle(g_hLogFile);
+	g_hLogFile = INVALID_HANDLE;
 }
 
 bool:CreateLogFileOrTurnOffLogging()
 {
-	decl String:filename[128];
-	new pos = BuildPath(Path_SM, filename, sizeof(filename), "logs/");
-	FormatTime(filename[pos], sizeof(filename)-pos, "timer_%Y-%m-%d.log", GetTime());
+	decl String:sFilename[PLATFORM_MAX_PATH];
+	new iPos = BuildPath(Path_SM, sFilename, sizeof(sFilename), "logs/");
+	FormatTime(sFilename[iPos], sizeof(sFilename) - iPos, "timer_%Y-%m-%d.log", GetTime());
 	
-	if ((g_log_file = OpenFile(filename, "a")) == INVALID_HANDLE) 
+	if ((g_hLogFile = OpenFile(sFilename, "a")) == INVALID_HANDLE) 
 	{
-		g_log_level = Timer_LogLevelNone;
+		g_iLogLevel = Timer_LogLevelNone;
 		LogError("Can't create timer log file");
 		return false;
 	}
@@ -140,124 +140,124 @@ bool:CreateLogFileOrTurnOffLogging()
 
 public Timer_GetLogLevel_(Handle:plugin, num_params) 
 {
-	return _:g_log_level;
+	return _:g_iLogLevel;
 }
 
 public Timer_Log_(Handle:plugin, num_params) 
 {
-	new Timer_LogLevel:log_level = Timer_LogLevel:GetNativeCell(1);
-	if (g_log_level >= log_level) 
+	new Timer_LogLevel:iLogLevel = Timer_LogLevel:GetNativeCell(1);
+	if (g_iLogLevel >= iLogLevel) 
 	{
-		decl String:message[10000], written;
-		FormatNativeString(0, 2, 3, sizeof(message), written, message);
+		decl String:sMessage[10000], written;
+		FormatNativeString(0, 2, 3, sizeof(sMessage), written, sMessage);
 		
-		if (g_log_file != INVALID_HANDLE)
+		if (g_hLogFile != INVALID_HANDLE)
 		{
-			WriteMessageToLog(plugin, log_level, message);
+			WriteMessageToLog(plugin, iLogLevel, sMessage);
 		}
 		
-		if (log_level == Timer_LogLevelError && g_log_errors_to_SM) 
+		if (iLogLevel == Timer_LogLevelError && g_bLogErrorsToSM) 
 		{
-			ReplaceString(message, sizeof(message), "%", "%%");
-			LogError(message);
+			ReplaceString(sMessage, sizeof(sMessage), "%", "%%");
+			LogError(sMessage);
 		}
 	}
 }
 
 public Timer_LogError_(Handle:plugin, num_params) 
 {
-	if (g_log_level >= Timer_LogLevelError) 
+	if (g_iLogLevel >= Timer_LogLevelError) 
 	{
-		decl String:message[10000], written;
-		FormatNativeString(0, 1, 2, sizeof(message), written, message);
+		decl String:sMessage[10000], written;
+		FormatNativeString(0, 1, 2, sizeof(sMessage), written, sMessage);
 		
-		if (g_log_file != INVALID_HANDLE)
+		if (g_hLogFile != INVALID_HANDLE)
 		{
-			WriteMessageToLog(plugin, Timer_LogLevelError, message);
+			WriteMessageToLog(plugin, Timer_LogLevelError, sMessage);
 		}
 		
-		if (g_log_errors_to_SM) 
+		if (g_bLogErrorsToSM) 
 		{
-			ReplaceString(message, sizeof(message), "%", "%%");
-			LogError(message);
+			ReplaceString(sMessage, sizeof(sMessage), "%", "%%");
+			LogError(sMessage);
 		}
 	}
 }
 
 public Timer_LogWarning_(Handle:plugin, num_params) 
 {
-	if (g_log_level >= Timer_LogLevelWarning && g_log_file != INVALID_HANDLE) 
+	if (g_iLogLevel >= Timer_LogLevelWarning && g_hLogFile != INVALID_HANDLE) 
 	{
-		decl String:message[10000], written;
-		FormatNativeString(0, 1, 2, sizeof(message), written, message);
-		WriteMessageToLog(plugin, Timer_LogLevelWarning, message);
+		decl String:sMessage[10000], written;
+		FormatNativeString(0, 1, 2, sizeof(sMessage), written, sMessage);
+		WriteMessageToLog(plugin, Timer_LogLevelWarning, sMessage);
 	}
 }
 
 public Timer_LogInfo_(Handle:plugin, num_params) 
 {
-	if (g_log_level >= Timer_LogLevelInfo && g_log_file != INVALID_HANDLE) 
+	if (g_iLogLevel >= Timer_LogLevelInfo && g_hLogFile != INVALID_HANDLE) 
 	{
-		decl String:message[10000], written;
-		FormatNativeString(0, 1, 2, sizeof(message), written, message);
-		WriteMessageToLog(plugin, Timer_LogLevelInfo, message);
+		decl String:sMessage[10000], written;
+		FormatNativeString(0, 1, 2, sizeof(sMessage), written, sMessage);
+		WriteMessageToLog(plugin, Timer_LogLevelInfo, sMessage);
 	}
 }
 
 public Timer_LogDebug_(Handle:plugin, num_params) 
 {
-	if (g_log_level >= Timer_LogLevelDebug && g_log_file != INVALID_HANDLE) 
+	if (g_iLogLevel >= Timer_LogLevelDebug && g_hLogFile != INVALID_HANDLE) 
 	{
-		decl String:message[10000], written;
-		FormatNativeString(0, 1, 2, sizeof(message), written, message);
-		WriteMessageToLog(plugin, Timer_LogLevelDebug, message);
+		decl String:sMessage[10000], written;
+		FormatNativeString(0, 1, 2, sizeof(sMessage), written, sMessage);
+		WriteMessageToLog(plugin, Timer_LogLevelDebug, sMessage);
 	}
 }
 
 public Timer_LogTrace_(Handle:plugin, num_params) 
 {
-	if (g_log_level >= Timer_LogLevelTrace && g_log_file != INVALID_HANDLE) 
+	if (g_iLogLevel >= Timer_LogLevelTrace && g_hLogFile != INVALID_HANDLE) 
 	{
-		decl String:message[10000], written;
-		FormatNativeString(0, 1, 2, sizeof(message), written, message);
-		WriteMessageToLog(plugin, Timer_LogLevelTrace, message);
+		decl String:sMessage[10000], written;
+		FormatNativeString(0, 1, 2, sizeof(sMessage), written, sMessage);
+		WriteMessageToLog(plugin, Timer_LogLevelTrace, sMessage);
 	}
 }
 
-WriteMessageToLog(Handle:plugin, Timer_LogLevel:log_level, const String:message[], bool:force_flush=false) 
+WriteMessageToLog(Handle:plugin, Timer_LogLevel:iLogLevel, const String:sMessage[], bool:bForceFlush=false) 
 {
-	decl String:log_line[10000];
-	PrepareLogLine(plugin, log_level, message, log_line);
-	WriteFileString(g_log_file, log_line, false);
+	decl String:sLogLine[10000];
+	PrepareLogLine(plugin, iLogLevel, sMessage, sLogLine);
+	WriteFileString(g_hLogFile, sLogLine, false);
 	
-	if (log_level <= g_log_flush_level || force_flush)
+	if (iLogLevel <= g_iLogFlushLevel || bForceFlush)
 	{
-		FlushFile(g_log_file);
+		FlushFile(g_hLogFile);
 	}
 }
 
-PrepareLogLine(Handle:plugin, Timer_LogLevel:log_level, const String:message[], String:log_line[10000]) 
+PrepareLogLine(Handle:plugin, Timer_LogLevel:iLogLevel, const String:sMessage[], String:sLogLine[10000]) 
 {
-	decl String:plugin_name[100];
-	GetPluginFilename(plugin, plugin_name, sizeof(plugin_name)-1);
+	decl String:sPluginName[100];
+	GetPluginFilename(plugin, sPluginName, sizeof(sPluginName) - 1);
 	// Make windows consistent with unix
-	ReplaceString(plugin_name, sizeof(plugin_name), "\\", "/");
-	new name_end = strlen(plugin_name);
-	plugin_name[name_end++] = ']';
-	for (new end=PLUGIN_NAME_RESERVED_LENGTH-1; name_end<end; ++name_end)
+	ReplaceString(sPluginName, sizeof(sPluginName), "\\", "/");
+	new iNameEnd = strlen(sPluginName);
+	sPluginName[iNameEnd++] = ']';
+	for (new end = PLUGIN_NAME_RESERVED_LENGTH - 1; iNameEnd < end; ++iNameEnd)
 	{
-		plugin_name[name_end] = ' ';
+		sPluginName[iNameEnd] = ' ';
 	}
-	plugin_name[name_end++] = 0;
-	FormatTime(log_line, sizeof(log_line), "%Y-%m-%d %H:%M:%S [", GetTime());
-	new pos = strlen(log_line);
-	pos += strcopy(log_line[pos], sizeof(log_line)-pos, plugin_name);
-	log_line[pos++] = ' ';
-	pos += strcopy(log_line[pos], sizeof(log_line)-pos-5, g_log_level_names[log_level]);
-	log_line[pos++] = ' ';
-	log_line[pos++] = '|';
-	log_line[pos++] = ' ';
-	pos += strcopy(log_line[pos], sizeof(log_line)-pos-2, message);
-	log_line[pos++] = '\n';
-	log_line[pos++] = 0;
+	sPluginName[iNameEnd++] = 0;
+	FormatTime(sLogLine, sizeof(sLogLine), "%Y-%m-%d %H:%M:%S [", GetTime());
+	new iPos = strlen(sLogLine);
+	iPos += strcopy(sLogLine[iPos], sizeof(sLogLine) - iPos, sPluginName);
+	sLogLine[iPos++] = ' ';
+	iPos += strcopy(sLogLine[iPos], sizeof(sLogLine) - iPos - 5, g_sLogLevelNames[iLogLevel]);
+	sLogLine[iPos++] = ' ';
+	sLogLine[iPos++] = '|';
+	sLogLine[iPos++] = ' ';
+	iPos += strcopy(sLogLine[iPos], sizeof(sLogLine) - iPos - 2, sMessage);
+	sLogLine[iPos++] = '\n';
+	sLogLine[iPos++] = 0;
 }

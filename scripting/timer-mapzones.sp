@@ -40,8 +40,8 @@ new g_endColor[4] = { 0, 0, 255, 255 };
 new bool:g_bStopPrespeed = false;
 new bool:g_bDrawMapZones = true;
 
-new String:g_currentMap[32];
-new g_reconnectCounter = 0;
+new String:g_sCurrentMap[32];
+new g_iReconnectCounter = 0;
 
 new g_mapZones[64][MapZone];
 new g_mapZonesCount = 0;
@@ -51,10 +51,10 @@ new TopMenuObject:oMapZoneMenu;
 
 new g_mapZoneEditors[MAXPLAYERS+1][MapZoneEditor];
 
-new precache_laser;
+new g_precacheLaser;
 
-new bool:g_timerPhysics = false;
-new bool:g_timerWorldRecord = false;
+new bool:g_bTimerPhysics = false;
+new bool:g_bTimerWorldRecord = false;
 
 public Plugin:myinfo =
 {
@@ -67,8 +67,8 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
-	g_timerPhysics = LibraryExists("timer-physics");
-	g_timerWorldRecord = LibraryExists("timer-worldrecord");
+	g_bTimerPhysics = LibraryExists("timer-physics");
+	g_bTimerWorldRecord = LibraryExists("timer-worldrecord");
 
 	g_hCvarStartMapZoneColor = CreateConVar("timer_startcolor", "0 255 0 255", "The color of the start map zone.");
 	g_hCvarEndMapZoneColor = CreateConVar("timer_endcolor", "0 0 255 255", "The color of the end map zone.");
@@ -95,28 +95,30 @@ public OnPluginStart()
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
-	}	
+	}
+	
+	ConnectSQL();
 }
 
 public OnMapStart()
 {
-	ConnectSQL();
+	GetCurrentMap(g_sCurrentMap, sizeof(g_sCurrentMap));
+	StringToLower(g_sCurrentMap);
 	
-	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
-	StringToLower(g_currentMap);
+	g_precacheLaser = PrecacheModel("materials/sprites/laserbeam.vmt");
 	
-	precache_laser = PrecacheModel("materials/sprites/laserbeam.vmt");
+	LoadMapZones();
 }
 
 public OnLibraryAdded(const String:name[])
 {
 	if (StrEqual(name, "timer-physics"))
 	{
-		g_timerPhysics = true;
+		g_bTimerPhysics = true;
 	}
 	else if (StrEqual(name, "timer-worldrecord"))
 	{
-		g_timerWorldRecord = true;
+		g_bTimerWorldRecord = true;
 	}
 	else if (StrEqual(name, "updater"))
 	{
@@ -132,11 +134,11 @@ public OnLibraryRemoved(const String:name[])
 	}
 	else if (StrEqual(name, "timer-physics"))
 	{
-		g_timerPhysics = false;
+		g_bTimerPhysics = false;
 	}
 	else if (StrEqual(name, "timer-worldrecord"))
 	{
-		g_timerWorldRecord = false;
+		g_bTimerWorldRecord = false;
 	}
 }
 
@@ -218,7 +220,7 @@ AddMapZone(String:map[], MapZoneType:type, Float:point1[3], Float:point2[3])
 	
 	if (type == Start || type == End)
 	{
-		decl String:deleteQuery[255];
+		decl String:deleteQuery[128];
 		FormatEx(deleteQuery, sizeof(deleteQuery), "DELETE FROM mapzone WHERE map = '%s' AND type = %d;", map, type);
 
 		SQL_TQuery(g_hSQL, AddMapZoneCallback, deleteQuery, _, DBPrio_High);	
@@ -241,7 +243,7 @@ public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 LoadMapZones()
 {
 	decl String:query[255];
-	FormatEx(query, sizeof(query), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_currentMap);
+	FormatEx(query, sizeof(query), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_sCurrentMap);
 	
 	SQL_TQuery(g_hSQL, LoadMapZonesCallback, query, _, DBPrio_Low);	
 }
@@ -258,7 +260,7 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 
 	while (SQL_FetchRow(hndl))
 	{
-		strcopy(g_mapZones[g_mapZonesCount][Map], 32, g_currentMap);
+		strcopy(g_mapZones[g_mapZonesCount][Map], 32, g_sCurrentMap);
 		
 		g_mapZones[g_mapZonesCount][Id] = SQL_FetchInt(hndl, 0);
 		g_mapZones[g_mapZonesCount][Type] = MapZoneType:SQL_FetchInt(hndl, 1);
@@ -286,15 +288,13 @@ public OnTimerRestart(client)
 	for (new mapZone = 0; mapZone < g_mapZonesCount; mapZone++)
 	{
 		if (g_mapZones[mapZone][Type] == Start)
-		{
-			new Float:zero[3];
-			
+		{		
 			new Float:center[3];
 			center[0] = (g_mapZones[mapZone][Point1][0] + g_mapZones[mapZone][Point2][0]) / 2.0;
 			center[1] = (g_mapZones[mapZone][Point1][1] + g_mapZones[mapZone][Point2][1]) / 2.0;
 			center[2] = ((g_mapZones[mapZone][Point1][2] + g_mapZones[mapZone][Point2][2]) / 2.0) - 40.0;
 			
-			TeleportEntity(client, center, zero, zero);
+			TeleportEntity(client, center, Float:{0.0, 0.0, 0.0}, Float:{0.0, 0.0, 0.0});
 
 			break;
 		}
@@ -322,7 +322,7 @@ ConnectSQL()
 
 public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
-	if (g_reconnectCounter >= 5)
+	if (g_iReconnectCounter >= 5)
 	{
 		Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
 		return;
@@ -332,7 +332,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	{
 		Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
 		
-		g_reconnectCounter++;
+		g_iReconnectCounter++;
 		ConnectSQL();
 		
 		return;
@@ -353,7 +353,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `mapzone` (`id` INTEGER PRIMARY KEY, `type` INTEGER NOT NULL, `point1_x` float NOT NULL, `point1_y` float NOT NULL, `point1_z` float NOT NULL, `point2_x` float NOT NULL, `point2_y` float NOT NULL, `point2_z` float NOT NULL, `map` varchar(32) NOT NULL);");
 	}
 	
-	g_reconnectCounter = 1;
+	g_iReconnectCounter = 1;
 }
 
 public SetNamesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -371,7 +371,7 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	{
 		Timer_LogError(error);
 
-		g_reconnectCounter++;
+		g_iReconnectCounter++;
 		ConnectSQL();
 		
 		return;
@@ -453,14 +453,14 @@ RestartMapZoneEditor(client)
 
 DeleteMapZone(client)
 {
-	new Float:vec[3];
-	GetClientAbsOrigin(client, vec);
+	new Float:vecOrigin[3];
+	GetClientAbsOrigin(client, vecOrigin);
 	
 	for (new zone = 0; zone < g_mapZonesCount; zone++)
 	{
-		if (IsInsideBox(vec, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
+		if (IsInsideBox(vecOrigin, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
 		{
-			decl String:query[256];
+			decl String:query[128];
 			FormatEx(query, sizeof(query), "DELETE FROM mapzone WHERE id = %d", g_mapZones[zone][Id]);
 
 			SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_High);	
@@ -471,8 +471,8 @@ DeleteMapZone(client)
 
 DeleteAllMapZones(client)
 {
-	decl String:query[256];
-	FormatEx(query, sizeof(query), "DELETE FROM mapzone WHERE map = '%s'", g_currentMap);
+	decl String:query[128];
+	FormatEx(query, sizeof(query), "DELETE FROM mapzone WHERE map = '%s'", g_sCurrentMap);
 
 	SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_High);
 }
@@ -636,7 +636,7 @@ public ZoneTypeSelect(Handle:menu, MenuAction:action, param1, param2)
 		point1[2] -= 2;
 		point2[2] += 100;
 
-		AddMapZone(g_currentMap, MapZoneType:param2, point1, point2);
+		AddMapZone(g_sCurrentMap, MapZoneType:param2, point1, point2);
 		RestartMapZoneEditor(param1);
 		LoadMapZones();
 	}
@@ -664,7 +664,7 @@ public Action:DrawAdminBox(Handle:timer, any:serial)
 		GetClientAbsOrigin(client, a);
 	}
 
-	// Effect_DrawBeamBoxToClient(client, a, b, precache_laser, 0, 0, 30, 0.1, 3.0, 3.0);
+	// Effect_DrawBeamBoxToClient(client, a, b, g_precacheLaser, 0, 0, 30, 0.1, 3.0, 3.0);
 	new color[4] = {255, 255, 255, 255};
 
 	DrawBox(a, b, 0.1, color, false);
@@ -717,12 +717,12 @@ public Action:PlayerTracker(Handle:timer)
 	{
 		if (IsClientInGame(client) && IsPlayerAlive(client) && !IsClientObserver(client))
 		{
-			new Float:vec[3];
-			GetClientAbsOrigin(client, vec);
+			new Float:vecOrigin[3];
+			GetClientAbsOrigin(client, vecOrigin);
 			
 			for (new zone = 0; zone < g_mapZonesCount; zone++)
 			{
-				if (IsInsideBox(vec, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
+				if (IsInsideBox(vecOrigin, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
 				{
 					if (g_mapZones[zone][Type] == Start)
 					{
@@ -739,22 +739,20 @@ public Action:PlayerTracker(Handle:timer)
 						if (Timer_Stop(client, false))
 						{
 							new bool:enabled = false;
-							new jumps;
+							new jumps, fpsmax, flashbangs;
 							new Float:time;
-							new fpsmax;
-							new flashbangs;
 
 							if (Timer_GetClientTimer(client, enabled, time, jumps, fpsmax, flashbangs))
 							{
 								new difficulty = 0;
-								if (g_timerPhysics)
+								if (g_bTimerPhysics)
 								{
 									difficulty = Timer_GetClientDifficulty(client);
 								}
 
-								Timer_FinishRound(client, g_currentMap, time, jumps, flashbangs, difficulty, fpsmax);
+								Timer_FinishRound(client, g_sCurrentMap, time, jumps, flashbangs, difficulty, fpsmax);
 								
-								if (g_timerWorldRecord)
+								if (g_bTimerWorldRecord)
 								{
 									Timer_ForceReloadWorldRecordCache();
 								}
@@ -947,24 +945,24 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	}
 	
 	//create the box
-	TE_SetupBeamPoints(lefttopfront,righttopfront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-	TE_SetupBeamPoints(lefttopfront,fLeftTopBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-	TE_SetupBeamPoints(fRightTopBack,fLeftTopBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-	TE_SetupBeamPoints(fRightTopBack,righttopfront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+	TE_SetupBeamPoints(lefttopfront,righttopfront,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+	TE_SetupBeamPoints(lefttopfront,fLeftTopBack,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+	TE_SetupBeamPoints(fRightTopBack,fLeftTopBack,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+	TE_SetupBeamPoints(fRightTopBack,righttopfront,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 
 	if(!flat)
 	{
-		TE_SetupBeamPoints(fLeftBottomFront,fRightBottomFront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-		TE_SetupBeamPoints(fLeftBottomFront,fLeftBottomBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-		TE_SetupBeamPoints(fLeftBottomFront,lefttopfront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+		TE_SetupBeamPoints(fLeftBottomFront,fRightBottomFront,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+		TE_SetupBeamPoints(fLeftBottomFront,fLeftBottomBack,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+		TE_SetupBeamPoints(fLeftBottomFront,lefttopfront,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 
 		
-		TE_SetupBeamPoints(fRightBottomBack,fLeftBottomBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-		TE_SetupBeamPoints(fRightBottomBack,fRightBottomFront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-		TE_SetupBeamPoints(fRightBottomBack,fRightTopBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+		TE_SetupBeamPoints(fRightBottomBack,fLeftBottomBack,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+		TE_SetupBeamPoints(fRightBottomBack,fRightBottomFront,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+		TE_SetupBeamPoints(fRightBottomBack,fRightTopBack,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 		
-		TE_SetupBeamPoints(fRightBottomFront,righttopfront,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
-		TE_SetupBeamPoints(fLeftBottomBack,fLeftTopBack,precache_laser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+		TE_SetupBeamPoints(fRightBottomFront,righttopfront,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
+		TE_SetupBeamPoints(fLeftBottomBack,fLeftTopBack,g_precacheLaser,0,0,0,fLife,3.0,3.0,10,0.0,color,0);TE_SendToAll(0.0);//TE_SendToClient(client, 0.0);
 	}
 }
 

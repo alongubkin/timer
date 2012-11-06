@@ -149,7 +149,9 @@ public OnPluginStart()
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
-	}	
+	}
+	
+	ConnectSQL();
 }
 
 public OnLibraryAdded(const String:name[])
@@ -173,19 +175,12 @@ public OnLibraryRemoved(const String:name[])
 }
 
 public OnMapStart()
-{	
-	ConnectSQL();
-	
+{
 	PrecacheSound("bot/great.wav");
 	
 	GetCurrentMap(g_sCurrentMap, sizeof(g_sCurrentMap));
 	StringToLower(g_sCurrentMap);
 	
-	ClearCache();
-}
-
-public OnMapEnd()
-{
 	ClearCache();
 }
 
@@ -229,6 +224,9 @@ public Action:Event_WeaponFire(Handle:event, const String:name[], bool:dontBroad
 	return Plugin_Continue;
 }
 
+/**
+* Commands
+*/
 public Action:Command_Restart(client, args)
 {
 	if (g_bRestartEnabled)
