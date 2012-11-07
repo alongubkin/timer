@@ -68,7 +68,8 @@ public Plugin:myinfo =
 public OnPluginStart()
 {
 	g_bTimerPhysics = LibraryExists("timer-physics");
-	g_bTimerWorldRecord = LibraryExists("timer-worldrecord");
+	g_bTimerWorldRecord = LibraryExists("timer-worldrecord");	
+	LoadTranslations("timer.phrases");
 
 	g_hCvarStartMapZoneColor = CreateConVar("timer_startcolor", "0 255 0 255", "The color of the start map zone.");
 	g_hCvarEndMapZoneColor = CreateConVar("timer_endcolor", "0 0 255 255", "The color of the end map zone.");
@@ -81,10 +82,6 @@ public OnPluginStart()
 	HookConVarChange(g_hCvarDrawMapZones, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-mapzones");
-	
-	g_bStopPrespeed = GetConVarBool(g_hCvarStopPrespeed);
-	
-	LoadTranslations("timer.phrases");
 	
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))

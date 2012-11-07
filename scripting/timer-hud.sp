@@ -26,6 +26,7 @@ new Handle:g_hCvarShowName = INVALID_HANDLE;
 new Handle:g_hCvarTimeByKills = INVALID_HANDLE;
 new Handle:g_hCvarJumpOrFlashbangssByDeaths = INVALID_HANDLE;
 new Handle:g_hCvarThreeAxisSpeed = INVALID_HANDLE;
+new Handle:g_hCvarUpdateTime = INVALID_HANDLE;
 
 new bool:g_bShowSpeed = true;
 new bool:g_bShowJumps = true;
@@ -62,6 +63,7 @@ public OnPluginStart()
 	g_hCvarTimeByKills = CreateConVar("timer_frags", "0", "Whether or not players' score should be his current timer.");
 	g_hCvarJumpOrFlashbangssByDeaths = CreateConVar("timer_jumps_death", "0", "Whether or not players' death count should be their jump or flashbang count.");
 	g_hCvarThreeAxisSpeed = CreateConVar("timer_three_axis_speed", "0", "Whether or not Z-axis will be used in speed calculations.");
+	g_hCvarUpdateTime = CreateConVar("timer_hud_update_time", "0.25", "Delay between updating hud message. 0.25 means 4 times per sec, 1/0.25 = 4.", 0, true, 0.01);
 
 	HookConVarChange(g_hCvarShowSpeed, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);	
@@ -89,7 +91,7 @@ public OnMapStart()
 	
 	PrecacheSound("UI/hint.wav");
 	
-	CreateTimer(0.25, HUDTimer, _, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
+	CreateTimer(GetConVarFloat(g_hCvarUpdateTime), HUDTimer, _, TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
 }
 
 public OnLibraryAdded(const String:name[])

@@ -21,8 +21,9 @@ public OnPluginStart()
 {
 	LoadTranslations("timer.phrases");
 	
-	Array_Fill(g_bHide, sizeof(g_bHide), false, 0);
 	RegConsoleCmd("sm_hide", HideCommand);
+	
+	Array_Fill(g_bHide, sizeof(g_bHide), false, 0);
 }
 
 public OnMapStart()

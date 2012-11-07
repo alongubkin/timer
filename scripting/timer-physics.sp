@@ -50,27 +50,27 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 public OnPluginStart()
 {
-	g_cookie = RegClientCookie("timer-physics", "", CookieAccess_Public);
-	
+	g_cookie = RegClientCookie("timer-physics", "", CookieAccess_Public);	
 	LoadTranslations("timer.phrases");
-
-	LoadDifficulties();
 	
+	g_hCvarJoinTeamDifficulty = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
+
+	HookConVarChange(g_hCvarJoinTeamDifficulty, Action_OnSettingsChange);
+	
+	AutoExecConfig(true, "timer-physics");
+
 	HookEvent("player_spawn", Event_PlayerSpawn);
-	HookEvent("player_jump", Event_PlayerJump);
+	HookEvent("player_jump", Event_PlayerJump, EventHookMode_Post);
 	HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
 	
 	RegConsoleCmd("sm_difficulty", Command_Difficulty);
 	
-	g_hCvarJoinTeamDifficulty = CreateConVar("timer_jointeam_difficulty", "0", "Whether or not the difficulty menu is being shown to players who join a team.");
-	HookConVarChange(g_hCvarJoinTeamDifficulty, Action_OnSettingsChange);
-	
-	AutoExecConfig(true, "timer-physics");
-	
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
-	}		
+	}
+	
+	LoadDifficulties();
 }
 
 public OnLibraryAdded(const String:name[])

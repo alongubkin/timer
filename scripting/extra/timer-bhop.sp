@@ -21,7 +21,7 @@ public OnPluginStart()
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	
 	AddCommandListener(Command_JoinTeam, "jointeam");
-	RegConsoleCmd("sm_respawn", Command_Respawn);	
+	RegConsoleCmd("sm_respawn", Command_Respawn);
 }
 
 public OnMapStart()

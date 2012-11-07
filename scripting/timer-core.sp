@@ -105,6 +105,8 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 
 public OnPluginStart()
 {
+	ConnectSQL();
+
 	CreateConVar("timer_version", PL_VERSION, "Timer Version", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_REPLICATED|FCVAR_NOTIFY);
 	
 	g_hTimerStartedForward = CreateGlobalForward("OnTimerStarted", ET_Event, Param_Cell);
@@ -114,23 +116,8 @@ public OnPluginStart()
 	g_hTimerResumeForward = CreateGlobalForward("OnTimerResume", ET_Event, Param_Cell);
 	g_hFinishRoundForward = CreateGlobalForward("OnFinishRound", ET_Event, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_Cell, Param_Cell, Param_String, Param_String, Param_Cell, Param_Cell, Param_Cell);
 
-	g_bTimerPhysics = LibraryExists("timer-physics");
-	
+	g_bTimerPhysics = LibraryExists("timer-physics");	
 	LoadTranslations("timer.phrases");
-	
-	HookEvent("player_jump", Event_PlayerJump);
-	HookEvent("player_death", Event_StopTimer);
-	HookEvent("player_team", Event_StopTimer);
-	HookEvent("player_spawn", Event_StopTimer);
-	HookEvent("player_disconnect", Event_StopTimer);
-	HookEvent("player_connect", Event_StopTimer);
-	HookEvent("weapon_fire", Event_WeaponFire);
-	
-	RegConsoleCmd("sm_restart", Command_Restart);
-	RegConsoleCmd("sm_r", Command_Restart);
-	RegConsoleCmd("sm_stop", Command_Stop);
-	RegConsoleCmd("sm_pause", Command_Pause);
-	RegConsoleCmd("sm_resume", Command_Resume);
 	
 	g_hCvarRestartEnabled = CreateConVar("timer_restart_enabled", "1", "Whether or not players can restart their timers.");
 	g_hCvarStopEnabled = CreateConVar("timer_stop_enabled", "1", "Whether or not players can stop their timers.");
@@ -146,12 +133,25 @@ public OnPluginStart()
 	
 	AutoExecConfig(true, "timer-core");
 	
+	HookEvent("player_jump", Event_PlayerJump);
+	HookEvent("player_death", Event_StopTimer);
+	HookEvent("player_team", Event_StopTimer);
+	HookEvent("player_spawn", Event_StopTimer);
+	HookEvent("player_disconnect", Event_StopTimer);
+	HookEvent("player_connect", Event_StopTimer);
+	HookEvent("weapon_fire", Event_WeaponFire);
+	
+	RegConsoleCmd("sm_restart", Command_Restart);
+	RegConsoleCmd("sm_r", Command_Restart);
+	RegConsoleCmd("sm_stop", Command_Stop);
+	RegConsoleCmd("sm_pause", Command_Pause);
+	RegConsoleCmd("sm_resume", Command_Resume);
+
+	
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);
 	}
-	
-	ConnectSQL();
 }
 
 public OnLibraryAdded(const String:name[])

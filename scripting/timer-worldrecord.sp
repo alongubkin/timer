@@ -78,8 +78,15 @@ public OnPluginStart()
 	ConnectSQL(true);
 	
 	g_bTimerPhysics = LibraryExists("timer-physics");
-	
 	LoadTranslations("timer.phrases");
+	
+	g_hCvarShowJumps = CreateConVar("timer_showjumps", "1", "Whether or not jumps will be shown in some of the WR menus.");
+	g_hCvarShowFlashbangs = CreateConVar("timer_showflashbangs", "0", "Whether or not flashbangs will be shown in some of the WR menus.");
+	
+	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarShowFlashbangs, Action_OnSettingsChange);
+	
+	AutoExecConfig(true, "timer-worldrecord");
 	
 	RegConsoleCmd("sm_wr", Command_WorldRecord);
 	RegConsoleCmd("sm_delete", Command_Delete);
@@ -88,13 +95,6 @@ public OnPluginStart()
 	
 	RegAdminCmd("sm_deleterecord_all", Command_DeleteRecord_All, ADMFLAG_RCON, "sm_deleterecord_all STEAM_ID");
 	RegAdminCmd("sm_deleterecord", Command_DeleteRecord, ADMFLAG_RCON, "sm_deleterecord STEAM_ID");
-	
-	g_hCvarShowJumps = CreateConVar("timer_showjumps", "1", "Whether or not jumps will be shown in some of the WR menus.");
-	g_hCvarShowFlashbangs = CreateConVar("timer_showflashbangs", "0", "Whether or not flashbangs will be shown in some of the WR menus.");
-	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);
-	HookConVarChange(g_hCvarShowFlashbangs, Action_OnSettingsChange);
-	
-	AutoExecConfig(true, "timer-worldrecord");
 	
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
