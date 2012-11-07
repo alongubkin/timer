@@ -93,16 +93,16 @@ public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-	new String:buffer[10];
-	GetClientCookie(client, g_cookie, buffer, sizeof(buffer));
+	new String:sBuffer[10];
+	GetClientCookie(client, g_cookie, sBuffer, sizeof(sBuffer));
 
-	if (StrEqual(buffer, ""))
+	if (StrEqual(sBuffer, ""))
 	{
 		g_iClientDifficulty[client] = g_iDefaultDifficulty;
 	}
 	else
 	{
-		g_iClientDifficulty[client] = StringToInt(buffer);
+		g_iClientDifficulty[client] = StringToInt(sBuffer);
 	}
 	
 	ApplyDifficulty(client);
@@ -122,10 +122,10 @@ public Action:Event_PlayerJump(Handle:event, const String:name[], bool:dontBroad
 
 public Action:Event_PlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	new team = GetEventInt(event, "team");
+	new iTeam = GetEventInt(event, "team");
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	
-	if (g_bJoinTeamDifficulty && team > 1 && client > 0)
+	if (g_bJoinTeamDifficulty && iTeam > 1 && client > 0)
 	{
 		CreateDifficultyMenu(client);
 	}
@@ -142,38 +142,38 @@ public Action:Command_Difficulty(client, args)
 
 LoadDifficulties()
 {
-	new String:path[PLATFORM_MAX_PATH];
-	BuildPath(Path_SM, path, PLATFORM_MAX_PATH, "configs/timer/difficulties.cfg");
+	new String:sPath[PLATFORM_MAX_PATH];
+	BuildPath(Path_SM, sPath, sizeof(sPath), "configs/timer/difficulties.cfg");
 
-	new Handle:kv = CreateKeyValues("difficulties");
-	if (!FileToKeyValues(kv, path))
+	new Handle:hKv = CreateKeyValues("difficulties");
+	if (!FileToKeyValues(hKv, sPath))
 	{
-		CloseHandle(kv);
+		CloseHandle(hKv);
 		return;
 	}
 	
 	g_difficultyCount = 0;
 
-	if (!KvGotoFirstSubKey(kv))
+	if (!KvGotoFirstSubKey(hKv))
 	{
-		CloseHandle(kv);
+		CloseHandle(hKv);
 		return;
 	}
 	
 	do 
 	{
-		decl String:sectionName[32];
-		KvGetSectionName(kv, sectionName, sizeof(sectionName));
+		decl String:sSectionName[32];
+		KvGetSectionName(hKv, sSectionName, sizeof(sSectionName));
 
-		g_difficulties[g_difficultyCount][Id] = StringToInt(sectionName);
-		KvGetString(kv, "name", g_difficulties[g_difficultyCount][Name], 32);
-		g_difficulties[g_difficultyCount][IsDefault] = bool:KvGetNum(kv, "default", 0);
-		g_difficulties[g_difficultyCount][Stamina] = KvGetFloat(kv, "stamina", -1.0);
-		g_difficulties[g_difficultyCount][Gravity] = KvGetFloat(kv, "gravity", 1.0);
-		g_difficulties[g_difficultyCount][PreventAD] = bool:KvGetNum(kv, "prevent_ad", 0);
-		g_difficulties[g_difficultyCount][PreventBack] = bool:KvGetNum(kv, "prevent_back", 0);
-		g_difficulties[g_difficultyCount][PreventForward] = bool:KvGetNum(kv, "prevent_forward", 0);
-		g_difficulties[g_difficultyCount][Auto] = bool:KvGetNum(kv, "auto", 0);
+		g_difficulties[g_difficultyCount][Id] = StringToInt(sSectionName);
+		KvGetString(hKv, "name", g_difficulties[g_difficultyCount][Name], 32);
+		g_difficulties[g_difficultyCount][IsDefault] = bool:KvGetNum(hKv, "default", 0);
+		g_difficulties[g_difficultyCount][Stamina] = KvGetFloat(hKv, "stamina", -1.0);
+		g_difficulties[g_difficultyCount][Gravity] = KvGetFloat(hKv, "gravity", 1.0);
+		g_difficulties[g_difficultyCount][PreventAD] = bool:KvGetNum(hKv, "prevent_ad", 0);
+		g_difficulties[g_difficultyCount][PreventBack] = bool:KvGetNum(hKv, "prevent_back", 0);
+		g_difficulties[g_difficultyCount][PreventForward] = bool:KvGetNum(hKv, "prevent_forward", 0);
+		g_difficulties[g_difficultyCount][Auto] = bool:KvGetNum(hKv, "auto", 0);
 		
 		if (g_difficulties[g_difficultyCount][IsDefault])
 		{
@@ -181,9 +181,9 @@ LoadDifficulties()
 		}
 		
 		g_difficultyCount++;
-	} while (KvGotoNextKey(kv));
+	} while (KvGotoNextKey(hKv));
 	
-	CloseHandle(kv);	
+	CloseHandle(hKv);	
 }
 
 CreateDifficultyMenu(client)
@@ -195,10 +195,10 @@ CreateDifficultyMenu(client)
 
 	for (new difficulty = 0; difficulty < g_difficultyCount; difficulty++)
 	{
-		decl String:id[5];
-		IntToString(g_difficulties[difficulty][Id], id, sizeof(id));
+		decl String:sID[5];
+		IntToString(g_difficulties[difficulty][Id], sID, sizeof(sID));
 
-		AddMenuItem(menu, id, g_difficulties[difficulty][Name]);
+		AddMenuItem(menu, sID, g_difficulties[difficulty][Name]);
 	}
 
 	DisplayMenu(menu, client, MENU_TIME_FOREVER);
@@ -212,11 +212,11 @@ public MenuHandler_Difficulty(Handle:menu, MenuAction:action, param1, param2)
 	}
 	else if (action == MenuAction_Select) 
 	{
-		decl String:info[32];		
-		GetMenuItem(menu, param2, info, sizeof(info));
+		decl String:sInfo[32];		
+		GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
 		
-		g_iClientDifficulty[param1] = StringToInt(info);
-		SetClientCookie(param1, g_cookie, info);
+		g_iClientDifficulty[param1] = StringToInt(sInfo);
+		SetClientCookie(param1, g_cookie, sInfo);
 		ApplyDifficulty(param1);
 
 		Timer_Restart(param1);

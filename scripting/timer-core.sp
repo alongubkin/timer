@@ -45,7 +45,7 @@ enum BestTimeCacheEntity
 */
 new Handle:g_hSQL;
 
-new String:g_sCurrentMap[32];
+new String:g_sCurrentMap[MAX_MAPNAME_LENGTH];
 new g_iReconnectCounter = 0;
 
 new g_timers[MAXPLAYERS+1][Timer];
@@ -212,10 +212,10 @@ public Action:Event_WeaponFire(Handle:event, const String:name[], bool:dontBroad
 
 	if (g_timers[client][Enabled] && !g_timers[client][IsPaused])
 	{
-		decl String:weapon[32];
-		GetEventString(event, "weapon", weapon, sizeof(weapon));
+		decl String:sWeapon[32];
+		GetEventString(event, "weapon", sWeapon, sizeof(sWeapon));
 		
-		if (StrEqual(weapon, "flashbang"))
+		if (StrEqual(sWeapon, "flashbang"))
 		{
 			g_timers[client][Flashbangs]++;
 		}
@@ -380,17 +380,17 @@ bool:PauseTimer(client)
 	g_timers[client][IsPaused] = true;
 	g_timers[client][PauseStartTime] = GetGameTime();
 	
-	new Float:origin[3];
-	GetEntPropVector(client, Prop_Data, "m_vecOrigin", origin);
-	Array_Copy(origin, g_timers[client][PauseLastOrigin], 3);
+	new Float:vOrigin[3];
+	GetEntPropVector(client, Prop_Data, "m_vecOrigin", vOrigin);
+	Array_Copy(vOrigin, g_timers[client][PauseLastOrigin], 3);
 	
-	new Float:angles[3];
-	GetClientEyeAngles(client, angles);
-	Array_Copy(angles, g_timers[client][PauseLastAngles], 3);
+	new Float:vAngles[3];
+	GetClientEyeAngles(client, vAngles);
+	Array_Copy(vAngles, g_timers[client][PauseLastAngles], 3);
 	
-	new Float:velocity[3];
-	GetEntPropVector(client, Prop_Data, "m_vecVelocity", velocity);
-	Array_Copy(velocity, g_timers[client][PauseLastVelocity], 3);
+	new Float:vVelocity[3];
+	GetEntPropVector(client, Prop_Data, "m_vecVelocity", vVelocity);
+	Array_Copy(vVelocity, g_timers[client][PauseLastVelocity], 3);
 	
 	Call_StartForward(g_hTimerPauseForward);
 	Call_PushCell(client);
@@ -414,16 +414,16 @@ bool:ResumeTimer(client)
 	g_timers[client][IsPaused] = false;
 	g_timers[client][PauseTotalTime] += GetGameTime() - g_timers[client][PauseStartTime];
 	
-	new Float:origin[3];
-	Array_Copy(g_timers[client][PauseLastOrigin], origin, 3);
+	new Float:vOrigin[3];
+	Array_Copy(g_timers[client][PauseLastOrigin], vOrigin, 3);
 	
-	new Float:angles[3];
-	Array_Copy(g_timers[client][PauseLastAngles], angles, 3);
+	new Float:vAngles[3];
+	Array_Copy(g_timers[client][PauseLastAngles], vAngles, 3);
 	
-	new Float:velocity[3];
-	Array_Copy(g_timers[client][PauseLastVelocity], velocity, 3);
+	new Float:vVelocity[3];
+	Array_Copy(g_timers[client][PauseLastVelocity], vVelocity, 3);
 	
-	TeleportEntity(client, origin, angles, velocity);
+	TeleportEntity(client, vOrigin, vAngles, vVelocity);
 	
 	Call_StartForward(g_hTimerResumeForward);
 	Call_PushCell(client);
@@ -448,20 +448,20 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs)
 		return true;
 	}
 
-	decl String:auth[32];
-	GetClientAuthString(client, auth, sizeof(auth));
+	decl String:sAuthID[MAX_AUTHID_LENGTH];
+	GetClientAuthString(client, sAuthID, sizeof(sAuthID));
 	
-	decl String:query[255], String:error[255];
-	FormatEx(query, sizeof(query), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", auth, map);
+	decl String:sQuery[255], String:sError[255];
+	FormatEx(sQuery, sizeof(sQuery), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", sAuthID, map);
 	
 	SQL_LockDatabase(g_hSQL);
 
-	new Handle:hQuery = SQL_Query(g_hSQL, query);
+	new Handle:hQuery = SQL_Query(g_hSQL, sQuery);
 	
 	if (hQuery == INVALID_HANDLE)
 	{
-		SQL_GetError(g_hSQL, error, sizeof(error));
-		Timer_LogError("SQL Error on GetBestRound: %s", error);
+		SQL_GetError(g_hSQL, sError, sizeof(sError));
+		Timer_LogError("SQL Error on GetBestRound: %s", sError);
 		SQL_UnlockDatabase(g_hSQL);
 		
 		g_bestTimeCache[client][IsCached] = true;
@@ -563,26 +563,26 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 		FormatEx(sTimeDiff, sizeof(sTimeDiff), "%s", sBuffer);
 	}
 	
-	decl String:auth[32];
-	GetClientAuthString(client, auth, sizeof(auth));
+	decl String:sAuthID[MAX_AUTHID_LENGTH];
+	GetClientAuthString(client, sAuthID, sizeof(sAuthID));
 
-	decl String:name[MAX_NAME_LENGTH];
-	GetClientName(client, name, sizeof(name));
+	decl String:sName[MAX_NAME_LENGTH];
+	GetClientName(client, sName, sizeof(sName));
 	
-	decl String:safeName[2 * strlen(name) + 1];
-	SQL_EscapeString(g_hSQL, name, safeName, 2 * strlen(name) + 1);
+	decl String:sSafeName[2 * strlen(sName) + 1];
+	SQL_EscapeString(g_hSQL, sName, sSafeName, 2 * strlen(sName) + 1);
 
-	decl String:query[256], String:error[255];
-	FormatEx(query, sizeof(query), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax, flashbangs) VALUES ('%s', '%s', %f, %d, %d, '%s', %d, %d);", map, auth, time, jumps, physicsDifficulty, safeName, fpsmax, flashbangs);
+	decl String:sQuery[256], String:sError[255];
+	FormatEx(sQuery, sizeof(sQuery), "INSERT INTO round (map, auth, time, jumps, physicsdifficulty, name, fpsmax, flashbangs) VALUES ('%s', '%s', %f, %d, %d, '%s', %d, %d);", map, sAuthID, time, jumps, physicsDifficulty, sSafeName, fpsmax, flashbangs);
 	
 	SQL_LockDatabase(g_hSQL);
 
-	new Handle:hQuery = SQL_Query(g_hSQL, query);
+	new Handle:hQuery = SQL_Query(g_hSQL, sQuery);
 	
 	if (hQuery == INVALID_HANDLE)
 	{
-		SQL_GetError(g_hSQL, error, sizeof(error));
-		Timer_LogError("SQL Error on GetTotalRank: %s", error);
+		SQL_GetError(g_hSQL, sError, sizeof(sError));
+		Timer_LogError("SQL Error on GetTotalRank: %s", sError);
 		SQL_UnlockDatabase(g_hSQL);
 		return;
 	}
@@ -616,17 +616,17 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 
 GetTotalRank(const String:map[])
 {
-	decl String:query[448], String:error[255];
-	FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth", map, map);
+	decl String:sQuery[448], String:sError[255];
+	FormatEx(sQuery, sizeof(sQuery), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth", map, map);
 	
 	SQL_LockDatabase(g_hSQL);
 
-	new Handle:hQuery = SQL_Query(g_hSQL, query);
+	new Handle:hQuery = SQL_Query(g_hSQL, sQuery);
 	
 	if (hQuery == INVALID_HANDLE)
 	{
-		SQL_GetError(g_hSQL, error, sizeof(error));
-		Timer_LogError("SQL Error on GetTotalRank: %s", error);
+		SQL_GetError(g_hSQL, sError, sizeof(sError));
+		Timer_LogError("SQL Error on GetTotalRank: %s", sError);
 		SQL_UnlockDatabase(g_hSQL);
 		return;
 	}
@@ -640,17 +640,17 @@ GetTotalRank(const String:map[])
 
 GetCurrentRank(client, const String:map[])
 {
-	decl String:query[512], String:error[255];
-	FormatEx(query, sizeof(query), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' AND n.time <= %f GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' AND m.time <= %f GROUP BY m.physicsdifficulty, m.auth", map, g_bestTimeCache[client][Time] + 0.0001, map, g_bestTimeCache[client][Time] + 0.0001);
+	decl String:sQuery[512], String:sError[255];
+	FormatEx(sQuery, sizeof(sQuery), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' AND n.time <= %f GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' AND m.time <= %f GROUP BY m.physicsdifficulty, m.auth", map, g_bestTimeCache[client][Time] + 0.0001, map, g_bestTimeCache[client][Time] + 0.0001);
 
 	SQL_LockDatabase(g_hSQL);
 
-	new Handle:hQuery = SQL_Query(g_hSQL, query);
+	new Handle:hQuery = SQL_Query(g_hSQL, sQuery);
 	
 	if (hQuery == INVALID_HANDLE)
 	{
-		SQL_GetError(g_hSQL, error, sizeof(error));
-		Timer_LogError("SQL Error on GetCurrentRank: %s", error);
+		SQL_GetError(g_hSQL, sError, sizeof(sError));
+		Timer_LogError("SQL Error on GetCurrentRank: %s", sError);
 		SQL_UnlockDatabase(g_hSQL);
 		return;
 	}
@@ -711,17 +711,17 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		return;
 	}
 
-	decl String:driver[16];
-	SQL_GetDriverIdent(owner, driver, sizeof(driver));
+	decl String:sDriver[16];
+	SQL_GetDriverIdent(owner, sDriver, sizeof(sDriver));
 
 	g_hSQL = CloneHandle(hndl);		
 	
-	if (StrEqual(driver, "mysql", false))
+	if (StrEqual(sDriver, "mysql", false))
 	{
 		SQL_TQuery(g_hSQL, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` int(11) NOT NULL AUTO_INCREMENT, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` int(11) NOT NULL, `physicsdifficulty` int(11) NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` int(11) NOT NULL, `flashbangs` int(11) NOT NULL, PRIMARY KEY (`id`));");
 	}
-	else if (StrEqual(driver, "sqlite", false))
+	else if (StrEqual(sDriver, "sqlite", false))
 	{
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` INTEGER PRIMARY KEY, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` INTEGER NOT NULL, `physicsdifficulty` INTEGER NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` INTEGER NOT NULL, `flashbangs` INTEGER NOT NULL);");
 	}
@@ -761,10 +761,10 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 
 public OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDifficulty, fpsmax, const String:timeString[], const String:timeDiffString[], position, totalrank, bool:overwrite)
 {
-	decl String:sMessage[256], String:name[MAX_NAME_LENGTH];
-	GetClientName(client, name, sizeof(name));
+	decl String:sMessage[256], String:sName[MAX_NAME_LENGTH];
+	GetClientName(client, sName, sizeof(sName));
 	
-	FormatEx(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish Message", name, timeString, timeDiffString);
+	FormatEx(sMessage, sizeof(sMessage), PLUGIN_PREFIX, "Round Finish Message", sName, timeString, timeDiffString);
 	
 	if (g_bShowJumps)
 	{
@@ -778,10 +778,10 @@ public OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDiffi
 	
 	if (g_bTimerPhysics)
 	{
-		new String:difficulty[32];
-		Timer_GetDifficultyName(physicsDifficulty, difficulty, sizeof(difficulty));	
+		new String:sDifficulty[32];
+		Timer_GetDifficultyName(physicsDifficulty, sDifficulty, sizeof(sDifficulty));	
 		
-		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Difficulty Message", difficulty);
+		Format(sMessage, sizeof(sMessage), "%s %t", sMessage, "Difficulty Message", sDifficulty);
 	}
 	
 	Format(sMessage, sizeof(sMessage), "%s. %t", sMessage, "Rank Message", position, totalrank);
@@ -791,10 +791,9 @@ public OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDiffi
 	if (position == 1 && overwrite)
 	{	
 		EmitSoundToAll("bot/great.wav", client, SNDCHAN_WEAPON, SNDLEVEL_RAIDSIREN);
-		PrintToChatAll(PLUGIN_PREFIX, "Record Break Message", name);
+		PrintToChatAll(PLUGIN_PREFIX, "Record Break Message", sName);
 	}
 }
-
 
 public Native_GetTotalRank(Handle:plugin, numParams)
 {

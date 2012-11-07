@@ -13,7 +13,7 @@
 /**
 * Global Variables
 */
-new String:g_sCurrentMap[32];
+new String:g_sCurrentMap[MAX_MAPNAME_LENGTH];
 new bool:g_bTimerPhysics = false;
 
 new Handle:g_hCvarShowSpeed = INVALID_HANDLE;

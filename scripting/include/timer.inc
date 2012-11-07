@@ -8,6 +8,9 @@
 #define PL_VERSION "1.0.6"
 #define PLUGIN_PREFIX "\x0700FFBF[Timer] \x01%t"
 
+#define MAX_MAPNAME_LENGTH	32
+#define MAX_AUTHID_LENGTH	64
+
 enum MapZoneType
 {
 	Start,
@@ -21,7 +24,7 @@ enum MapZone
 {
 	Id,
 	MapZoneType:Type,
-	String:Map[32],
+	String:Map[MAX_MAPNAME_LENGTH],
 	Float:Point1[3],
 	Float:Point2[3]
 }
@@ -90,7 +93,6 @@ forward OnTimerResume(client);
  */
 
 forward OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDifficulty, fpsmax, const String:timeString[], const String:timeDiffString[], position, totalrank, bool:overwrite);
-
 
 /**
  * Starts the timer for a client.

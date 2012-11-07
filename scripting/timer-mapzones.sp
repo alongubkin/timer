@@ -35,12 +35,12 @@ new Handle:g_hCvarEndMapZoneColor = INVALID_HANDLE;
 new Handle:g_hCvarStopPrespeed = INVALID_HANDLE;
 new Handle:g_hCvarDrawMapZones = INVALID_HANDLE;
 
-new g_startColor[4] = { 0, 255, 0, 255 };
-new g_endColor[4] = { 0, 0, 255, 255 };
+new g_startColor[4] = {0, 255, 0, 255};
+new g_endColor[4] = {0, 0, 255, 255};
 new bool:g_bStopPrespeed = false;
 new bool:g_bDrawMapZones = true;
 
-new String:g_sCurrentMap[32];
+new String:g_sCurrentMap[MAX_MAPNAME_LENGTH];
 new g_iReconnectCounter = 0;
 
 new g_mapZones[64][MapZone];
@@ -213,19 +213,19 @@ public OnAdminMenuReady(Handle:topmenu)
 
 AddMapZone(String:map[], MapZoneType:type, Float:point1[3], Float:point2[3])
 {
-	decl String:query[512];
+	decl String:sQuery[512];
 	
 	if (type == Start || type == End)
 	{
-		decl String:deleteQuery[128];
-		FormatEx(deleteQuery, sizeof(deleteQuery), "DELETE FROM mapzone WHERE map = '%s' AND type = %d;", map, type);
+		decl String:sDeleteQuery[128];
+		FormatEx(sDeleteQuery, sizeof(sDeleteQuery), "DELETE FROM mapzone WHERE map = '%s' AND type = %d;", map, type);
 
-		SQL_TQuery(g_hSQL, AddMapZoneCallback, deleteQuery, _, DBPrio_High);	
+		SQL_TQuery(g_hSQL, AddMapZoneCallback, sDeleteQuery, _, DBPrio_High);	
 	}
 
-	FormatEx(query, sizeof(query), "INSERT INTO mapzone (map, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z) VALUES ('%s', '%d', %f, %f, %f, %f, %f, %f);", map, type, point1[0], point1[1], point1[2], point2[0], point2[1], point2[2]);
+	FormatEx(sQuery, sizeof(sQuery), "INSERT INTO mapzone (map, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z) VALUES ('%s', '%d', %f, %f, %f, %f, %f, %f);", map, type, point1[0], point1[1], point1[2], point2[0], point2[1], point2[2]);
 
-	SQL_TQuery(g_hSQL, AddMapZoneCallback, query, _, DBPrio_Normal);	
+	SQL_TQuery(g_hSQL, AddMapZoneCallback, sQuery, _, DBPrio_Normal);	
 }
 
 public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -239,10 +239,10 @@ public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 
 LoadMapZones()
 {
-	decl String:query[255];
-	FormatEx(query, sizeof(query), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_sCurrentMap);
+	decl String:sQuery[192];
+	FormatEx(sQuery, sizeof(sQuery), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_sCurrentMap);
 	
-	SQL_TQuery(g_hSQL, LoadMapZonesCallback, query, _, DBPrio_Low);	
+	SQL_TQuery(g_hSQL, LoadMapZonesCallback, sQuery, _, DBPrio_Low);	
 }
 
 public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -257,7 +257,7 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 
 	while (SQL_FetchRow(hndl))
 	{
-		strcopy(g_mapZones[g_mapZonesCount][Map], 32, g_sCurrentMap);
+		strcopy(g_mapZones[g_mapZonesCount][Map], MAX_MAPNAME_LENGTH, g_sCurrentMap);
 		
 		g_mapZones[g_mapZonesCount][Id] = SQL_FetchInt(hndl, 0);
 		g_mapZones[g_mapZonesCount][Type] = MapZoneType:SQL_FetchInt(hndl, 1);
@@ -286,12 +286,12 @@ public OnTimerRestart(client)
 	{
 		if (g_mapZones[mapZone][Type] == Start)
 		{		
-			new Float:center[3];
-			center[0] = (g_mapZones[mapZone][Point1][0] + g_mapZones[mapZone][Point2][0]) / 2.0;
-			center[1] = (g_mapZones[mapZone][Point1][1] + g_mapZones[mapZone][Point2][1]) / 2.0;
-			center[2] = ((g_mapZones[mapZone][Point1][2] + g_mapZones[mapZone][Point2][2]) / 2.0) - 40.0;
+			new Float:vCenter[3];
+			vCenter[0] = (g_mapZones[mapZone][Point1][0] + g_mapZones[mapZone][Point2][0]) / 2.0;
+			vCenter[1] = (g_mapZones[mapZone][Point1][1] + g_mapZones[mapZone][Point2][1]) / 2.0;
+			vCenter[2] = ((g_mapZones[mapZone][Point1][2] + g_mapZones[mapZone][Point2][2]) / 2.0) - 40.0;
 			
-			TeleportEntity(client, center, Float:{0.0, 0.0, 0.0}, Float:{0.0, 0.0, 0.0});
+			TeleportEntity(client, vCenter, Float:{0.0, 0.0, 0.0}, Float:{0.0, 0.0, 0.0});
 
 			break;
 		}
@@ -335,17 +335,17 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		return;
 	}
 
-	decl String:driver[16];
-	SQL_GetDriverIdent(owner, driver, sizeof(driver));
+	decl String:sDriver[16];
+	SQL_GetDriverIdent(owner, sDriver, sizeof(sDriver));
 
 	g_hSQL = CloneHandle(hndl);
 	
-	if (StrEqual(driver, "mysql", false))
+	if (StrEqual(sDriver, "mysql", false))
 	{
 		SQL_TQuery(g_hSQL, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `mapzone` (`id` int(11) NOT NULL AUTO_INCREMENT, `type` int(11) NOT NULL, `point1_x` float NOT NULL, `point1_y` float NOT NULL, `point1_z` float NOT NULL, `point2_x` float NOT NULL, `point2_y` float NOT NULL, `point2_z` float NOT NULL, `map` varchar(32) NOT NULL, PRIMARY KEY (`id`));");
 	}
-	else if (StrEqual(driver, "sqlite", false))
+	else if (StrEqual(sDriver, "sqlite", false))
 	{
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `mapzone` (`id` INTEGER PRIMARY KEY, `type` INTEGER NOT NULL, `point1_x` float NOT NULL, `point1_y` float NOT NULL, `point1_z` float NOT NULL, `point2_x` float NOT NULL, `point2_y` float NOT NULL, `point2_z` float NOT NULL, `map` varchar(32) NOT NULL);");
 	}
@@ -450,17 +450,17 @@ RestartMapZoneEditor(client)
 
 DeleteMapZone(client)
 {
-	new Float:vecOrigin[3];
-	GetClientAbsOrigin(client, vecOrigin);
+	new Float:vOrigin[3];
+	GetClientAbsOrigin(client, vOrigin);
 	
 	for (new zone = 0; zone < g_mapZonesCount; zone++)
 	{
-		if (IsInsideBox(vecOrigin, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
+		if (IsInsideBox(vOrigin, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
 		{
-			decl String:query[128];
-			FormatEx(query, sizeof(query), "DELETE FROM mapzone WHERE id = %d", g_mapZones[zone][Id]);
+			decl String:sQuery[64];
+			FormatEx(sQuery, sizeof(sQuery), "DELETE FROM mapzone WHERE id = %d", g_mapZones[zone][Id]);
 
-			SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_High);	
+			SQL_TQuery(g_hSQL, DeleteMapZoneCallback, sQuery, client, DBPrio_High);	
 			break;
 		}
 	}
@@ -468,10 +468,10 @@ DeleteMapZone(client)
 
 DeleteAllMapZones(client)
 {
-	decl String:query[128];
-	FormatEx(query, sizeof(query), "DELETE FROM mapzone WHERE map = '%s'", g_sCurrentMap);
+	decl String:sQuery[96];
+	FormatEx(sQuery, sizeof(sQuery), "DELETE FROM mapzone WHERE map = '%s'", g_sCurrentMap);
 
-	SQL_TQuery(g_hSQL, DeleteMapZoneCallback, query, client, DBPrio_High);
+	SQL_TQuery(g_hSQL, DeleteMapZoneCallback, sQuery, client, DBPrio_High);
 }
 
 public DeleteMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -494,17 +494,17 @@ DisplaySelectPointMenu(client, n)
 {
 	new Handle:panel = CreatePanel();
 
-	decl String:message[255];
-	decl String:first[32], String:second[32];
-	FormatEx(first, sizeof(first), "%t", "FIRST");
-	FormatEx(second, sizeof(second), "%t", "SECOND");
+	decl String:sMessage[255];
+	decl String:sFirst[32], String:sSecond[32];
+	FormatEx(sFirst, sizeof(sFirst), "%t", "FIRST");
+	FormatEx(sSecond, sizeof(sSecond), "%t", "SECOND");
 	
-	FormatEx(message, sizeof(message), "%t", "Point Select Panel", (n == 1) ? first : second);
+	FormatEx(sMessage, sizeof(sMessage), "%t", "Point Select Panel", (n == 1) ? sFirst : sSecond);
 
-	DrawPanelItem(panel, message, ITEMDRAW_RAWLINE);
+	DrawPanelItem(panel, sMessage, ITEMDRAW_RAWLINE);
 
-	FormatEx(message, sizeof(message), "%t", "Cancel");
-	DrawPanelItem(panel, message);
+	FormatEx(sMessage, sizeof(sMessage), "%t", "Cancel");
+	DrawPanelItem(panel, sMessage);
 
 	SendPanelToClient(panel, client, PointSelect, 540);
 	CloseHandle(panel);
@@ -514,9 +514,9 @@ DisplayPleaseWaitMenu(client)
 {
 	new Handle:panel = CreatePanel();
 	
-	decl String:wait[64];
-	FormatEx(wait, sizeof(wait), "%t", "Please wait");
-	DrawPanelItem(panel, wait, ITEMDRAW_RAWLINE);
+	decl String:sWait[64];
+	FormatEx(sWait, sizeof(sWait), "%t", "Please wait");
+	DrawPanelItem(panel, sWait, ITEMDRAW_RAWLINE);
 
 	SendPanelToClient(panel, client, PointSelect, 540);
 	CloseHandle(panel);
@@ -545,9 +545,9 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	{
 		if (g_mapZoneEditors[client][Step] == 1)
 		{
-			new Float:vec[3];			
-			GetClientAbsOrigin(client, vec);
-			g_mapZoneEditors[client][Point1] = vec;
+			new Float:vOrigin[3];			
+			GetClientAbsOrigin(client, vOrigin);
+			g_mapZoneEditors[client][Point1] = vOrigin;
 
 			DisplayPleaseWaitMenu(client);
 
@@ -556,9 +556,9 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		}
 		else if (g_mapZoneEditors[client][Step] == 2)
 		{
-			new Float:vec[3];
-			GetClientAbsOrigin(client, vec);
-			g_mapZoneEditors[client][Point2] = vec;
+			new Float:vOrigin[3];
+			GetClientAbsOrigin(client, vOrigin);
+			g_mapZoneEditors[client][Point2] = vOrigin;
 
 			g_mapZoneEditors[client][Step] = 3;
 
@@ -586,22 +586,22 @@ DisplaySelectZoneTypeMenu(client)
 	new Handle:menu = CreateMenu(ZoneTypeSelect);
 	SetMenuTitle(menu, "%T", "Select zone type", client);
 	
-	decl String:text[256];
+	decl String:sText[256];
 	
-	FormatEx(text, sizeof(text), "%T", "Start", client);
-	AddMenuItem(menu, "0", text);
+	FormatEx(sText, sizeof(sText), "%T", "Start", client);
+	AddMenuItem(menu, "0", sText);
 
-	FormatEx(text, sizeof(text), "%T", "End", client);
-	AddMenuItem(menu, "1", text);
+	FormatEx(sText, sizeof(sText), "%T", "End", client);
+	AddMenuItem(menu, "1", sText);
 	
-	FormatEx(text, sizeof(text), "%T", "Glitch1", client);
-	AddMenuItem(menu, "2", text);
+	FormatEx(sText, sizeof(sText), "%T", "Glitch1", client);
+	AddMenuItem(menu, "2", sText);
 	
-	FormatEx(text, sizeof(text), "%T", "Glitch2", client);
-	AddMenuItem(menu, "3", text);
+	FormatEx(sText, sizeof(sText), "%T", "Glitch2", client);
+	AddMenuItem(menu, "3", sText);
 	
-	FormatEx(text, sizeof(text), "%T", "Glitch3", client);
-	AddMenuItem(menu, "4", text);
+	FormatEx(sText, sizeof(sText), "%T", "Glitch3", client);
+	AddMenuItem(menu, "4", sText);
 	
 	SetMenuExitButton(menu, true);
 	DisplayMenu(menu, client, 360);
@@ -714,12 +714,12 @@ public Action:PlayerTracker(Handle:timer)
 	{
 		if (IsClientInGame(client) && IsPlayerAlive(client) && !IsClientObserver(client))
 		{
-			new Float:vecOrigin[3];
-			GetClientAbsOrigin(client, vecOrigin);
+			new Float:vOrigin[3];
+			GetClientAbsOrigin(client, vOrigin);
 			
 			for (new zone = 0; zone < g_mapZonesCount; zone++)
 			{
-				if (IsInsideBox(vecOrigin, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
+				if (IsInsideBox(vOrigin, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
 				{
 					if (g_mapZones[zone][Type] == Start)
 					{
@@ -976,10 +976,10 @@ ParseColor(const String:color[], result[])
 
 StopPrespeed(client)
 {
-	new Float:vecVelocity[3];
+	new Float:vVelocity[3];
+	GetEntPropVector(client, Prop_Data, "m_vecVelocity", vVelocity);
 	
-	GetEntPropVector(client, Prop_Data, "m_vecVelocity", vecVelocity);
-	if (SquareRoot(Pow(vecVelocity[0], 2.0) + Pow(vecVelocity[1], 2.0)) > (GetEntPropFloat(client, Prop_Data, "m_flMaxspeed") * 1.115 + 0.5))
+	if (SquareRoot(Pow(vVelocity[0], 2.0) + Pow(vVelocity[1], 2.0)) > (GetEntPropFloat(client, Prop_Data, "m_flMaxspeed") * 1.115 + 0.5))
 	{
 		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, Float:{0.0, 0.0, 0.0});
 	}	
