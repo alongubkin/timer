@@ -20,15 +20,15 @@ enum Checkpoint
 */
 new Handle:g_hSQL;
 
-new String:g_currentMap[32];
-new g_reconnectCounter = 0;
+new String:g_sCurrentMap[32];
+new g_iReconnectCounter = 0;
 
 new g_checkpoints[2048][Checkpoint];
 new g_checkpointCount = 0;
 
 //new bool:g_loadingCheckpoints = false;
 
-new g_currentCheckpoint[MAXPLAYERS+1];
+new g_iCurrentCheckpoint[MAXPLAYERS+1];
 
 public Plugin:myinfo =
 {
@@ -51,21 +51,21 @@ public OnPluginStart()
 	RegConsoleCmd("sm_tele", TeleCommand);
 	RegConsoleCmd("sm_t", TeleCommand);
 
-	Array_Fill(g_currentCheckpoint, sizeof(g_currentCheckpoint), 0, 0);
+	Array_Fill(g_iCurrentCheckpoint, sizeof(g_iCurrentCheckpoint), 0, 0);
 }
 
 public OnMapStart()
 {
-	GetCurrentMap(g_currentMap, sizeof(g_currentMap));
-	StringToLower(g_currentMap);
+	GetCurrentMap(g_sCurrentMap, sizeof(g_sCurrentMap));
+	StringToLower(g_sCurrentMap);
 
 	LoadCheckpoints();
-	Array_Fill(g_currentCheckpoint, sizeof(g_currentCheckpoint), 0, 0);
+	Array_Fill(g_iCurrentCheckpoint, sizeof(g_iCurrentCheckpoint), 0, 0);
 }
 
 public OnClientPutInServer(client)
 {
-	g_currentCheckpoint[client] = 0;
+	g_iCurrentCheckpoint[client] = 0;
 }
 
 public Action:ClearCommand(client, args)
@@ -79,7 +79,7 @@ public Action:NextCommand(client, args)
 {
 	if(IsPlayerAlive(client))
 	{
-		GoToCheckpoint(client, g_currentCheckpoint[client] + 1);
+		GoToCheckpoint(client, g_iCurrentCheckpoint[client] + 1);
 	}
 	
 	return Plugin_Handled;
@@ -89,7 +89,7 @@ public Action:PrevCommand(client, args)
 {
 	if(IsPlayerAlive(client))
 	{
-		GoToCheckpoint(client, g_currentCheckpoint[client] - 1);
+		GoToCheckpoint(client, g_iCurrentCheckpoint[client] - 1);
 	}
 	
 	return Plugin_Handled;
@@ -129,7 +129,7 @@ LoadCheckpoints()
 	else
 	{	
 		decl String:query[384];
-		FormatEx(query, sizeof(query), "SELECT id, auth, map, position_x, position_y, position_z, `order` FROM `checkpoints` WHERE map = '%s' ORDER BY `order` ASC", g_currentMap);
+		FormatEx(query, sizeof(query), "SELECT id, auth, map, position_x, position_y, position_z, `order` FROM `checkpoints` WHERE map = '%s' ORDER BY `order` ASC", g_sCurrentMap);
 
 		SQL_TQuery(g_hSQL, LoadCheckpointsCallback, query, _, DBPrio_High);
 	}
@@ -185,7 +185,7 @@ ConnectSQL(bool:refreshCache)
 
 public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
 {
-	if (g_reconnectCounter >= 5)
+	if (g_iReconnectCounter >= 5)
 	{
 		Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
 		return;
@@ -195,7 +195,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	{
 		Timer_LogError("Connection to SQL database has failed, Reason: %s", error);
 
-		g_reconnectCounter++;
+		g_iReconnectCounter++;
 		ConnectSQL(data);
 
 		return;
@@ -216,7 +216,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `checkpoints` (`id` INTEGER PRIMARY KEY, `auth` varchar(32) NOT NULL, `map` varchar(32) NOT NULL, `position_x` float NOT NULL, `position_y` float NOT NULL, `position_z` float NOT NULL, `order` INTEGER NOT NULL);");
 	}
 
-	g_reconnectCounter = 1;
+	g_iReconnectCounter = 1;
 }
 
 public SetNamesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -234,7 +234,7 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	{
 		Timer_LogError(error);
 
-		g_reconnectCounter++;
+		g_iReconnectCounter++;
 		ConnectSQL(data);
 		
 		return;
@@ -262,7 +262,7 @@ ClearCheckpoints(client)
 		GetClientAuthString(client, auth, sizeof(auth));
 		
 		decl String:query[384];
-		FormatEx(query, sizeof(query), "DELETE FROM checkpoints WHERE auth = '%s' AND map = '%s';", auth, g_currentMap);
+		FormatEx(query, sizeof(query), "DELETE FROM checkpoints WHERE auth = '%s' AND map = '%s';", auth, g_sCurrentMap);
 		
 		SQL_TQuery(g_hSQL, ClearCheckpointsCallback, query, client, DBPrio_Normal);
 	}
@@ -280,7 +280,7 @@ public ClearCheckpointsCallback(Handle:owner, Handle:hndl, const String:error[],
 
 	LoadCheckpoints();
 	
-	g_currentCheckpoint[client] = 0;
+	g_iCurrentCheckpoint[client] = 0;
 }
 
 SaveCheckpoint(client)
@@ -312,7 +312,7 @@ SaveCheckpoint(client)
 			order++;
 
 			decl String:query[384];
-			FormatEx(query, sizeof(query), "INSERT INTO checkpoints (auth, map, position_x, position_y, position_z, `order`) VALUES ('%s', '%s', %f, %f, %f, %d)", auth, g_currentMap, position[0], position[1], position[2], order);
+			FormatEx(query, sizeof(query), "INSERT INTO checkpoints (auth, map, position_x, position_y, position_z, `order`) VALUES ('%s', '%s', %f, %f, %f, %d)", auth, g_sCurrentMap, position[0], position[1], position[2], order);
 
 			SQL_TQuery(g_hSQL, SaveCheckpointCallback, query, client, DBPrio_High);
 		}
@@ -361,7 +361,7 @@ TeleportToLastCheckpoint(client)
 
 	Timer_Stop(client);
 	TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
-	g_currentCheckpoint[client] = g_checkpoints[cp][Order];
+	g_iCurrentCheckpoint[client] = g_checkpoints[cp][Order];
 }
 
 GoToCheckpoint(client, order)
@@ -391,5 +391,5 @@ GoToCheckpoint(client, order)
 	
 	Timer_Stop(client);
 	TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
-	g_currentCheckpoint[client] = order;
+	g_iCurrentCheckpoint[client] = order;
 }

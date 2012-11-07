@@ -231,7 +231,7 @@ UpdateHUD(client)
 			new String:sTimeString[32];
 			Timer_SecondsToTime(fTime, sTimeString, sizeof(sTimeString), false);
 			
-			Format(sHintText, sizeof(sHintText), "%s%t: %s", sHintText, "Time", sTimeString);
+			Format(sHintText, sizeof(sHintText), " %s%t: %s", sHintText, "Time", sTimeString);
 		}	
 		
 		if (g_bShowJumps)
@@ -241,7 +241,7 @@ UpdateHUD(client)
 				Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 			}
 			
-			Format(sHintText, sizeof(sHintText), "%s%t: %d", sHintText, "Jumps", iJumps);
+			Format(sHintText, sizeof(sHintText), " %s%t: %d", sHintText, "Jumps", iJumps);
 		}
 		
 		if (g_bShowFlashbangs)
@@ -251,7 +251,7 @@ UpdateHUD(client)
 				Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 			}
 			
-			Format(sHintText, sizeof(sHintText), "%s%t: %d", sHintText, "Flashbangs", iFlashbangs);
+			Format(sHintText, sizeof(sHintText), " %s%t: %d", sHintText, "Flashbangs", iFlashbangs);
 		}
 	}
 	
@@ -265,7 +265,7 @@ UpdateHUD(client)
 			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(sHintText, sizeof(sHintText), "%s%t: %.02f u/s", sHintText, "HUD Speed", g_bThreeAxisSpeed
+		Format(sHintText, sizeof(sHintText), " %s%t: %.02f u/s", sHintText, "HUD Speed", g_bThreeAxisSpeed
 		? SquareRoot(Pow(fVelocity[0], 2.0) + Pow(fVelocity[1], 2.0) + Pow(fVelocity[2], 2.0))
 		: SquareRoot(Pow(fVelocity[0], 2.0) + Pow(fVelocity[1], 2.0)));
 	}
@@ -284,7 +284,7 @@ UpdateHUD(client)
 			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(sHintText, sizeof(sHintText), "%s%t: %s", sHintText, "HUD Best Times", sBuffer);
+		Format(sHintText, sizeof(sHintText), " %s%t: %s", sHintText, "HUD Best Times", sBuffer);
 	}
 	
 	if (g_bTimerPhysics && g_bShowDifficulty) 
@@ -297,7 +297,7 @@ UpdateHUD(client)
 			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(sHintText, sizeof(sHintText), "%s%t: %s", sHintText, "HUD Difficulty", sDifficulty);
+		Format(sHintText, sizeof(sHintText), " %s%t: %s", sHintText, "HUD Difficulty", sDifficulty);
 	}
 	
 	if (g_bShowName && target == t)
@@ -310,7 +310,7 @@ UpdateHUD(client)
 			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(sHintText, sizeof(sHintText), "%s%t: %s", sHintText, "Player", sName);
+		Format(sHintText, sizeof(sHintText), " %s%t: %s", sHintText, "Player", sName);
 	}
 	
 	PrintHintText(client, sHintText);

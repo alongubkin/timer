@@ -5,7 +5,7 @@
 #include <smlib/arrays>
 #include <timer>
 
-new bool:g_hide[MAXPLAYERS+1];
+new bool:g_bHide[MAXPLAYERS+1];
 new g_iWeaponOwner[2048];
 
 public Plugin:myinfo =
@@ -21,18 +21,18 @@ public OnPluginStart()
 {
 	LoadTranslations("timer.phrases");
 	
-	Array_Fill(g_hide, sizeof(g_hide), false, 0);
+	Array_Fill(g_bHide, sizeof(g_bHide), false, 0);
 	RegConsoleCmd("sm_hide", HideCommand);
 }
 
 public OnMapStart()
 {
-	Array_Fill(g_hide, sizeof(g_hide), false, 0);
+	Array_Fill(g_bHide, sizeof(g_bHide), false, 0);
 }
 
 public OnClientPutInServer(client) 
 { 
-	g_hide[client] = false; 
+	g_bHide[client] = false; 
 	SDKHook(client, SDKHook_SetTransmit, Hook_SetTransmit);
 	SDKHook(client, SDKHook_WeaponEquip, Hook_WeaponEquip);
 	SDKHook(client, SDKHook_WeaponDrop, Hook_WeaponDrop);
@@ -74,17 +74,17 @@ public Hook_WeaponDrop(client, weapon)
 
 public Action:Hook_SetTransmit(entity, client) 
 { 
-	return !(client != entity && (0 < entity <= MaxClients) && g_hide[client]) ? Plugin_Continue : Plugin_Handled; 
+	return !(client != entity && (0 < entity <= MaxClients) && g_bHide[client]) ? Plugin_Continue : Plugin_Handled; 
 }
 
 public Action:Hook_SetTransmitWeapon(entity, client) 
 { 
-	return !(g_iWeaponOwner[entity] && g_iWeaponOwner[entity] != client && g_hide[client]) ? Plugin_Continue : Plugin_Handled; 
+	return !(g_iWeaponOwner[entity] && g_iWeaponOwner[entity] != client && g_bHide[client]) ? Plugin_Continue : Plugin_Handled; 
 }
 
 public Action:HideCommand(client, args)
 {
-	g_hide[client] = !g_hide[client];
+	g_bHide[client] = !g_bHide[client];
 	PrintToChat(client, PLUGIN_PREFIX, "Toggle visibilty");
 	
 	return Plugin_Handled;

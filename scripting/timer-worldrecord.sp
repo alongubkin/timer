@@ -253,7 +253,7 @@ public Action:Command_PersonalRecord(client, args)
 	else
 	{
 		decl String:auth[32];
-		GetClientAuthString(client, auth, sizeof(auth));
+		GetClientAuthString(target, auth, sizeof(auth));
 
 		for (new t = 0; t < g_cacheCount; t++)
 		{
@@ -627,7 +627,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	
 	if (StrEqual(driver, "mysql", false))
 	{
-		SQL_FastQuery(hndl, "SET NAMES 'utf8'");
+		SQL_TQuery(hndl, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
 	}
 
 	g_hSQL = CloneHandle(hndl);
@@ -639,6 +639,16 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		RefreshCache();	
 	}
 }
+
+public SetNamesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{	
+	if (hndl == INVALID_HANDLE)
+	{
+		Timer_LogError("SQL Error on SetNames: %s", error);
+		return;
+	}
+}
+
 
 CreateDifficultyMenu(client)
 {
