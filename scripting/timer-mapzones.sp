@@ -83,6 +83,9 @@ public OnPluginStart()
 	
 	AutoExecConfig(true, "timer-mapzones");
 	
+	g_bStopPrespeed = GetConVarBool(g_hCvarStopPrespeed);
+	g_bDrawMapZones = GetConVarBool(g_hCvarDrawMapZones);
+	
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
 	{
@@ -162,7 +165,6 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 			CreateTimer(2.0, DrawZones, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		}
 	}
-
 }
 
 public OnAdminMenuReady(Handle:topmenu)

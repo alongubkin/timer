@@ -78,6 +78,17 @@ public OnPluginStart()
 	
 	AutoExecConfig(true, "timer-hud");
 	
+	g_bShowSpeed = GetConVarBool(g_hCvarShowSpeed);
+	g_bShowJumps = GetConVarBool(g_hCvarShowJumps);
+	g_bShowFlashbangs = GetConVarBool(g_hCvarShowFlashbans);
+	g_bShowTime = GetConVarBool(g_hCvarShowTime);
+	g_bShowDifficulty = GetConVarBool(g_hCvarShowDifficulty);
+	g_bShowBestTimes = GetConVarBool(g_hcvarShowBestTimes);
+	g_bShowName = GetConVarBool(g_hCvarShowName);
+	g_bTimeByKills = GetConVarBool(g_hCvarTimeByKills);
+	g_bJumpsOrFlashbangsByDeaths = GetConVarBool(g_hCvarJumpOrFlashbangssByDeaths);
+	g_bThreeAxisSpeed = GetConVarBool(g_hCvarThreeAxisSpeed);
+	
 	if (LibraryExists("updater"))
 	{
 		Updater_AddPlugin(UPDATE_URL);

@@ -88,6 +88,9 @@ public OnPluginStart()
 	
 	AutoExecConfig(true, "timer-worldrecord");
 	
+	g_bShowJumps = GetConVarBool(g_hCvarShowJumps);
+	g_bShowFlashbangs = GetConVarBool(g_hCvarShowFlashbangs);
+	
 	RegConsoleCmd("sm_wr", Command_WorldRecord);
 	RegConsoleCmd("sm_delete", Command_Delete);
 	RegConsoleCmd("sm_record", Command_PersonalRecord);

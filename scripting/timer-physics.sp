@@ -58,6 +58,8 @@ public OnPluginStart()
 	HookConVarChange(g_hCvarJoinTeamDifficulty, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-physics");
+	
+	g_bJoinTeamDifficulty = GetConVarBool(g_hCvarJoinTeamDifficulty);
 
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("player_jump", Event_PlayerJump, EventHookMode_Post);

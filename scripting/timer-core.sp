@@ -133,12 +133,18 @@ public OnPluginStart()
 	
 	AutoExecConfig(true, "timer-core");
 	
-	HookEvent("player_jump", Event_PlayerJump);
+	g_bRestartEnabled = GetConVarBool(g_hCvarRestartEnabled);
+	g_bStopEnabled = GetConVarBool(g_hCvarStopEnabled);
+	g_bPauseResumeEnabled = GetConVarBool(g_hCvarPauseResumeEnabled);
+	g_bShowJumps = GetConVarBool(g_hCvarShowJumps);
+	g_bShowFlashbangs = GetConVarBool(g_hCvarShowFlashbangs);
+	
 	HookEvent("player_death", Event_StopTimer);
 	HookEvent("player_team", Event_StopTimer);
 	HookEvent("player_spawn", Event_StopTimer);
 	HookEvent("player_disconnect", Event_StopTimer);
 	HookEvent("player_connect", Event_StopTimer);
+	HookEvent("player_jump", Event_PlayerJump);
 	HookEvent("weapon_fire", Event_WeaponFire);
 	
 	RegConsoleCmd("sm_restart", Command_Restart);
