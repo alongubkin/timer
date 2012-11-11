@@ -726,13 +726,14 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	{
 		SQL_TQuery(g_hSQL, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` int(11) NOT NULL AUTO_INCREMENT, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` int(11) NOT NULL, `physicsdifficulty` int(11) NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` int(11) NOT NULL, `flashbangs` int(11) NOT NULL, PRIMARY KEY (`id`));");
-		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "ALTER TABLE `round` ADD `flashbangs` int(11) NOT NULL;");
 	}
 	else if (StrEqual(sDriver, "sqlite", false))
 	{
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` INTEGER PRIMARY KEY, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` INTEGER NOT NULL, `physicsdifficulty` INTEGER NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` INTEGER NOT NULL, `flashbangs` INTEGER NOT NULL);");
-		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "ALTER TABLE `round` ADD `flashbangs` INTEGER NOT NULL;");
 	}
+	
+	SQL_TQuery(g_hSQL, CheckFlashbangsCallback, "SELECT flashbangs FROM round");
+	
 	
 	g_iReconnectCounter = 1;
 }
@@ -765,6 +766,24 @@ public CreateSQLTableCallback(Handle:owner, Handle:hndl, const String:error[], a
 	}
 	
 	GetTotalRank(g_sCurrentMap);
+}
+
+public CheckFlashbangsCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
+{
+	if (hndl == INVALID_HANDLE)
+	{	
+		decl String:sDriver[16];
+		SQL_GetDriverIdent(owner, sDriver, sizeof(sDriver));
+
+		if (StrEqual(sDriver, "mysql", false))
+		{
+			SQL_TQuery(g_hSQL, CreateSQLTableCallback, "ALTER TABLE `round` ADD `flashbangs` int(11) NOT NULL;");
+		}
+		else if (StrEqual(sDriver, "sqlite", false))
+		{
+			SQL_TQuery(g_hSQL, CreateSQLTableCallback, "ALTER TABLE `round` ADD `flashbangs` INTEGER NOT NULL;");
+		}
+	}
 }
 
 public OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDifficulty, fpsmax, const String:timeString[], const String:timeDiffString[], position, totalrank, bool:overwrite)
