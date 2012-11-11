@@ -726,10 +726,12 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 	{
 		SQL_TQuery(g_hSQL, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` int(11) NOT NULL AUTO_INCREMENT, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` int(11) NOT NULL, `physicsdifficulty` int(11) NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` int(11) NOT NULL, `flashbangs` int(11) NOT NULL, PRIMARY KEY (`id`));");
+		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "ALTER TABLE `round` ADD `flashbangs` int(11) NOT NULL;");
 	}
 	else if (StrEqual(sDriver, "sqlite", false))
 	{
 		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "CREATE TABLE IF NOT EXISTS `round` (`id` INTEGER PRIMARY KEY, `map` varchar(32) NOT NULL, `auth` varchar(32) NOT NULL, `time` float NOT NULL, `jumps` INTEGER NOT NULL, `physicsdifficulty` INTEGER NOT NULL, `name` varchar(64) NOT NULL, `fpsmax` INTEGER NOT NULL, `flashbangs` INTEGER NOT NULL);");
+		SQL_TQuery(g_hSQL, CreateSQLTableCallback, "ALTER TABLE `round` ADD `flashbangs` INTEGER NOT NULL;");
 	}
 	
 	g_iReconnectCounter = 1;
