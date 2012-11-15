@@ -696,7 +696,7 @@ CreateWRMenu(client, difficulty)
 {
 	new Handle:menu = CreateMenu(MenuHandler_WR);
 
-	SetMenuTitle(menu, "%T", "World Record Menu Title", client, g_sCurrentMap);
+	SetMenuTitle(menu, "%T (%d)", "World Record Menu Title", client, g_sCurrentMap, g_cacheCount);
 	
 	if (g_bTimerPhysics)
 	{
