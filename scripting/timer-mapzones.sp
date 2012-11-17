@@ -241,7 +241,7 @@ public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 
 LoadMapZones()
 {
-	decl String:sQuery[192];
+	decl String:sQuery[384];
 	FormatEx(sQuery, sizeof(sQuery), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_sCurrentMap);
 	
 	SQL_TQuery(g_hSQL, LoadMapZonesCallback, sQuery, _, DBPrio_Low);	
