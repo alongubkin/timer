@@ -201,7 +201,7 @@ UpdateHUD(client)
 		{
 			t = GetEntPropEnt(client, Prop_Send, "m_hObserverTarget");
 
-			if (IsClientInGame(t) && !IsFakeClient(t))
+			if (t > 0 && IsClientInGame(t) && !IsFakeClient(t))
 			{
 				target = t;
 			}
@@ -290,7 +290,7 @@ UpdateHUD(client)
 		Timer_GetBestRound(target, g_sCurrentMap, fBestTime, iBestJumps, iBestFlashbangs);	
 		
 		new String:sBuffer[32];
-		Timer_SecondsToTime(fBestTime, sBuffer, sizeof(sBuffer), false);	
+		Timer_SecondsToTime(fBestTime, sBuffer, sizeof(sBuffer), true);	
 		
 		if ((bEnabled && (g_bShowTime || g_bShowJumps || g_bShowFlashbangs)) || g_bShowSpeed)
 		{
