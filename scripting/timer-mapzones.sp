@@ -67,6 +67,8 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
+	ConnectSQL();
+	
 	g_bTimerPhysics = LibraryExists("timer-physics");
 	g_bTimerWorldRecord = LibraryExists("timer-worldrecord");	
 	LoadTranslations("timer.phrases");
@@ -96,8 +98,6 @@ public OnPluginStart()
 	{
 		Updater_AddPlugin(UPDATE_URL);
 	}
-	
-	ConnectSQL();
 }
 
 public OnMapStart()
@@ -241,10 +241,17 @@ public AddMapZoneCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 
 LoadMapZones()
 {
-	decl String:sQuery[384];
-	FormatEx(sQuery, sizeof(sQuery), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_sCurrentMap);
+	if (g_hSQL == INVALID_HANDLE)
+	{
+		ConnectSQL();
+	}
+	else
+	{	
+		decl String:sQuery[384];
+		FormatEx(sQuery, sizeof(sQuery), "SELECT id, type, point1_x, point1_y, point1_z, point2_x, point2_y, point2_z FROM mapzone WHERE map = '%s'", g_sCurrentMap);
 	
-	SQL_TQuery(g_hSQL, LoadMapZonesCallback, sQuery, _, DBPrio_Low);	
+		SQL_TQuery(g_hSQL, LoadMapZonesCallback, sQuery, _, DBPrio_Low);
+	}
 }
 
 public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
