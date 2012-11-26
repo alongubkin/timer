@@ -773,8 +773,8 @@ public CheckFlashbangsCallback(Handle:owner, Handle:hndl, const String:error[], 
 	if (hndl == INVALID_HANDLE)
 	{	
 		decl String:sDriver[16];
-		SQL_GetDriverIdent(owner, sDriver, sizeof(sDriver));
-
+		SQL_ReadDriver(g_hSQL, sDriver, sizeof(sDriver));
+		
 		if (StrEqual(sDriver, "mysql", false))
 		{
 			SQL_TQuery(g_hSQL, CreateSQLTableCallback, "ALTER TABLE `round` ADD `flashbangs` int(11) NOT NULL;");
