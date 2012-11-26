@@ -1,0 +1,217 @@
+"Phrases"
+{
+	"Round Finish Message"
+	{
+		"fr"            "{1} a fini la map en {2}({3})"
+	}
+	
+	"Jumps Message"
+	{
+		"fr"             "en {1} sauts"
+	}
+	
+	"Flashbangs Message"
+	{
+		"fr"            "avec {1} flashbangs"
+	}
+	
+	"Difficulty Message"
+	{
+		"fr"             "sur {1}"
+	}
+	
+	"Rank Message"
+	{
+		"fr"             "Rank: {1}/{2}."
+	}
+	
+	"Record Break Message"
+	{
+		"fr"             "{1} a battu le record de la map."
+	}
+	
+	"Point Select Panel"
+	{
+		"fr"            "Merci de rester sur le {1} point de la zone,\net de click droit."
+	}
+	
+	"Cancel"
+	{
+		"fr"            "Annuler"
+	}
+	
+	"Please wait"
+	{
+		"fr"            "Patientez s'il vous plait..."
+	}
+
+	"FIRST"
+	{
+		"fr"            "PREMIER"
+	}
+	
+	"SECOND"
+	{
+		"fr"            "DEUXIEME"
+	}
+	
+	"Map Zone Delete"
+	{
+		"fr"            "Map zone a bien ete suprimer."
+	}
+
+	"Time"
+	{
+		"en"            "Temps"
+	}
+	
+	"Jumps"
+	{
+		"fr"            "Sauts"
+	}
+	
+	"Flashbangs"
+	{
+		"fr"            "Flashbangs"
+	}
+
+	"HUD Speed"
+	{
+		"fr"            "Vitesse"
+	}
+
+	"HUD Best Times"
+	{
+		"fr"            "Meilleur temps"
+	}
+	
+	"HUD Difficulty"
+	{
+		"fr"            "Difficultee"
+	}
+
+	"Player"
+	{
+		"fr"            "Joueur"
+	}
+	
+	"No target"
+	{
+		"fr"            "Aucune cible trouvee."
+	}
+	
+	"Physics Difficulty"
+	{
+		"fr"            "Difficultee"
+	}
+	
+	"World Record Menu Title"
+	{
+		"fr"            "World Records pour {1}"
+	}
+	
+	"World Record Loading"
+	{
+		"fr"            "World Record est encore en chargement; essayez encore dans quelques instants."
+	}
+	
+	"No Records"
+	{
+		"fr"            "Desole, il n'y a aucun record."
+	}
+	
+	"No Difficulty Records"
+	{
+		"fr"            "Desole, aucun record pour cette difficultee."
+	}
+	
+	"Record Info"
+	{
+		"fr"            "Record Info"
+	}
+	
+	"Player Name"
+	{
+		"fr"            "Nom du Joueur"
+	}
+	
+	"Rank"
+	{
+		"fr"            "Rank"
+	}
+
+	"Toggle visibilty"
+	{
+		"fr"            "Visibilitee des joueurs basculee."
+	}
+
+	"Timer Management"
+	{
+		"fr"            "Reglages du timer"
+	}
+
+	"Delete Map Records"
+	{
+		"fr"            "Supprimer tout les records de cette map"
+	}
+	
+	"Delete All Map Zones"
+	{
+		"fr"            "Supprimer toutes les zone maps"
+	}
+
+	"Delete Player Record"
+	{
+		"fr"            "Supprimer le record"
+	}
+
+	"Add Map Zone"
+	{
+		"fr"            "Ajouter une map zone"
+	}
+
+	"Delete Map Zone"
+	{
+		"fr"            "Supprimer une map zone"
+	}
+	
+	"Select zone type"
+	{
+		"fr"            "Selectionner le type de zone:"
+	}
+	
+	"Start"
+	{
+		"fr"            "Debut"
+	}
+	
+	"End"
+	{
+		"fr"            "Fin"
+	}
+	
+	"Glitch1"
+	{
+		"fr"            "Glitch1 - Arreter le Timer"
+	}
+	
+	"Glitch2"
+	{
+		"fr"            "Glitch2 - Redemarrer le Timer"
+	}
+	
+	"Glitch3"
+	{
+		"fr"            "Glitch3 - Respawn le joueur"
+	}
+	
+	"Choose Player"
+	{
+		"fr"            "Choisir le Joueur:"
+	}
+	
+	"Delete Records"
+	{
+		"fr"            "Supprimer un Records:"
+	}
+}  
