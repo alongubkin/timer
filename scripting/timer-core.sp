@@ -588,7 +588,7 @@ FinishRound(client, const String:map[], Float:time, jumps, flashbangs, physicsDi
 	if (hQuery == INVALID_HANDLE)
 	{
 		SQL_GetError(g_hSQL, sError, sizeof(sError));
-		Timer_LogError("SQL Error on GetTotalRank: %s", sError);
+		Timer_LogError("SQL Error on FinishRound: %s", sError);
 		SQL_UnlockDatabase(g_hSQL);
 		return;
 	}
