@@ -154,7 +154,7 @@ public OnClientAuthorized(client, const String:auth[])
 	decl String:sQuery[256];
 	FormatEx(sQuery, sizeof(sQuery), "UPDATE round SET name = '%s' WHERE auth = '%s';", sSafeName, auth);
 
-	SQL_TQuery(g_hSQL, ChangeNameCallback, sQuery, _, DBPrio_Low);
+	SQL_TQuery(g_hSQL, ChangeNameCallback, sQuery, _, DBPrio_High);
 }
 
 public ChangeNameCallback(Handle:owner, Handle:hndl, const String:error[], any:data)
@@ -553,7 +553,7 @@ RefreshCache()
 		decl String:sQuery[512];
 		FormatEx(sQuery, sizeof(sQuery), "SELECT m.id, m.auth, m.time, MAX(m.jumps) jumps, m.physicsdifficulty, m.name, MAX(m.flashbangs) flashbangs FROM round AS m INNER JOIN (SELECT MIN(n.time) time, n.auth FROM round n WHERE n.map = '%s' GROUP BY n.physicsdifficulty, n.auth) AS j ON (j.time = m.time AND j.auth = m.auth) WHERE m.map = '%s' GROUP BY m.physicsdifficulty, m.auth ORDER BY m.time ASC LIMIT 0, 1000", g_sCurrentMap, g_sCurrentMap);	
 		
-		SQL_TQuery(g_hSQL, RefreshCacheCallback, sQuery, _, DBPrio_Low);
+		SQL_TQuery(g_hSQL, RefreshCacheCallback, sQuery, _, DBPrio_High);
 	}
 }
 
