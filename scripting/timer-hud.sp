@@ -285,9 +285,9 @@ UpdateHUD(client)
 	
 	if (g_bShowBestTimes)
 	{
-		new Float:fBestTime, iBestJumps, iBestFlashbangs;
+		new Float:fBestTime, iBestJumps, iBestFlashbangs, iBestFpsMax;
 		
-		Timer_GetBestRound(target, g_sCurrentMap, fBestTime, iBestJumps, iBestFlashbangs);	
+		Timer_GetBestRecord(target, g_sCurrentMap, -1, fBestTime, iBestJumps, iBestFpsMax, iBestFlashbangs);	
 		
 		new String:sBuffer[32];
 		Timer_SecondsToTime(fBestTime, sBuffer, sizeof(sBuffer), true);	

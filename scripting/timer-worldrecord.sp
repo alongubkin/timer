@@ -952,6 +952,7 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 	{
 		decl String:sInfo[32];		
 		GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
+
 		
 		decl String:sQuery[64];
 		FormatEx(sQuery, sizeof(sQuery), "DELETE FROM `round` WHERE id = %s", sInfo);	

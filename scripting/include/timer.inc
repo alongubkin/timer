@@ -141,17 +141,24 @@ native bool:Timer_Pause(client);
 native bool:Timer_Resume(client);
 
 /**
- * Fetches the best round for a player in a specific map.
+ * DEPRECATED: Use Timer_GetBestRecord instead.
+ */
+native bool:Timer_GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs);
+
+/**
+ * Fetches the best record for a player.
  *
- * @param client    	The client to fetch the best round for.
+ * @param client   	 	Client index.
  * @param map			
+ * @param difficulty
  * @param time			A reference to the time of the round.
  * @param jumps			A reference to the count of the jumps in that round.
+ * @param fpsmax 		A reference to the client fpsmax value.
  * @param flashbangs	A reference to the count of the flashbangs in that round.
  *
  * @return True on success, false on failure.
  */
-native bool:Timer_GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs);
+native bool:Timer_GetBestRecord(client, const String:map[] = "", difficulty = -1, &Float:time, &jumps, &fpsmax, &flashbangs);
 
 /**
  * Gets the current active timer for a player

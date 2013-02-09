@@ -86,20 +86,20 @@ public Plugin:myinfo =
 
 public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 {
-	RegPluginLibrary("timer");
-	
 	CreateNative("Timer_Start", Native_TimerStart);
 	CreateNative("Timer_Stop", Native_TimerStop);
 	CreateNative("Timer_Restart", Native_TimerRestart);
 	CreateNative("Timer_Pause", Native_TimerPause);
 	CreateNative("Timer_Resume", Native_TimerResume);
 	CreateNative("Timer_GetBestRound", Native_GetBestRound);
+	CreateNative("Timer_GetBestRecord", Native_GetBestRecord);
 	CreateNative("Timer_GetClientTimer", Native_GetClientTimer);
 	CreateNative("Timer_FinishRound", Native_FinishRound);
 	CreateNative("Timer_ForceReloadBestRoundCache", Native_ForceReloadBestRoundCache);
 	CreateNative("Timer_GetTotalRank", Native_GetTotalRank);
 	CreateNative("Timer_GetCurrentRank", Native_GetCurrentRank);
 
+	RegPluginLibrary("timer");
 	return APLRes_Success;
 }
 
@@ -438,7 +438,7 @@ bool:ResumeTimer(client)
 	return true;
 }
 
-bool:GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs)
+bool:GetBestRecord(client, const String:map[] = "", difficulty = -1, &Float:time, &jumps, &fpsmax, &flashbangs)
 {
 	if (!IsClientInGame(client))
 	{
@@ -458,7 +458,19 @@ bool:GetBestRound(client, const String:map[], &Float:time, &jumps, &flashbangs)
 	GetClientAuthString(client, sAuthID, sizeof(sAuthID));
 	
 	decl String:sQuery[255], String:sError[255];
-	FormatEx(sQuery, sizeof(sQuery), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s' AND map = '%s' ORDER BY time ASC LIMIT 1", sAuthID, map);
+	Format(sQuery, sizeof(sQuery), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s'", sAuthID);
+
+	if (!StrEqual(map, ""))
+	{
+		Format(sQuery, sizeof(sQuery), "%s AND map='%s'", sQuery, map);
+	}
+
+	if (difficulty != -1)
+	{
+		Format(sQuery, sizeof(sQuery), "%s AND physicsdifficulty=%d", sQuery, difficulty);
+	}
+
+	Format(sQuery, sizeof(sQuery), "%s ORDER BY time ASC LIMIT 1", sQuery);
 	
 	SQL_LockDatabase(g_hSQL);
 
@@ -873,16 +885,31 @@ public Native_GetBestRound(Handle:plugin, numParams)
 	decl String:map[32];
 	GetNativeString(2, map, sizeof(map));
 	
-	new Float:time;
-	new jumps, flashbangs;
-	
-	new bool:success = GetBestRound(GetNativeCell(1), map, time, jumps, flashbangs);
-
-	if (success)
+	new Float:time, jumps, flashbangs, fpsmax;
+	if (GetBestRecord(GetNativeCell(1), map, -1, time, jumps, fpsmax, flashbangs))
 	{
 		SetNativeCellRef(3, time);
 		SetNativeCellRef(4, jumps);
 		SetNativeCellRef(5, flashbangs);
+		
+		return true;
+	}
+	
+	return false;
+}
+
+public Native_GetBestRecord(Handle:plugin, numParams)
+{
+	decl String:map[32];
+	GetNativeString(2, map, sizeof(map));
+	
+	new Float:time, jumps, fpsmax, flashbangs;
+	if (GetBestRecord(GetNativeCell(1), map, GetNativeCell(3), time, jumps, fpsmax, flashbangs))
+	{
+		SetNativeCellRef(4, time);
+		SetNativeCellRef(5, jumps);
+		SetNativeCellRef(6, fpsmax);
+		SetNativeCellRef(7, flashbangs);
 		
 		return true;
 	}
