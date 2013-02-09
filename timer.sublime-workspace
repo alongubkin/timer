@@ -1,0 +1,359 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"On",
+				"OnAllPluginsLoaded"
+			],
+			[
+				"si",
+				"sizeof"
+			],
+			[
+				"mess",
+				"messageSize"
+			],
+			[
+				"g_",
+				"g_messagesPrefix"
+			],
+			[
+				"Kill",
+				"KillTempEntsTrail"
+			],
+			[
+				"g_trail",
+				"g_trailTimers"
+			],
+			[
+				"STORE_",
+				"STORE_MAX_NAME_LENGTH"
+			],
+			[
+				"ColorfulTex",
+				"TitleColorfulText"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "Packages/SourcePawn/SourcePawn.sublime-build",
+	"command_palette":
+	{
+		"height": 66.0,
+		"selected_items":
+		[
+			[
+				"instal",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 386.0
+	},
+	"console":
+	{
+		"height": 125.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/store/store-inventory.inc",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/a.inc",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/b.inc",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/b.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/a.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/store/store-backend.inc",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-trails.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-titles.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-shop.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-logging.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-loadout.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-distributor.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-core.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-equipment.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-inventory.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-backend.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/zombiereloaded.inc",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/store/store-core.inc",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/store/store-shop.inc",
+		"/C/Users/Alon/Downloads/PlayerTrails (1).sp",
+		"/C/Users/Alon/Downloads/autoupdate.sp",
+		"/C/Users/Alon/Downloads/tauntcrits2.sp",
+		"/C/Users/Alon/Downloads/tauntcrits.sp",
+		"/C/Users/Alon/Documents/GitHub/store/configs/store/core.cfg",
+		"/C/Users/Alon/Documents/GitHub/store/configs/store/sql-init-scripts/store.sql",
+		"/C/Users/Alon/Documents/GitHub/store/configs/store/distributor.cfg",
+		"/C/Users/Alon/Documents/GitHub/store/configs/store/sql-init-scripts/equipment.sql",
+		"/C/Users/Alon/Downloads/zriot_boomer.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-jetpack.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-props.sp",
+		"/C/Users/Alon/Documents/GitHub/store/translations/store.phrases.txt",
+		"/C/Users/Alon/AppData/Local/Temp/7zOA73C.tmp/trails.sp",
+		"/C/Users/Alon/AppData/Local/Temp/7zOC29A.tmp/global.sp",
+		"/C/Users/Alon/AppData/Local/Temp/7zOD3BA.tmp/store.sp",
+		"/C/Users/Alon/AppData/Local/Temp/7zOA71C.tmp/gtrails.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/smjansson.inc",
+		"/C/Users/Alon/AppData/Local/Temp/7zOA965.tmp/stamm_grenadetrail.sp",
+		"/C/Users/Alon/AppData/Local/Temp/7zO105E.tmp/stamm_grenadetrail.sp",
+		"/C/Users/Alon/AppData/Local/Temp/7zOE0B5.tmp/stamm_grenadetrail.sp",
+		"/C/Users/Alon/AppData/Local/Temp/7zO9707.tmp/stamm_grenadetrail.sp",
+		"/C/Users/Alon/AppData/Local/Temp/7zO3B41.tmp/stamm_playertrail.sp",
+		"/C/Users/Alon/Downloads/PlayerTrails.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/colors.inc",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/morecolors_store.inc",
+		"/C/Users/Alon/AppData/Roaming/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/C/Users/Alon/Documents/GitHub/store/store.sublime-project",
+		"/C/Users/Alon/AppData/Roaming/Sublime Text 2/Packages/User/SublimeOnSaveBuild.sublime-settings",
+		"/C/Users/Alon/Downloads/warden.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-sounds.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/include/store.inc",
+		"/C/Users/Alon/Downloads/rtler.sp",
+		"/C/Users/Alon/Documents/GitHub/store/scripting/store-database.sp",
+		"/C/Users/Alon/AppData/Roaming/Sublime Text 2/Packages/SublimeOnSaveBuild/SublimeOnSaveBuild.sublime-settings",
+		"/C/Users/Alon/AppData/Roaming/Sublime Text 2/Packages/SublimeOnSaveBuild/README.md",
+		"/C/Users/Alon/AppData/Roaming/Sublime Text 2/Packages/SourcePawn/SourcePawn.sublime-build",
+		"/C/Users/Alon/AppData/Roaming/Sublime Text 2/Packages/sublime-sourcepawn-master/SPCompletions.sublime-settings",
+		"/C/Users/Alon/AppData/Local/Temp/7zOAF29.tmp/st2generator.sp",
+		"/C/Users/Alon/Desktop/st2generator.sp",
+		"/C/Users/Alon/AppData/Local/Temp/7zE90A1.tmp/st2generator.sp"
+	],
+	"find":
+	{
+		"height": 36.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"Command_PrintItemTypes",
+			"printtoserver",
+			"LoadItem",
+			"attrs",
+			"SetItemEquippedState",
+			"Command_ReloadItems",
+			"OnEquip",
+			"PrinTtoserver",
+			"PrinT",
+			"PrintToServer",
+			"printtoserver",
+			"attrs",
+			"loaditem",
+			"printtoserver",
+			"Command_GetRegisteredItemTypes",
+			"SpawnTimer",
+			"GetItems",
+			"GetITems",
+			"reloaditemcache",
+			"GetItems",
+			"ReloadItemCache",
+			"printtoserver",
+			"ConnectSQL",
+			"ReloadItemCache",
+			"attrs",
+			"LoadItem",
+			"EquipmentEntity",
+			"hub",
+			"g_itemTypes",
+			"attrs",
+			"onmapstart",
+			"SpawnTimer",
+			"Event_PlayerSpawn",
+			"spawn",
+			"Equip(",
+			"Equip",
+			"loaditem",
+			"g_allPluginsLoaded",
+			"PrintToserver",
+			"PrintToServer",
+			"g_itemTypeNameIndex",
+			"g_allPluginsLoaded",
+			"ConnectSQL",
+			"g_databaseInitialized",
+			"ReloadItemCache",
+			"g_itemTypeNamenIdex",
+			"Command_list",
+			"GetPluginInfo",
+			"Command_OpenInventory",
+			"Command_GetRegisteredItemTypes",
+			"Command_OpenInventory",
+			"g_itemTypeNameIndex\n",
+			"g_itemTypeNameIndex",
+			"Store_IsItemTypeRegistered",
+			"CategoryRequirePlugin",
+			"GetItems",
+			"Store_",
+			"ConnectSQL",
+			"g_dbInitializedForward",
+			"Store Menu Title",
+			"store_getcredits",
+			"command_openmain",
+			"printtochat",
+			"printtochat\\",
+			"printtochat",
+			"g_messagesPrefix",
+			"printtocha",
+			"printtoserver",
+			"g_allPluginsLoaded",
+			"ReloadItemCache",
+			"onreloaditems",
+			"g_trailsNameIndex",
+			"IsSource2009",
+			"LoadConfig",
+			"LoadConig",
+			"printtochat",
+			"Store_OpenLoadoutMenu",
+			"Native_OpenLoadoutMenu",
+			"OpenLoadoutMenu",
+			"OnMainMenuLoadoutClick",
+			"printtoserver",
+			"Store_GetItems",
+			"ReloadItemCache",
+			"reloaditemcache",
+			"RefreshItemCache",
+			"ReloadItemCache",
+			"Native_GetCurrencyName",
+			"g_reloadItemsRequested",
+			"Command_GiveCredits",
+			"PlayerTeam",
+			"playerspawn",
+			"KillTrail",
+			"killtrail",
+			"playerspawn",
+			"KillTrail",
+			"PlayerSpawn",
+			"playerspawn",
+			"g_trailTimers",
+			"KillTrail",
+			"gtrails",
+			"HandleGTrails",
+			"Store_GetUserItemCountCallback",
+			"GetUserItemCount",
+			"getuseritemcount",
+			"Store_GetUserItemCount",
+			"Store_GetUserItemCountCallback",
+			"Store_HasItem",
+			"getuseritems",
+			"HasItem",
+			"json_typeof",
+			"json_is_string",
+			"Handle:json_object_get(",
+			"stock json_object_get(",
+			"json_object_get(",
+			"json_object_get",
+			"json_object_get_string",
+			"json_object_get_float",
+			"json_array_get_float",
+			"position",
+			"g_SpriteModel",
+			"150",
+			"AddTrail",
+			"tcolor",
+			"tolor",
+			"AddTrail",
+			"TE_",
+			"g_game",
+			"dark"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 33.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 101.0
+	},
+	"replace":
+	{
+		"height": 0.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true
+}
