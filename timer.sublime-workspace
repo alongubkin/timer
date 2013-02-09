@@ -39,6 +39,70 @@
 	},
 	"buffers":
 	[
+		{
+			"file": "scripting/include/timer.inc",
+			"settings":
+			{
+				"buffer_size": 6407,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "scripting/timer-core.sp",
+			"settings":
+			{
+				"buffer_size": 24478,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripting/timer-worldrecord.sp",
+			"settings":
+			{
+				"buffer_size": 23748,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripting/include/timer-worldrecord.inc",
+			"settings":
+			{
+				"buffer_size": 536,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "scripting/timer-hud.sp",
+			"settings":
+			{
+				"buffer_size": 10094,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripting/timer-physics.sp",
+			"settings":
+			{
+				"buffer_size": 7978,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripting/timer-mapzones.sp",
+			"settings":
+			{
+				"buffer_size": 24702,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "scripting/timer-logging.sp",
+			"settings":
+			{
+				"buffer_size": 7113,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "Packages/SourcePawn/SourcePawn.sublime-build",
 	"command_palette":
@@ -68,6 +132,10 @@
 	},
 	"file_history":
 	[
+		"/C/Users/Alon/Documents/GitHub/timer/scripting/include/timer-physics.inc",
+		"/C/Users/Alon/Documents/GitHub/timer/scripting/include/timer-worldrecord.inc",
+		"/C/Users/Alon/Documents/GitHub/timer/scripting/timer-core.sp",
+		"/C/Users/Alon/Documents/GitHub/timer/scripting/timer-worldrecord.sp",
 		"/C/Users/Alon/Documents/GitHub/store/scripting/include/store/store-inventory.inc",
 		"/C/Users/Alon/Documents/GitHub/store/scripting/include/a.inc",
 		"/C/Users/Alon/Documents/GitHub/store/scripting/include/b.inc",
@@ -144,6 +212,25 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"DELETE FROM",
+			"g_hTimerDeleteRecordForward",
+			"g_hFinishRoundForward",
+			"delete from",
+			"MAX_AUTHID_LENGTH",
+			"iFpsMax",
+			"GetCurrentRank",
+			"Native_GetCurrentRank",
+			"Timer_GetCurrentRank",
+			"g_hFinishRoundForward",
+			"g_hFinishRoundForward\n",
+			"OnFinishRound",
+			"getbestrecord",
+			"getbestround",
+			"GetBestRecord",
+			"GetBestRound",
+			"Command_PersonalRecord",
+			"CreateDeleteMenu",
+			"Command_Delete",
 			"Command_PrintItemTypes",
 			"printtoserver",
 			"LoadItem",
@@ -252,26 +339,7 @@
 			"Store_GetUserItemCountCallback",
 			"Store_HasItem",
 			"getuseritems",
-			"HasItem",
-			"json_typeof",
-			"json_is_string",
-			"Handle:json_object_get(",
-			"stock json_object_get(",
-			"json_object_get(",
-			"json_object_get",
-			"json_object_get_string",
-			"json_object_get_float",
-			"json_array_get_float",
-			"position",
-			"g_SpriteModel",
-			"150",
-			"AddTrail",
-			"tcolor",
-			"tolor",
-			"AddTrail",
-			"TE_",
-			"g_game",
-			"dark"
+			"HasItem"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -289,8 +357,224 @@
 	"groups":
 	[
 		{
+			"selected": 2,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "scripting/include/timer.inc",
+					"settings":
+					{
+						"buffer_size": 6407,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								116,
+								116
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SourcePawn/sourcepawn.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "scripting/timer-core.sp",
+					"settings":
+					{
+						"buffer_size": 24478,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								15710,
+								15311
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SourcePawn/sourcepawn.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 8999.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "scripting/timer-worldrecord.sp",
+					"settings":
+					{
+						"buffer_size": 23748,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2084,
+								2084
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SourcePawn/sourcepawn.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 850.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "scripting/include/timer-worldrecord.inc",
+					"settings":
+					{
+						"buffer_size": 536,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								102,
+								124
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SourcePawn/sourcepawn.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "scripting/timer-hud.sp",
+					"settings":
+					{
+						"buffer_size": 10094,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								8584,
+								8584
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SourcePawn/sourcepawn.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 4081.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "scripting/timer-physics.sp",
+					"settings":
+					{
+						"buffer_size": 7978,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SourcePawn/sourcepawn.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "scripting/timer-mapzones.sp",
+					"settings":
+					{
+						"buffer_size": 24702,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								263,
+								263
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SourcePawn/sourcepawn.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "scripting/timer-logging.sp",
+					"settings":
+					{
+						"buffer_size": 7113,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SourcePawn/sourcepawn.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
 			]
 		}
 	],
