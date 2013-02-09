@@ -3,6 +3,7 @@
 #endif
 #define _timer_worldrecord_included
 
+forward OnTimerDeleteOneRecord(client, Float:time, const String:map[], jumps, difficulty, flashbangs);
 native Timer_ForceReloadWorldRecordCache();
 
 public SharedPlugin:__pl_timer_worldrecord = 

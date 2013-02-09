@@ -55,6 +55,8 @@ new Handle:g_hCvarShowFlashbangs = INVALID_HANDLE;
 new bool:g_bShowJumps = true;
 new bool:g_bShowFlashbangs = false;
 
+new Handle:g_hTimerDeleteRecordForward;
+
 public Plugin:myinfo =
 {
 	name        = "[Timer] World Record",
@@ -83,6 +85,8 @@ public OnPluginStart()
 	g_hCvarShowJumps = CreateConVar("timer_showjumps", "1", "Whether or not jumps will be shown in some of the WR menus.");
 	g_hCvarShowFlashbangs = CreateConVar("timer_showflashbangs", "0", "Whether or not flashbangs will be shown in some of the WR menus.");
 	
+	g_hTimerDeleteRecordForward = CreateGlobalForward("OnTimerDeleteOneRecord", ET_Event, Param_Cell, Param_Float, Param_String, Param_Cell, Param_Cell, Param_Cell);
+
 	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarShowFlashbangs, Action_OnSettingsChange);
 	
@@ -953,12 +957,48 @@ public MenuHandler_DeleteRecord(Handle:menu, MenuAction:action, param1, param2)
 		decl String:sInfo[32];		
 		GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
 
+		decl String:sQuery[256];
+		FormatEx(sQuery, sizeof(sQuery), "SELECT id, auth, time, map, jumps, physicsdifficulty, flashbangs FROM `round` WHERE id = %s", sInfo);	
 		
-		decl String:sQuery[64];
-		FormatEx(sQuery, sizeof(sQuery), "DELETE FROM `round` WHERE id = %s", sInfo);	
-
-		SQL_TQuery(g_hSQL, DeleteRecordCallback, sQuery, param1, DBPrio_High);
+		SQL_TQuery(g_hSQL, GetRecordInfoBeforeDelete, sQuery, param1, DBPrio_Normal);
 	}
+}
+
+public GetRecordInfoBeforeDelete(Handle:owner, Handle:hndl, const String:error[], any:client)
+{
+	if (hndl == INVALID_HANDLE)
+	{
+		Timer_LogError("SQL Error on GetRecordInfoBeforeDelete: %s", error);
+		return;
+	}
+
+	new id = SQL_FetchInt(hndl, 0);
+
+	decl String:auth[32];
+	SQL_FetchString(hndl, 1, auth, sizeof(auth));
+
+	new Float:time = SQL_FetchFloat(hndl, 2);
+
+	decl String:map[32];
+	SQL_FetchString(hndl, 3, map, sizeof(map));	
+
+	new jumps = SQL_FetchInt(hndl, 4);
+	new difficulty = SQL_FetchInt(hndl, 5);
+	new flashbangs = SQL_FetchInt(hndl, 6);
+
+	Call_StartForward(g_hTimerDeleteRecordForward);
+	Call_PushCell(client);
+	Call_PushFloat(time);
+	Call_PushString(map);
+	Call_PushCell(jumps);
+	Call_PushCell(difficulty);
+	Call_PushCell(flashbangs);
+	Call_Finish();
+
+	decl String:sQuery[64];
+	FormatEx(sQuery, sizeof(sQuery), "DELETE FROM `round` WHERE id = %d", id);	
+
+	SQL_TQuery(g_hSQL, DeleteRecordCallback, sQuery, client, DBPrio_High);
 }
 
 public DeleteRecordCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
