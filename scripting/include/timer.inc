@@ -5,7 +5,7 @@
 
 #pragma semicolon 1
 
-#define PL_VERSION "1.0.6"
+#define PL_VERSION "1.0.7"
 #define PLUGIN_PREFIX "\x0700FFBF[Timer] \x01%t"
 
 #define MAX_MAPNAME_LENGTH	32
