@@ -396,11 +396,11 @@ public AdminMenu_CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuOb
 {
 	if (action == TopMenuAction_DisplayTitle)
 	{
-		FormatEx(buffer, maxlength, "%t", "Timer Management");
+		FormatEx(buffer, maxlength, "%T", "Timer Management", param);
 	} 
 	else if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Timer Management");
+		FormatEx(buffer, maxlength, "%T", "Timer Management", param);
 	}
 }
 
@@ -408,7 +408,7 @@ public AdminMenu_DeleteMapRecords(Handle:topmenu, TopMenuAction:action, TopMenuO
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Delete Map Records");
+		FormatEx(buffer, maxlength, "%T", "Delete Map Records", param);
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
@@ -424,7 +424,7 @@ public AdminMenu_DeleteRecord(Handle:topmenu, TopMenuAction:action, TopMenuObjec
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Delete Player Record");
+		FormatEx(buffer, maxlength, "%T", "Delete Player Record", param);
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
