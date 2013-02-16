@@ -416,6 +416,7 @@ public AdminMenu_DeleteMapRecords(Handle:topmenu, TopMenuAction:action, TopMenuO
 		GetCurrentMap(sMap, sizeof(sMap));
 		
 		DeleteMapRecords(sMap);
+		RedisplayAdminMenu(topmenu, param);
 	}
 }
 
@@ -466,6 +467,7 @@ DisplaySelectPlayerMenu(client)
 
 	if (items == 0)
 	{
+		RedisplayAdminMenu(hTopMenu, client);
 		CloseHandle(menu);
 		return;
 	}
@@ -629,7 +631,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		SQL_TQuery(hndl, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
 	}
 
-	g_hSQL = CloneHandle(hndl);
+	g_hSQL = hndl;
 
 	g_iReconnectCounter = 1;
 
@@ -739,6 +741,10 @@ CreateWRMenu(client, difficulty)
 		else
 		{
 			PrintToChat(client, PLUGIN_PREFIX, "No Difficulty Records");
+			if (g_bTimerPhysics)
+			{
+				CreateDifficultyMenu(client);
+			}
 		}
 		
 		CloseHandle(menu);
