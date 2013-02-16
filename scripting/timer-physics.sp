@@ -42,8 +42,12 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	RegPluginLibrary("timer-physics");
 	
 	CreateNative("Timer_GetClientDifficulty", Native_GetClientDifficulty);
+	CreateNative("Timer_SetClientDifficulty", Native_SetClientDifficulty);
 	CreateNative("Timer_GetDifficultyName", Native_GetDifficultyName);
 	CreateNative("Timer_AutoBunny", Native_AutoBunny);
+	CreateNative("Timer_GetDifficultyCount", Native_GetDifficultyCount);
+	CreateNative("Timer_GetDifficultyDetails", Native_GetDifficultyDetails);
+	CreateNative("Timer_GetDifficultyDetailsByIndex", Native_GetDifficultyDetailsByIndex);
 
 	return APLRes_Success;
 }
@@ -83,6 +87,20 @@ public OnLibraryAdded(const String:name[])
 	}	
 }
 
+public OnClientCookiesCached(client)
+{
+	new String:sBuffer[10];
+	GetClientCookie(client, g_cookie, sBuffer, sizeof(sBuffer));
+	if (StrEqual(sBuffer, ""))
+	{
+		g_iClientDifficulty[client] = g_iDefaultDifficulty;
+	}
+	else
+	{
+		g_iClientDifficulty[client] = StringToInt(sBuffer);
+	}
+}
+
 public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const String:newvalue[])
 {
 	if (cvar == g_hCvarJoinTeamDifficulty)
@@ -94,18 +112,6 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-
-	new String:sBuffer[10];
-	GetClientCookie(client, g_cookie, sBuffer, sizeof(sBuffer));
-
-	if (StrEqual(sBuffer, ""))
-	{
-		g_iClientDifficulty[client] = g_iDefaultDifficulty;
-	}
-	else
-	{
-		g_iClientDifficulty[client] = StringToInt(sBuffer);
-	}
 	
 	ApplyDifficulty(client);
 }
@@ -218,7 +224,8 @@ public MenuHandler_Difficulty(Handle:menu, MenuAction:action, param1, param2)
 		GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
 		
 		g_iClientDifficulty[param1] = StringToInt(sInfo);
-		SetClientCookie(param1, g_cookie, sInfo);
+		if(AreClientCookiesCached(param1))
+			SetClientCookie(param1, g_cookie, sInfo);
 		ApplyDifficulty(param1);
 
 		Timer_Restart(param1);
@@ -301,6 +308,35 @@ public Native_GetClientDifficulty(Handle:plugin, numParams)
 	return g_iClientDifficulty[client];
 }
 
+public Native_SetClientDifficulty(Handle:plugin, numParams)
+{
+	new client = GetNativeCell(1);
+	new difficulty = GetNativeCell(2);
+	
+	new iDifficultyIndex = -1;
+	for (new t = 0; t < g_difficultyCount; t++)
+	{
+		if (g_difficulties[t][Id] == difficulty)
+		{
+			iDifficultyIndex = t;
+			break;
+		}
+	}
+	
+	if(iDifficultyIndex == -1)
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Bad difficulty id %d.", difficulty);
+		return;
+	}
+	
+	g_iClientDifficulty[client] = difficulty;
+	decl String:sBuffer[10];
+	IntToString(difficulty, sBuffer, sizeof(sBuffer));
+	if(AreClientCookiesCached(client))
+		SetClientCookie(client, g_cookie, sBuffer);
+	ApplyDifficulty(client);
+}
+
 public Native_GetDifficultyName(Handle:plugin, numParams)
 {
 	new difficulty = GetNativeCell(1);
@@ -323,4 +359,53 @@ public Native_AutoBunny(Handle:plugin, numParams)
 {
 	new client = GetNativeCell(1);
 	return g_bAuto[client];
+}
+
+public Native_GetDifficultyCount(Handle:plugin, numParams)
+{
+	return g_difficultyCount;
+}
+
+public Native_GetDifficultyDetails(Handle:plugin, numParams)
+{
+	new difficulty = GetNativeCell(1);
+	
+	new iDifficultyIndex = -1;
+	for (new t = 0; t < g_difficultyCount; t++)
+	{
+		if (g_difficulties[t][Id] == difficulty)
+		{
+			iDifficultyIndex = t;
+			break;
+		}
+	}
+	
+	if(iDifficultyIndex == -1)
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Bad difficulty id %d.", difficulty);
+		return;
+	}
+	
+	new iLength = _:PhysicsDifficulty;
+	new iCopy[iLength];
+	for(new i=0;i<iLength;i++)
+		iCopy[i] = g_difficulties[iDifficultyIndex][i];
+	SetNativeArray(2, iCopy, iLength);
+}
+
+public Native_GetDifficultyDetailsByIndex(Handle:plugin, numParams)
+{
+	new iDifficultyIndex = GetNativeCell(1);
+	
+	if(iDifficultyIndex < 0 || iDifficultyIndex >= g_difficultyCount)
+	{
+		ThrowNativeError(SP_ERROR_NATIVE, "Bad difficulty index %d.", iDifficultyIndex);
+		return;
+	}
+	
+	new iLength = _:PhysicsDifficulty;
+	new iCopy[iLength];
+	for(new i=0;i<iLength;i++)
+		iCopy[i] = g_difficulties[iDifficultyIndex][i];
+	SetNativeArray(2, iCopy, iLength);
 }
