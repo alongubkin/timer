@@ -399,11 +399,11 @@ public AdminMenu_CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuOb
 {
 	if (action == TopMenuAction_DisplayTitle) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Timer Management");
+		FormatEx(buffer, maxlength, "%T", "Timer Management", param);
 	}
 	else if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Timer Management");
+		FormatEx(buffer, maxlength, "%T", "Timer Management", param);
 	}
 }
 
@@ -411,7 +411,7 @@ public AdminMenu_AddMapZone(Handle:topmenu, TopMenuAction:action, TopMenuObject:
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Add Map Zone");
+		FormatEx(buffer, maxlength, "%T", "Add Map Zone", param);
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
@@ -425,7 +425,7 @@ public AdminMenu_RemoveMapZone(Handle:topmenu, TopMenuAction:action, TopMenuObje
 {
 	if (action == TopMenuAction_DisplayOption)
 	{
-		FormatEx(buffer, maxlength, "%t", "Delete Map Zone");
+		FormatEx(buffer, maxlength, "%T", "Delete Map Zone", param);
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
@@ -437,7 +437,7 @@ public AdminMenu_RemoveAllMapZones(Handle:topmenu,  TopMenuAction:action, TopMen
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Delete All Map Zones");
+		FormatEx(buffer, maxlength, "%T", "Delete All Map Zones", param);
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
