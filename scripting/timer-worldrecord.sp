@@ -14,21 +14,6 @@
 #define UPDATE_URL "http://dl.dropbox.com/u/16304603/timer/updateinfo-timer-worldrecord.txt"
 
 /**
-* Global Enums
-*/
-enum RecordCache
-{
-	Id,
-	String:Name[MAX_NAME_LENGTH],
-	String:TimeString[16],
-	Jumps,
-	Flashbangs,
-	String:RecordPhysicsDifficulty[32],
-	String:Auth[MAX_AUTHID_LENGTH],
-	bool:Ignored
-}
-
-/**
 * Global Variables
 */
 new Handle:g_hSQL;
@@ -56,6 +41,7 @@ new bool:g_bShowJumps = true;
 new bool:g_bShowFlashbangs = false;
 
 new Handle:g_hTimerDeleteRecordForward;
+new Handle:g_hTimerRecordCachedForward;
 
 public Plugin:myinfo =
 {
@@ -71,6 +57,7 @@ public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
 	RegPluginLibrary("timer-worldrecord");
 	
 	CreateNative("Timer_ForceReloadWorldRecordCache", Native_ForceReloadWorldRecordCache);
+	CreateNative("Timer_GetWorldRecordForDifficulty", Native_GetWorldRecordForDifficulty);
 
 	return APLRes_Success;
 }
@@ -86,6 +73,7 @@ public OnPluginStart()
 	g_hCvarShowFlashbangs = CreateConVar("timer_showflashbangs", "0", "Whether or not flashbangs will be shown in some of the WR menus.");
 	
 	g_hTimerDeleteRecordForward = CreateGlobalForward("OnTimerDeleteOneRecord", ET_Event, Param_Cell, Param_Float, Param_String, Param_Cell, Param_Cell, Param_Cell);
+	g_hTimerRecordCachedForward = CreateGlobalForward("OnTimerWorldRecordCacheLoaded", ET_Ignore);
 
 	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarShowFlashbangs, Action_OnSettingsChange);
@@ -408,11 +396,11 @@ public AdminMenu_CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuOb
 {
 	if (action == TopMenuAction_DisplayTitle)
 	{
-		FormatEx(buffer, maxlength, "%t", "Timer Management");
+		FormatEx(buffer, maxlength, "%T", "Timer Management", param);
 	} 
 	else if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Timer Management");
+		FormatEx(buffer, maxlength, "%T", "Timer Management", param);
 	}
 }
 
@@ -420,7 +408,7 @@ public AdminMenu_DeleteMapRecords(Handle:topmenu, TopMenuAction:action, TopMenuO
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Delete Map Records");
+		FormatEx(buffer, maxlength, "%T", "Delete Map Records", param);
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
@@ -428,6 +416,7 @@ public AdminMenu_DeleteMapRecords(Handle:topmenu, TopMenuAction:action, TopMenuO
 		GetCurrentMap(sMap, sizeof(sMap));
 		
 		DeleteMapRecords(sMap);
+		RedisplayAdminMenu(topmenu, param);
 	}
 }
 
@@ -435,7 +424,7 @@ public AdminMenu_DeleteRecord(Handle:topmenu, TopMenuAction:action, TopMenuObjec
 {
 	if (action == TopMenuAction_DisplayOption) 
 	{
-		FormatEx(buffer, maxlength, "%t", "Delete Player Record");
+		FormatEx(buffer, maxlength, "%T", "Delete Player Record", param);
 	} 
 	else if (action == TopMenuAction_SelectOption) 
 	{
@@ -478,6 +467,7 @@ DisplaySelectPlayerMenu(client)
 
 	if (items == 0)
 	{
+		RedisplayAdminMenu(hTopMenu, client);
 		CloseHandle(menu);
 		return;
 	}
@@ -575,7 +565,8 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 	{
 		g_cache[g_cacheCount][Id] = SQL_FetchInt(hndl, 0);
 		SQL_FetchString(hndl, 1, g_cache[g_cacheCount][Auth], MAX_AUTHID_LENGTH);
-		Timer_SecondsToTime(SQL_FetchFloat(hndl, 2), g_cache[g_cacheCount][TimeString], 16, true);
+		g_cache[g_cacheCount][Time] = SQL_FetchFloat(hndl, 2);
+		Timer_SecondsToTime(g_cache[g_cacheCount][Time], g_cache[g_cacheCount][TimeString], 16, true);
 		g_cache[g_cacheCount][Jumps] = SQL_FetchInt(hndl, 3);
 		g_cache[g_cacheCount][RecordPhysicsDifficulty] = SQL_FetchInt(hndl, 4);
 		SQL_FetchString(hndl, 5, g_cache[g_cacheCount][Name], MAX_NAME_LENGTH);
@@ -588,6 +579,9 @@ public RefreshCacheCallback(Handle:owner, Handle:hndl, const String:error[], any
 	Timer_ForceReloadBestRoundCache();
 	
 	Timer_GetTotalRank(true);
+	
+	Call_StartForward(g_hTimerRecordCachedForward);
+	Call_Finish();
 	
 	g_bCacheLoaded = true;
 }
@@ -637,7 +631,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 		SQL_TQuery(hndl, SetNamesCallback, "SET NAMES  'utf8'", _, DBPrio_High);
 	}
 
-	g_hSQL = CloneHandle(hndl);
+	g_hSQL = hndl;
 
 	g_iReconnectCounter = 1;
 
@@ -747,6 +741,10 @@ CreateWRMenu(client, difficulty)
 		else
 		{
 			PrintToChat(client, PLUGIN_PREFIX, "No Difficulty Records");
+			if (g_bTimerPhysics)
+			{
+				CreateDifficultyMenu(client);
+			}
 		}
 		
 		CloseHandle(menu);
@@ -1015,4 +1013,22 @@ public DeleteRecordCallback(Handle:owner, Handle:hndl, const String:error[], any
 public Native_ForceReloadWorldRecordCache(Handle:plugin, numParams)
 {
 	RefreshCache();
+}
+
+public Native_GetWorldRecordForDifficulty(Handle:plugin, numParams)
+{
+	new difficulty = GetNativeCell(1);
+	for(new cache=0;cache<g_cacheCount;cache++)
+	{
+		if (difficulty == -1 || g_cache[cache][RecordPhysicsDifficulty] == difficulty)
+		{
+			new iLength = _:RecordCache;
+			new iCopy[iLength];
+			for(new i=0;i<iLength;i++)
+				iCopy[i] = g_cache[cache][i];
+			SetNativeArray(2, iCopy, iLength);
+			return true;
+		}
+	}
+	return false;
 }
