@@ -262,7 +262,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	{
 		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT))
 		{
-			return Plugin_Handled;
+			buttons &= ~(IN_MOVELEFT|IN_MOVERIGHT);
 		}
 	}
 	
@@ -270,7 +270,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	{
 		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_BACK))
 		{
-			return Plugin_Handled;
+			buttons &= ~IN_BACK;
 		}
 	}
 	
@@ -278,7 +278,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 	{
 		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_FORWARD))
 		{
-			return Plugin_Handled;
+			buttons &= ~IN_FORWARD;
 		}
 	}
 	
