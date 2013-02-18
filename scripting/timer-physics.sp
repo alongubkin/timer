@@ -258,27 +258,32 @@ ApplyDifficulty(client)
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {	
+	static Float:oldVel[MAXPLAYERS+1][3];
+	new bool:bChanged;
 	if (g_bPreventAD[client] && IsPlayerAlive(client))
 	{
-		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT))
+		if (!(GetEntityFlags(client) & FL_ONGROUND) && GetEntityMoveType(client) != MOVETYPE_LADDER && (buttons & IN_MOVELEFT || buttons & IN_MOVERIGHT))
 		{
 			buttons &= ~(IN_MOVELEFT|IN_MOVERIGHT);
+			bChanged = true;
 		}
 	}
 	
 	if (g_bPreventBack[client] && IsPlayerAlive(client))
 	{
-		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_BACK))
+		if (!(GetEntityFlags(client) & FL_ONGROUND) && GetEntityMoveType(client) != MOVETYPE_LADDER && (buttons & IN_BACK))
 		{
 			buttons &= ~IN_BACK;
+			bChanged = true;
 		}
 	}
 	
 	if (g_bPreventForward[client] && IsPlayerAlive(client))
 	{
-		if (!(GetEntityFlags(client) & FL_ONGROUND) && (buttons & IN_FORWARD))
+		if (!(GetEntityFlags(client) & FL_ONGROUND) && GetEntityMoveType(client) != MOVETYPE_LADDER && (buttons & IN_FORWARD))
 		{
 			buttons &= ~IN_FORWARD;
+			bChanged = true;
 		}
 	}
 	
@@ -299,7 +304,16 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		}
 	}
 	
-	return Plugin_Continue;
+	if(bChanged)
+	{
+		vel = oldVel[client];
+		return Plugin_Changed;
+	}
+	else
+	{
+		oldVel[client] = vel;
+		return Plugin_Continue;
+	}
 }
 
 public Native_GetClientDifficulty(Handle:plugin, numParams)
