@@ -137,6 +137,11 @@ public OnMapStart()
 
 public OnClientAuthorized(client, const String:auth[])
 {
+	if(IsClientSourceTV(client) || IsFakeClient(client))
+	{
+		return;
+	}
+	
 	decl String:sName[MAX_NAME_LENGTH];
 	GetClientName(client, sName, sizeof(sName));
 	
