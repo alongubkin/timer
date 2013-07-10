@@ -137,7 +137,7 @@ public OnMapStart()
 
 public OnClientAuthorized(client, const String:auth[])
 {
-	if(IsClientSourceTV(client) || IsFakeClient(client))
+	if (IsClientSourceTV(client) || IsFakeClient(client))
 	{
 		return;
 	}
@@ -975,33 +975,36 @@ public GetRecordInfoBeforeDelete(Handle:owner, Handle:hndl, const String:error[]
 		return;
 	}
 
-	new id = SQL_FetchInt(hndl, 0);
+	if (SQL_FetchRow(hndl))
+	{
+		new id = SQL_FetchInt(hndl, 0);
 
-	decl String:auth[32];
-	SQL_FetchString(hndl, 1, auth, sizeof(auth));
+		decl String:auth[32];
+		SQL_FetchString(hndl, 1, auth, sizeof(auth));
 
-	new Float:time = SQL_FetchFloat(hndl, 2);
+		new Float:time = SQL_FetchFloat(hndl, 2);
 
-	decl String:map[32];
-	SQL_FetchString(hndl, 3, map, sizeof(map));	
+		decl String:map[32];
+		SQL_FetchString(hndl, 3, map, sizeof(map));	
 
-	new jumps = SQL_FetchInt(hndl, 4);
-	new difficulty = SQL_FetchInt(hndl, 5);
-	new flashbangs = SQL_FetchInt(hndl, 6);
+		new jumps = SQL_FetchInt(hndl, 4);
+		new difficulty = SQL_FetchInt(hndl, 5);
+		new flashbangs = SQL_FetchInt(hndl, 6);
 
-	Call_StartForward(g_hTimerDeleteRecordForward);
-	Call_PushCell(client);
-	Call_PushFloat(time);
-	Call_PushString(map);
-	Call_PushCell(jumps);
-	Call_PushCell(difficulty);
-	Call_PushCell(flashbangs);
-	Call_Finish();
+		Call_StartForward(g_hTimerDeleteRecordForward);
+		Call_PushCell(client);
+		Call_PushFloat(time);
+		Call_PushString(map);
+		Call_PushCell(jumps);
+		Call_PushCell(difficulty);
+		Call_PushCell(flashbangs);
+		Call_Finish();
 
-	decl String:sQuery[64];
-	FormatEx(sQuery, sizeof(sQuery), "DELETE FROM `round` WHERE id = %d", id);	
+		decl String:sQuery[64];
+		FormatEx(sQuery, sizeof(sQuery), "DELETE FROM `round` WHERE id = %d", id);	
 
-	SQL_TQuery(g_hSQL, DeleteRecordCallback, sQuery, client, DBPrio_High);
+		SQL_TQuery(g_hSQL, DeleteRecordCallback, sQuery, client, DBPrio_High);
+	}
 }
 
 public DeleteRecordCallback(Handle:owner, Handle:hndl, const String:error[], any:client)
