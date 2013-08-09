@@ -999,17 +999,10 @@ stock SpawnTriggerMultipleInBox(iZoneIndex)
 	new iEffects = GetEntProp(iEnt, Prop_Send, "m_fEffects");
 	iEffects |= 0x020;
 	SetEntProp(iEnt, Prop_Send, "m_fEffects", iEffects);
-	if (g_mapZones[iZoneIndex][Type] == Start)
-	{
-		HookSingleEntityOutput(iEnt, "OnStartTouch", EntOut_Touch);
-		HookSingleEntityOutput(iEnt, "OnEndTouch", EntOut_Touch);
-		HookSingleEntityOutput(iEnt, "OnTrigger", EntOut_Touch);
-	}
-	else
-	{
-		HookSingleEntityOutput(iEnt, "OnStartTouch", EntOut_Touch);
-		HookSingleEntityOutput(iEnt, "OnEndTouch", EntOut_Touch);
-	}
+	
+	HookSingleEntityOutput(iEnt, "OnStartTouch", EntOut_Touch);
+	HookSingleEntityOutput(iEnt, "OnEndTouch", EntOut_Touch);
+	HookSingleEntityOutput(iEnt, "OnTrigger", EntOut_Touch);
 }
 
 public EntOut_Touch(const String:output[], caller, activator, Float:delay)
