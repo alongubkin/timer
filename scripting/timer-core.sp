@@ -318,8 +318,8 @@ bool:StartTimer(client)
 	}
 	
 	g_timers[client][Enabled] = true;
-	g_timers[client][StartTime] = GetGameTime();
-	g_timers[client][EndTime] = -1.0;
+	g_timers[client][StartTime] = GetEngineTime();
+	g_timers[client][EndTime] = 0.0;
 	g_timers[client][Jumps] = 0;
 	g_timers[client][Flashbangs] = 0;
 	g_timers[client][IsPaused] = false;
@@ -348,7 +348,7 @@ bool:StopTimer(client, bool:stopPaused = true)
 	}
 	
 	g_timers[client][Enabled] = false;
-	g_timers[client][EndTime] = GetGameTime();
+	g_timers[client][EndTime] = GetEngineTime();
 
 	Call_StartForward(g_hTimerStoppedForward);
 	Call_PushCell(client);
@@ -384,7 +384,7 @@ bool:PauseTimer(client)
 	}
 	
 	g_timers[client][IsPaused] = true;
-	g_timers[client][PauseStartTime] = GetGameTime();
+	g_timers[client][PauseStartTime] = GetEngineTime();
 	
 	new Float:vOrigin[3];
 	GetEntPropVector(client, Prop_Data, "m_vecOrigin", vOrigin);
@@ -418,7 +418,7 @@ bool:ResumeTimer(client)
 	}
 	
 	g_timers[client][IsPaused] = false;
-	g_timers[client][PauseTotalTime] += GetGameTime() - g_timers[client][PauseStartTime];
+	g_timers[client][PauseTotalTime] += GetEngineTime() - g_timers[client][PauseStartTime];
 	
 	new Float:vOrigin[3];
 	Array_Copy(g_timers[client][PauseLastOrigin], vOrigin, 3);
@@ -458,7 +458,7 @@ bool:GetBestRecord(client, const String:map[] = "", difficulty = -1, &Float:time
 	GetClientAuthString(client, sAuthID, sizeof(sAuthID));
 	
 	decl String:sQuery[255], String:sError[255];
-	Format(sQuery, sizeof(sQuery), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s'", sAuthID);
+	FormatEx(sQuery, sizeof(sQuery), "SELECT id, map, auth, time, jumps, flashbangs FROM round WHERE auth = '%s'", sAuthID);
 
 	if (!StrEqual(map, ""))
 	{
@@ -688,7 +688,7 @@ Float:CalculateTime(client)
 	}
 	else
 	{
-		return (g_timers[client][Enabled] ? GetGameTime() : g_timers[client][EndTime]) - g_timers[client][StartTime] - g_timers[client][PauseTotalTime];
+		return (g_timers[client][Enabled] ? GetEngineTime() : g_timers[client][EndTime]) - g_timers[client][StartTime] - g_timers[client][PauseTotalTime];
 	}
 }
 

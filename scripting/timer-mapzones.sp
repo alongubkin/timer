@@ -87,6 +87,8 @@ public OnPluginStart()
 	
 	g_bStopPrespeed = GetConVarBool(g_hCvarStopPrespeed);
 	g_bDrawMapZones = GetConVarBool(g_hCvarDrawMapZones);
+
+	HookEvent("round_start", Event_OnRoundStart, EventHookMode_Post);
 	
 	new Handle:topmenu;
 	if (LibraryExists("adminmenu") && ((topmenu = GetAdminTopMenu()) != INVALID_HANDLE))
@@ -106,8 +108,21 @@ public OnMapStart()
 	StringToLower(g_sCurrentMap);
 	
 	g_precacheLaser = PrecacheModel("materials/sprites/laserbeam.vmt");
+	PrecacheModel("models/error.mdl", true);
 	
 	LoadMapZones();
+}
+
+public Action:Event_OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	KillTriggers();
+	
+	for (new i = 0; i < g_mapZonesCount; i++)
+	{
+		SpawnTriggerMultipleInBox(i);
+	}
+	
+	return Plugin_Continue;
 }
 
 public OnLibraryAdded(const String:name[])
@@ -266,6 +281,8 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 
 	g_mapZonesCount = 0;
 
+	KillTriggers();
+
 	while (SQL_FetchRow(hndl))
 	{
 		strcopy(g_mapZones[g_mapZonesCount][Map], MAX_MAPNAME_LENGTH, g_sCurrentMap);
@@ -281,6 +298,8 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 		g_mapZones[g_mapZonesCount][Point2][1] = SQL_FetchFloat(hndl, 6);
 		g_mapZones[g_mapZonesCount][Point2][2] = SQL_FetchFloat(hndl, 7);
 		
+		SpawnTriggerMultipleInBox(g_mapZonesCount);	
+		
 		g_mapZonesCount++;
 	}
 	
@@ -288,8 +307,6 @@ public LoadMapZonesCallback(Handle:owner, Handle:hndl, const String:error[], any
 	{
 		CreateTimer(2.0, DrawZones, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 	}
-	
-	CreateTimer(0.1, PlayerTracker, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public OnTimerRestart(client)
@@ -720,76 +737,6 @@ public Action:DrawZones(Handle:timer)
 	return Plugin_Continue;
 }
 
-public Action:PlayerTracker(Handle:timer)
-{
-	for (new client = 1; client <= MaxClients; client++)
-	{
-		if (IsClientInGame(client) && IsPlayerAlive(client) && !IsClientObserver(client))
-		{
-			new Float:vOrigin[3];
-			GetClientAbsOrigin(client, vOrigin);
-			
-			for (new zone = 0; zone < g_mapZonesCount; zone++)
-			{
-				if (IsInsideBox(vOrigin, g_mapZones[zone][Point1][0], g_mapZones[zone][Point1][1], g_mapZones[zone][Point1][2], g_mapZones[zone][Point2][0], g_mapZones[zone][Point2][1], g_mapZones[zone][Point2][2]))
-				{
-					if (g_mapZones[zone][Type] == Start)
-					{
-						Timer_Stop(client, false);
-						Timer_Start(client);
-						
-						if (g_bStopPrespeed)
-						{
-							StopPrespeed(client);
-						}
-					}
-					else if (g_mapZones[zone][Type] == End)
-					{
-						if (Timer_Stop(client, false))
-						{
-							new bool:enabled = false;
-							new jumps, fpsmax, flashbangs;
-							new Float:time;
-
-							if (Timer_GetClientTimer(client, enabled, time, jumps, fpsmax, flashbangs))
-							{
-								new difficulty = 0;
-								if (g_bTimerPhysics)
-								{
-									difficulty = Timer_GetClientDifficulty(client);
-								}
-
-								Timer_FinishRound(client, g_sCurrentMap, time, jumps, flashbangs, difficulty, fpsmax);
-								
-								if (g_bTimerWorldRecord)
-								{
-									Timer_ForceReloadWorldRecordCache();
-								}
-							}
-						}
-					}
-					else if (g_mapZones[zone][Type] == Glitch1)
-					{
-						Timer_Stop(client);
-					}
-					else if (g_mapZones[zone][Type] == Glitch2)
-					{
-						Timer_Restart(client);
-					}
-					else if (g_mapZones[zone][Type] == Glitch3)
-					{
-						CS_RespawnPlayer(client);
-					}
-
-					break;
-				}	
-			}
-		}		
-	}
-
-	return Plugin_Continue;
-}
-
 IsInsideBox(Float:fPCords[3], Float:fbsx, Float:fbsy, Float:fbsz, Float:fbex, Float:fbey, Float:fbez)
 {
 	new Float:fpx = fPCords[0];
@@ -909,7 +856,7 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	lefttopfront[1] = fFrom[1];
 	if(flat)
 	{
-		lefttopfront[2] = fFrom[2]+2;
+		lefttopfront[2] = fFrom[2]+3;
 	}
 	else
 	{
@@ -921,7 +868,7 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	righttopfront[1] = fFrom[1];
 	if(flat)
 	{
-		righttopfront[2] = fFrom[2]+2;
+		righttopfront[2] = fFrom[2]+3;
 	}
 	else
 	{
@@ -934,7 +881,7 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	fLeftTopBack[1] = fTo[1];
 	if(flat)
 	{
-		fLeftTopBack[2] = fFrom[2]+2;
+		fLeftTopBack[2] = fFrom[2]+3;
 	}
 	else
 	{
@@ -946,7 +893,7 @@ DrawBox(Float:fFrom[3], Float:fTo[3], Float:fLife, color[4], bool:flat)
 	fRightTopBack[1] = fTo[1];
 	if(flat)
 	{
-		fRightTopBack[2] = fFrom[2]+2;
+		fRightTopBack[2] = fFrom[2]+3;
 	}
 	else
 	{
@@ -995,4 +942,184 @@ StopPrespeed(client)
 	{
 		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, Float:{0.0, 0.0, 0.0});
 	}	
+}
+
+stock SpawnTriggerMultipleInBox(iZoneIndex)
+{
+	new Float:fMiddle[3], Float:fMins[3], Float:fMaxs[3];
+	
+	decl String:sZoneName[128];
+	fMins[0] = g_mapZones[iZoneIndex][Point1][0];
+	fMaxs[0] = g_mapZones[iZoneIndex][Point2][0];
+	fMins[1] = g_mapZones[iZoneIndex][Point1][1];
+	fMaxs[1] = g_mapZones[iZoneIndex][Point2][1];
+	fMins[2] = g_mapZones[iZoneIndex][Point1][2];
+	fMaxs[2] = g_mapZones[iZoneIndex][Point2][2];
+
+	new iEnt = CreateEntityByName("trigger_multiple");
+	
+	DispatchKeyValue(iEnt, "spawnflags", "64");
+	Format(sZoneName, sizeof(sZoneName), "timer_zone %d", iZoneIndex);
+	DispatchKeyValue(iEnt, "targetname", sZoneName);
+	DispatchKeyValue(iEnt, "wait", "0");
+	
+	DispatchSpawn(iEnt);
+	ActivateEntity(iEnt);
+	SetEntProp(iEnt, Prop_Data, "m_spawnflags", 64 );
+	
+	GetMiddleOfABox(fMins, fMaxs, fMiddle);
+	
+	TeleportEntity(iEnt, fMiddle, NULL_VECTOR, NULL_VECTOR);
+	SetEntityModel(iEnt, "models/error.mdl");
+	
+	fMins[0] = fMins[0] - fMiddle[0];
+	if(fMins[0] > 0.0)
+	fMins[0] *= -1.0;
+	fMins[1] = fMins[1] - fMiddle[1];
+	if(fMins[1] > 0.0)
+	fMins[1] *= -1.0;
+	fMins[2] = fMins[2] - fMiddle[2];
+	if(fMins[2] > 0.0)
+	fMins[2] *= -1.0;
+	
+	fMaxs[0] = fMaxs[0] - fMiddle[0];
+	if(fMaxs[0] < 0.0)
+	fMaxs[0] *= -1.0;
+	fMaxs[1] = fMaxs[1] - fMiddle[1];
+	if(fMaxs[1] < 0.0)
+	fMaxs[1] *= -1.0;
+	fMaxs[2] = fMaxs[2] - fMiddle[2];
+	if(fMaxs[2] < 0.0)
+	fMaxs[2] *= -1.0;
+	
+	SetEntPropVector(iEnt, Prop_Send, "m_vecMins", fMins);
+	SetEntPropVector(iEnt, Prop_Send, "m_vecMaxs", fMaxs);
+	SetEntProp(iEnt, Prop_Send, "m_nSolidType", 2);
+	
+	new iEffects = GetEntProp(iEnt, Prop_Send, "m_fEffects");
+	iEffects |= 0x020;
+	SetEntProp(iEnt, Prop_Send, "m_fEffects", iEffects);
+	if (g_mapZones[iZoneIndex][Type] == Start)
+	{
+		HookSingleEntityOutput(iEnt, "OnStartTouch", EntOut_Touch);
+		HookSingleEntityOutput(iEnt, "OnEndTouch", EntOut_Touch);
+		HookSingleEntityOutput(iEnt, "OnTrigger", EntOut_Touch);
+	}
+	else
+	{
+		HookSingleEntityOutput(iEnt, "OnStartTouch", EntOut_Touch);
+	}
+}
+
+public EntOut_Touch(const String:output[], caller, activator, Float:delay)
+{
+	if (activator < 1 || activator > MaxClients || !IsPlayerAlive(activator))
+	{
+		return;
+	}
+	
+	decl String:sTargetName[256];
+	GetEntPropString(caller, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
+	ReplaceString(sTargetName, sizeof(sTargetName), "timer_zone ", "");
+	new zoneid = StringToInt(sTargetName);
+
+	if (g_mapZones[zoneid][Type] == Start)
+	{
+		Timer_Stop(activator, false);
+		Timer_Start(activator);
+		
+		if (g_bStopPrespeed)
+		{
+			StopPrespeed(activator);
+		}
+	}
+	else if (g_mapZones[zoneid][Type] == End)
+	{
+		if (Timer_Stop(activator, false))
+		{
+			new bool:enabled = false;
+			new jumps, fpsmax, flashbangs;
+			new Float:time;
+
+			if (Timer_GetClientTimer(activator, enabled, time, jumps, fpsmax, flashbangs))
+			{		
+				new difficulty = 0;
+				if (g_bTimerPhysics)
+				{
+					difficulty = Timer_GetClientDifficulty(activator);
+				}
+
+				Timer_FinishRound(activator, g_sCurrentMap, time, jumps, flashbangs, difficulty, fpsmax);
+				
+				if (g_bTimerWorldRecord)
+				{
+					Timer_ForceReloadWorldRecordCache();
+				}
+			}
+		}
+	}					
+	else if (g_mapZones[zoneid][Type] == Glitch1)
+	{
+		Timer_Stop(activator);
+	}
+	else if (g_mapZones[zoneid][Type] == Glitch2)
+	{
+		Timer_Restart(activator);
+	}
+	else if (g_mapZones[zoneid][Type] == Glitch3)
+	{
+		CS_RespawnPlayer(activator);
+	}
+}
+
+
+stock KillTriggerEntity(iZoneIndex)
+{
+	decl String:sZoneName[128];
+	Format(sZoneName, sizeof(sZoneName), "timer_zone %d", iZoneIndex);
+	decl String:sClassName[256];
+
+	new zone = -1;
+	while ((zone = FindEntityByClassname(zone, "trigger_multiple")) != INVALID_ENT_REFERENCE)
+	{
+		if (IsValidEntity(zone)
+				&& GetEntPropString(zone, Prop_Data, "m_iName", sClassName, sizeof(sClassName))
+				&& StrEqual(sClassName, sZoneName, false))
+		{
+			UnhookSingleEntityOutput(zone, "OnStartTouch", EntOut_Touch);
+			UnhookSingleEntityOutput(zone, "OnEndTouch", EntOut_Touch);
+			UnhookSingleEntityOutput(zone, "OnTrigger", EntOut_Touch);
+			AcceptEntityInput(zone, "Kill");
+			break;
+		}
+	}
+}
+
+stock GetMiddleOfABox(const Float:vec1[3], const Float:vec2[3], Float:buffer[3])
+{
+	new Float:mid[3];
+	MakeVectorFromPoints(vec1, vec2, mid);
+	mid[0] = mid[0] / 2.0;
+	mid[1] = mid[1] / 2.0;
+	mid[2] = mid[2] / 2.0;
+	AddVectors(vec1, mid, buffer);
+}
+
+
+stock KillTriggers()
+{
+	decl String:sClassName[64];
+	new zone = -1;
+	while ((zone = FindEntityByClassname(zone, "trigger_multiple")) != INVALID_ENT_REFERENCE)
+	{
+		if (IsValidEntity(zone)
+				&& GetEntPropString(zone, Prop_Data, "m_iName", sClassName, sizeof(sClassName))
+				&& StrContains(sClassName, "timer_zone") != -1)
+		{
+			UnhookSingleEntityOutput(zone, "OnStartTouch", EntOut_Touch);
+			UnhookSingleEntityOutput(zone, "OnEndTouch", EntOut_Touch);
+			UnhookSingleEntityOutput(zone, "OnTrigger", EntOut_Touch);
+			AcceptEntityInput(zone, "Kill");
+		}
+	}
 }

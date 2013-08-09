@@ -62,7 +62,7 @@
 
 	"Time"
 	{
-		"en"            "Temps"
+		"fr"            "Temps"
 	}
 	
 	"Jumps"

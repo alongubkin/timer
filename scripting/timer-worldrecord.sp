@@ -224,46 +224,37 @@ public Action:Command_Delete(client, args)
 
 public Action:Command_PersonalRecord(client, args)
 {
-	new argsCount = GetCmdArgs();
 	new target = -1;
 
-	if (argsCount == 0)
+	if (args == 0)
 	{
 		target = client;
 	}
-	else if (argsCount == 1)
+	else if (args == 1)
 	{
-		decl String:name[64];
-		GetCmdArg(1, name, sizeof(name));
+		new String:arg1[64];
+		GetCmdArgString(arg1, sizeof(arg1));
 		
-		new targets[2];
-		decl String:targetName[32];
-		new bool:ml = false;
-
-		if (ProcessTargetString(name, 0, targets, sizeof(targets), COMMAND_FILTER_NO_BOTS|COMMAND_FILTER_NO_IMMUNITY, targetName, sizeof(targetName), ml) > 0)
-		{
-			target = targets[0];
-		}
+		target = FindTarget(client, arg1);
 	}
 
 	if (target == -1)
 	{
 		PrintToChat(client, PLUGIN_PREFIX, "No target");
+		return Plugin_Handled;
 	}
-	else
-	{
-		decl String:sAuthID[MAX_AUTHID_LENGTH];
-		GetClientAuthString(target, sAuthID, sizeof(sAuthID));
 
-		for (new t = 0; t < g_cacheCount; t++)
+	decl String:sAuthID[MAX_AUTHID_LENGTH];
+	GetClientAuthString(target, sAuthID, sizeof(sAuthID));
+
+	for (new t = 0; t < g_cacheCount; t++)
+	{
+		if (StrEqual(g_cache[t][Auth], sAuthID))
 		{
-			if (StrEqual(g_cache[t][Auth], sAuthID))
-			{
-				CreatePlayerInfoMenu(client, g_cache[t][Id], false);
-				break;
-			}
-		}		
-	}
+			CreatePlayerInfoMenu(client, g_cache[t][Id], false);
+			break;
+		}
+	}		
 	
 	return Plugin_Handled;
 }
@@ -720,7 +711,7 @@ CreateWRMenu(client, difficulty)
 			IntToString(g_cache[cache][Id], sID, sizeof(sID));
 			
 			decl String:sText[92];
-			FormatEx(sText, sizeof(sText), "#%d: %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
+			FormatEx(sText, sizeof(sText), "#%d: %s - %s", (items + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
 			
 			if (g_bShowJumps)
 			{
