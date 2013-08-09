@@ -1008,6 +1008,7 @@ stock SpawnTriggerMultipleInBox(iZoneIndex)
 	else
 	{
 		HookSingleEntityOutput(iEnt, "OnStartTouch", EntOut_Touch);
+		HookSingleEntityOutput(iEnt, "OnEndTouch", EntOut_Touch);
 	}
 }
 
@@ -1035,7 +1036,7 @@ public EntOut_Touch(const String:output[], caller, activator, Float:delay)
 	}
 	else if (g_mapZones[zoneid][Type] == End)
 	{
-		if (Timer_Stop(activator, false))
+		if (Timer_Stop(activator, false) && StrEqual(output, "OnStartTouch"))
 		{
 			new bool:enabled = false;
 			new jumps, fpsmax, flashbangs;
