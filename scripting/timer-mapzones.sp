@@ -56,6 +56,10 @@ new g_precacheLaser;
 new bool:g_bTimerPhysics = false;
 new bool:g_bTimerWorldRecord = false;
 
+new PlayerZoneStates:g_PlayerState[MAXPLAYERS+1] = NotInZone;
+
+new bool:g_SkipNextOutput[MAXPLAYERS+1] = false;
+
 public Plugin:myinfo =
 {
 	name        = "[Timer] MapZones",
@@ -100,6 +104,15 @@ public OnPluginStart()
 	{
 		Updater_AddPlugin(UPDATE_URL);
 	}
+}
+
+public APLRes:AskPluginLoad2(Handle:myself, bool:late, String:error[], err_max)
+{
+	CreateNative("Timer_SkipNextOutput", Native_SkipNextOutput);
+	CreateNative("Timer_IsOutputBlocked", Native_IsOutputBlocked);
+	CreateNative("Timer_GetPlayerState", Native_GetPlayerState);
+
+	return APLRes_Success;
 }
 
 public OnMapStart()
@@ -319,6 +332,8 @@ public OnTimerRestart(client)
 			vCenter[0] = (g_mapZones[mapZone][Point1][0] + g_mapZones[mapZone][Point2][0]) / 2.0;
 			vCenter[1] = (g_mapZones[mapZone][Point1][1] + g_mapZones[mapZone][Point2][1]) / 2.0;
 			vCenter[2] = ((g_mapZones[mapZone][Point1][2] + g_mapZones[mapZone][Point2][2]) / 2.0) - 40.0;
+
+			Timer_SkipNextOutput(client);
 			
 			TeleportEntity(client, vCenter, Float:{0.0, 0.0, 0.0}, Float:{0.0, 0.0, 0.0});
 
@@ -539,18 +554,6 @@ DisplaySelectPointMenu(client, n)
 	CloseHandle(panel);
 }
 
-DisplayPleaseWaitMenu(client)
-{
-	new Handle:panel = CreatePanel();
-	
-	decl String:sWait[64];
-	FormatEx(sWait, sizeof(sWait), "%t", "Please wait");
-	DrawPanelItem(panel, sWait, ITEMDRAW_RAWLINE);
-
-	SendPanelToClient(panel, client, PointSelect, 540);
-	CloseHandle(panel);
-}
-
 public PointSelect(Handle:menu, MenuAction:action, param1, param2)
 {
 	if (action == MenuAction_End) 
@@ -570,44 +573,42 @@ public PointSelect(Handle:menu, MenuAction:action, param1, param2)
 
 public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
 {
-	if (buttons & IN_ATTACK2)
+	static PressedUse[MAXPLAYERS+1];
+	if (buttons & IN_USE)
 	{
-		if (g_mapZoneEditors[client][Step] == 1)
+		if (!PressedUse[client] && g_mapZoneEditors[client][Step] != 0)
 		{
-			new Float:vOrigin[3];			
-			GetClientAbsOrigin(client, vOrigin);
-			g_mapZoneEditors[client][Point1] = vOrigin;
+			if (g_mapZoneEditors[client][Step] == 1)
+			{
+				new Float:vOrigin[3];			
+				GetClientAbsOrigin(client, vOrigin);
+				g_mapZoneEditors[client][Point1] = vOrigin;
 
-			DisplayPleaseWaitMenu(client);
+				g_mapZoneEditors[client][Step] = 2;
+				CreateTimer(0.1, DrawAdminBox, GetClientSerial(client), TIMER_REPEAT);
 
-			CreateTimer(1.0, ChangeStep, GetClientSerial(client));
-			return Plugin_Handled;
+				DisplaySelectPointMenu(client, 2);
+			}
+			else if (g_mapZoneEditors[client][Step] == 2)
+			{
+				new Float:vOrigin[3];
+				GetClientAbsOrigin(client, vOrigin);
+				g_mapZoneEditors[client][Point2] = vOrigin;
+
+				g_mapZoneEditors[client][Step] = 3;
+
+				DisplaySelectZoneTypeMenu(client);
+			}
 		}
-		else if (g_mapZoneEditors[client][Step] == 2)
-		{
-			new Float:vOrigin[3];
-			GetClientAbsOrigin(client, vOrigin);
-			g_mapZoneEditors[client][Point2] = vOrigin;
 
-			g_mapZoneEditors[client][Step] = 3;
-
-			DisplaySelectZoneTypeMenu(client);
-
-			return Plugin_Handled;
-		}		
+		PressedUse[client] = true;	
+	}
+	else
+	{
+		PressedUse[client] = false;
 	}
 
 	return Plugin_Continue;
-}
-
-public Action:ChangeStep(Handle:timer, any:serial)
-{
-	new client = GetClientFromSerial(serial);
-	
-	g_mapZoneEditors[client][Step] = 2;
-	CreateTimer(0.1, DrawAdminBox, GetClientSerial(client), TIMER_REPEAT);
-
-	DisplaySelectPointMenu(client, 2);
 }
 
 DisplaySelectZoneTypeMenu(client)
@@ -958,14 +959,13 @@ stock SpawnTriggerMultipleInBox(iZoneIndex)
 
 	new iEnt = CreateEntityByName("trigger_multiple");
 	
-	DispatchKeyValue(iEnt, "spawnflags", "64");
+	DispatchKeyValue(iEnt, "spawnflags", "1");
 	Format(sZoneName, sizeof(sZoneName), "timer_zone %d", iZoneIndex);
 	DispatchKeyValue(iEnt, "targetname", sZoneName);
 	DispatchKeyValue(iEnt, "wait", "0");
 	
 	DispatchSpawn(iEnt);
 	ActivateEntity(iEnt);
-	SetEntProp(iEnt, Prop_Data, "m_spawnflags", 64 );
 	
 	GetMiddleOfABox(fMins, fMaxs, fMiddle);
 	
@@ -1000,18 +1000,17 @@ stock SpawnTriggerMultipleInBox(iZoneIndex)
 	iEffects |= 0x020;
 	SetEntProp(iEnt, Prop_Send, "m_fEffects", iEffects);
 	
-	HookSingleEntityOutput(iEnt, "OnStartTouch", EntOut_Touch);
-	HookSingleEntityOutput(iEnt, "OnEndTouch", EntOut_Touch);
-	HookSingleEntityOutput(iEnt, "OnTrigger", EntOut_Touch);
+	HookSingleEntityOutput(iEnt, "OnStartTouch", EntOut_OnStartTouch);
+	HookSingleEntityOutput(iEnt, "OnEndTouch", EntOut_OnEndTouch);
 }
 
-public EntOut_Touch(const String:output[], caller, activator, Float:delay)
+public EntOut_OnStartTouch(const String:output[], caller, activator, Float:delay)
 {
 	if (activator < 1 || activator > MaxClients || !IsPlayerAlive(activator))
 	{
 		return;
 	}
-	
+
 	decl String:sTargetName[256];
 	GetEntPropString(caller, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
 	ReplaceString(sTargetName, sizeof(sTargetName), "timer_zone ", "");
@@ -1019,24 +1018,25 @@ public EntOut_Touch(const String:output[], caller, activator, Float:delay)
 
 	if (g_mapZones[zoneid][Type] == Start)
 	{
-		Timer_Stop(activator, false);
-		Timer_Start(activator);
+		g_PlayerState[activator] = InStartZone;
+		Timer_Start(activator, false);
 		
 		if (g_bStopPrespeed)
 		{
 			StopPrespeed(activator);
-		}
+		}		
 	}
 	else if (g_mapZones[zoneid][Type] == End)
 	{
-		if (Timer_Stop(activator, false) && StrEqual(output, "OnStartTouch"))
+		g_PlayerState[activator] = InEndZone;
+		if (Timer_Stop(activator, false))
 		{
 			new bool:enabled = false;
 			new jumps, fpsmax, flashbangs;
 			new Float:time;
 
 			if (Timer_GetClientTimer(activator, enabled, time, jumps, fpsmax, flashbangs))
-			{		
+			{				
 				new difficulty = 0;
 				if (g_bTimerPhysics)
 				{
@@ -1054,6 +1054,7 @@ public EntOut_Touch(const String:output[], caller, activator, Float:delay)
 	}					
 	else if (g_mapZones[zoneid][Type] == Glitch1)
 	{
+		g_PlayerState[activator] = InStopZone;
 		Timer_Stop(activator);
 	}
 	else if (g_mapZones[zoneid][Type] == Glitch2)
@@ -1066,6 +1067,36 @@ public EntOut_Touch(const String:output[], caller, activator, Float:delay)
 	}
 }
 
+public EntOut_OnEndTouch(const String:output[], caller, activator, Float:delay)
+{
+	if (activator < 1 || activator > MaxClients || !IsPlayerAlive(activator))
+	{
+		return;
+	}
+
+	g_PlayerState[activator] = NotInZone;
+
+	decl String:sTargetName[64];
+	GetEntPropString(caller, Prop_Data, "m_iName", sTargetName, sizeof(sTargetName));
+	ReplaceString(sTargetName, sizeof(sTargetName), "timer_zone ", "");
+	new zoneid = StringToInt(sTargetName);
+
+	if (g_mapZones[zoneid][Type] == Start)
+	{
+		if (Timer_IsOutputBlocked(activator))
+		{
+			Timer_SkipNextOutput(activator, false);
+			return;
+		}
+
+		Timer_Start(activator);
+		
+		if (g_bStopPrespeed)
+		{
+			StopPrespeed(activator);
+		}
+	}
+}
 
 stock KillTriggerEntity(iZoneIndex)
 {
@@ -1074,15 +1105,15 @@ stock KillTriggerEntity(iZoneIndex)
 	decl String:sClassName[256];
 
 	new zone = -1;
-	while ((zone = FindEntityByClassname(zone, "trigger_multiple")) != INVALID_ENT_REFERENCE)
+	while ((zone = FindEntityByClassname(zone, "trigger_multiple")) != -1)
 	{
 		if (IsValidEntity(zone)
-				&& GetEntPropString(zone, Prop_Data, "m_iName", sClassName, sizeof(sClassName))
-				&& StrEqual(sClassName, sZoneName, false))
+				&& GetEntPropString(zone, Prop_Data, "m_iName", sClassName, sizeof(sClassName)) // Get m_iName datamap
+				&& StrEqual(sClassName, sZoneName, false)) // And check if m_iName is equal to name from array
 		{
-			UnhookSingleEntityOutput(zone, "OnStartTouch", EntOut_Touch);
-			UnhookSingleEntityOutput(zone, "OnEndTouch", EntOut_Touch);
-			UnhookSingleEntityOutput(zone, "OnTrigger", EntOut_Touch);
+			// Unhook touch callback, kill an entity and break the loop
+			UnhookSingleEntityOutput(zone, "OnStartTouch", EntOut_OnStartTouch);
+			UnhookSingleEntityOutput(zone, "OnEndTouch", EntOut_OnEndTouch);
 			AcceptEntityInput(zone, "Kill");
 			break;
 		}
@@ -1099,21 +1130,41 @@ stock GetMiddleOfABox(const Float:vec1[3], const Float:vec2[3], Float:buffer[3])
 	AddVectors(vec1, mid, buffer);
 }
 
-
 stock KillTriggers()
 {
 	decl String:sClassName[64];
 	new zone = -1;
-	while ((zone = FindEntityByClassname(zone, "trigger_multiple")) != INVALID_ENT_REFERENCE)
+	while ((zone = FindEntityByClassname(zone, "trigger_multiple")) != -1)
 	{
 		if (IsValidEntity(zone)
-				&& GetEntPropString(zone, Prop_Data, "m_iName", sClassName, sizeof(sClassName))
-				&& StrContains(sClassName, "timer_zone") != -1)
+				&& GetEntPropString(zone, Prop_Data, "m_iName", sClassName, sizeof(sClassName)) // Get m_iName datamap
+				&& StrContains(sClassName, "timer_zone") != -1) // And check if m_iName is equal to name from array
 		{
-			UnhookSingleEntityOutput(zone, "OnStartTouch", EntOut_Touch);
-			UnhookSingleEntityOutput(zone, "OnEndTouch", EntOut_Touch);
-			UnhookSingleEntityOutput(zone, "OnTrigger", EntOut_Touch);
+			// Unhook touch callback, kill an entity and break the loop
+			UnhookSingleEntityOutput(zone, "OnStartTouch", EntOut_OnStartTouch);
+			UnhookSingleEntityOutput(zone, "OnEndTouch", EntOut_OnEndTouch);
 			AcceptEntityInput(zone, "Kill");
 		}
 	}
+}
+
+public Native_SkipNextOutput(Handle:plugin, numParams)
+{
+	g_SkipNextOutput[GetNativeCell(1)] = bool:GetNativeCell(2);
+	CreateTimer(0.3, ResetOutput, GetNativeCell(1));
+}
+
+public Native_IsOutputBlocked(Handle:plugin, numParams)
+{
+	return g_SkipNextOutput[GetNativeCell(1)];
+}
+
+public Action:ResetOutput(Handle:timer, any:client)
+{
+	g_SkipNextOutput[client] = false;
+}
+
+public Native_GetPlayerState(Handle:plugin, numParams)
+{
+	return _:g_PlayerState[GetNativeCell(1)];
 }

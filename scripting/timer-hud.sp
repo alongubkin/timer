@@ -236,6 +236,22 @@ UpdateHUD(client)
 	}
 	
 	new String:sHintText[256];
+
+	switch(Timer_GetPlayerState(target))
+	{
+		case InStartZone:
+		{
+			Format(sHintText, sizeof(sHintText), " Inside Start Zone\n");
+		}
+		case InEndZone:
+		{
+			Format(sHintText, sizeof(sHintText), " Inside End Zone\n");
+		}
+		case InStopZone:
+		{
+			Format(sHintText, sizeof(sHintText), " Inside Stop Zone\n");
+		}
+	}
 	
 	if (bEnabled)
 	{

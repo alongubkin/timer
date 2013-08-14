@@ -20,6 +20,14 @@ enum MapZoneType
 	Glitch3
 }
 
+enum PlayerZoneStates
+{
+	NotInZone,
+	InStartZone,
+	InEndZone,
+	InStopZone
+}
+
 enum MapZone
 {
 	Id,
@@ -101,7 +109,7 @@ forward OnFinishRound(client, const String:map[], jumps, flashbangs, physicsDiff
  *
  * @return True on success, false on failure.
  */
-native bool:Timer_Start(client);
+native bool:Timer_Start(client, bool:start = true);
 
 /**
  * Stops the timer for a client.
@@ -208,6 +216,11 @@ native Timer_GetTotalRank(bool:update = false);
  */
 native Timer_GetCurrentRank(client, bool:update = false);
 
+native Timer_SkipNextOutput(client, bool:status = true);
+
+native bool:Timer_IsOutputBlocked(client);
+
+native Timer_GetPlayerState(client);
 
 stock Timer_SecondsToTime(Float:seconds, String:buffer[], maxlength, bool:precision = true)
 {
@@ -279,4 +292,7 @@ public __pl_timer_SetNTVOptional()
 	MarkNativeAsOptional("Timer_ForceReloadBestRoundCache");
 	MarkNativeAsOptional("Timer_GetTotalRank");
 	MarkNativeAsOptional("Timer_GetCurrentRank");
+	MarkNativeAsOptional("Timer_SkipNextOutput");
+	MarkNativeAsOptional("Timer_IsOutputBlocked");
+	MarkNativeAsOptional("Timer_GetPlayerState");
 }

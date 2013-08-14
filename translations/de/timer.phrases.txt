@@ -22,17 +22,12 @@
 	
 	"Point Select Panel"
 	{
-		"de"			"Stelle dich bitte in den {1} Punkt der Zone,\nund klicke deinen ATTACK2 Mausknopf."
+		"de"			"Stelle dich bitte in den {1} Punkt der Zone,\nund klicke deinen USE Mausknopf."
 	}
 	
 	"Cancel"
 	{
 		"de"			"Abbrechen"
-	}
-	
-	"Please wait"
-	{
-		"de"			"Bitte warte..."
 	}
 
 	"FIRST"

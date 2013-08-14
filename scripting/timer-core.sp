@@ -305,19 +305,19 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 /**
 * Core Functionality
 */
-bool:StartTimer(client)
+bool:StartTimer(client, bool:start = true)
 {
 	if (!IsPlayerAlive(client))
 	{
 		return false;
 	}
 	
-	if (g_timers[client][Enabled])
+	if (g_timers[client][Enabled] && start)
 	{
 		return false;
 	}
 	
-	g_timers[client][Enabled] = true;
+	g_timers[client][Enabled] = start;
 	g_timers[client][StartTime] = GetEngineTime();
 	g_timers[client][EndTime] = 0.0;
 	g_timers[client][Jumps] = 0;
@@ -328,9 +328,12 @@ bool:StartTimer(client)
 	
 	QueryClientConVar(client, "fps_max", FpsMaxCallback, client);
 	
-	Call_StartForward(g_hTimerStartedForward);
-	Call_PushCell(client);
-	Call_Finish();
+	if (start)
+	{
+		Call_StartForward(g_hTimerStartedForward);
+		Call_PushCell(client);
+		Call_Finish();
+	}
 	
 	return true;
 }
@@ -368,7 +371,7 @@ bool:RestartTimer(client)
 	Call_PushCell(client);
 	Call_Finish();
 	
-	return StartTimer(client);
+	return StartTimer(client, false);
 }
 
 bool:PauseTimer(client)
@@ -428,6 +431,8 @@ bool:ResumeTimer(client)
 	
 	new Float:vVelocity[3];
 	Array_Copy(g_timers[client][PauseLastVelocity], vVelocity, 3);
+
+	Timer_SkipNextOutput(client);
 	
 	TeleportEntity(client, vOrigin, vAngles, vVelocity);
 	
@@ -857,7 +862,7 @@ public Native_GetCurrentRank(Handle:plugin, numParams)
 
 public Native_TimerStart(Handle:plugin, numParams)
 {
-	return StartTimer(GetNativeCell(1));
+	return StartTimer(GetNativeCell(1), GetNativeCell(2));
 }
 
 public Native_TimerStop(Handle:plugin, numParams)

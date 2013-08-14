@@ -32,17 +32,12 @@
 	
 	"Point Select Panel"
 	{
-		"fr"            "Merci de rester sur le {1} point de la zone,\net de click droit."
+		"fr"            "Merci de rester sur le {1} point de la zone,\net de USE droit."
 	}
 	
 	"Cancel"
 	{
 		"fr"            "Annuler"
-	}
-	
-	"Please wait"
-	{
-		"fr"            "Patientez s'il vous plait..."
 	}
 
 	"FIRST"

@@ -359,6 +359,7 @@ TeleportToLastCheckpoint(client)
 	new Float:position[3];
 	Array_Copy(g_checkpoints[cp][Position], position, 3);
 
+	Timer_SkipNextOutput(client);
 	Timer_Stop(client);
 	TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
 	g_iCurrentCheckpoint[client] = g_checkpoints[cp][Order];
@@ -389,6 +390,7 @@ GoToCheckpoint(client, order)
 	new Float:position[3];
 	Array_Copy(g_checkpoints[cp][Position], position, 3);
 	
+	Timer_SkipNextOutput(client);
 	Timer_Stop(client);
 	TeleportEntity(client, position, NULL_VECTOR, NULL_VECTOR);
 	g_iCurrentCheckpoint[client] = order;

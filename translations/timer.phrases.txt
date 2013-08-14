@@ -39,17 +39,12 @@
 	"Point Select Panel"
 	{
 		"#format"		"{1:s}"
-		"en"			"Please stand in the {1} point of the zone,\nand click your ATTACK2 mouse key."
+		"en"			"Please stand in the {1} point of the zone,\nand click your USE mouse key."
 	}
 	
 	"Cancel"
 	{
 		"en"			"Cancel"
-	}
-	
-	"Please wait"
-	{
-		"en"			"Please wait..."
 	}
 
 	"FIRST"
