@@ -126,6 +126,11 @@ public OnMapStart()
 	LoadMapZones();
 }
 
+public OnClientPutInServer(client)
+{
+	g_PlayerState[client] = NotInZone;
+}
+
 public Action:Event_OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	KillTriggers();
