@@ -720,7 +720,7 @@ public ConnectSQLCallback(Handle:owner, Handle:hndl, const String:error[], any:d
 {
 	if (g_iReconnectCounter >= 5)
 	{
-		Timer_LogError("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
+		SetFailState("PLUGIN STOPPED - Reason: reconnect counter reached max - PLUGIN STOPPED");
 		return;
 	}
 
