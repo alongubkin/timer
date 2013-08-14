@@ -443,6 +443,9 @@ DisplaySelectPlayerMenu(client)
 		{
 			continue;
 		}
+
+		decl String:sID[10];
+		IntToString(g_cache[cache][Id], sID, sizeof(sID));
 		
 		decl String:sText[92];
 		FormatEx(sText, sizeof(sText), "#%d: %s - %s", (cache + 1), g_cache[cache][Name], g_cache[cache][TimeString]);
@@ -457,7 +460,7 @@ DisplaySelectPlayerMenu(client)
 			Format(sText, sizeof(sText), "%s (%d %T)", sText, g_cache[cache][Flashbangs], "Flashbangs", client);
 		}
 
-		AddMenuItem(menu, g_cache[cache][Auth], sText);
+		AddMenuItem(menu, sID, sText);
 		items++;
 	}
 
@@ -482,15 +485,16 @@ public MenuHandler_SelectPlayer(Handle:menu, MenuAction:action, param1, param2)
 	{
 		decl String:sInfo[32];		
 		GetMenuItem(menu, param2, sInfo, sizeof(sInfo));
+		new id = StringToInt(sInfo);
 		
 		decl String:sQuery[256];
-		FormatEx(sQuery, sizeof(sQuery), "DELETE FROM `round` WHERE auth = '%s' AND map = '%s'", sInfo, g_sCurrentMap);
+		FormatEx(sQuery, sizeof(sQuery), "DELETE FROM `round` WHERE id = '%d'", id);
 
 		SQL_TQuery(g_hSQL, DeletePlayersRecordCallback, sQuery, param1, DBPrio_High);
 		
 		for (new cache = 0; cache < g_cacheCount; cache++)
 		{
-			if (StrEqual(g_cache[cache][Auth], sInfo))
+			if (g_cache[cache][Id] == id)
 			{
 				g_cache[cache][Ignored] = true;
 			}
