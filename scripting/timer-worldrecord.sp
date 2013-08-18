@@ -377,7 +377,7 @@ public OnAdminMenuReady(Handle:topmenu)
 	AdminMenu_DeleteRecord,
 	oMapZoneMenu,
 	"timer_delete",
-	ADMFLAG_RCON);
+	ADMFLAG_ROOT);
 	
 	AddToTopMenu(hTopMenu, 
 	"timer_deletemaprecords",
@@ -385,7 +385,7 @@ public OnAdminMenuReady(Handle:topmenu)
 	AdminMenu_DeleteMapRecords,
 	oMapZoneMenu,
 	"timer_deletemaprecords",
-	ADMFLAG_RCON);		
+	ADMFLAG_ROOT);
 }
 
 public AdminMenu_CategoryHandler(Handle:topmenu, TopMenuAction:action, TopMenuObject:object_id, param, String:buffer[], maxlength)

@@ -226,7 +226,7 @@ public OnAdminMenuReady(Handle:topmenu)
 	AdminMenu_AddMapZone,
 	oMapZoneMenu,
 	"timer_mapzones_add",
-	ADMFLAG_RCON);
+	ADMFLAG_ROOT);
 
 	AddToTopMenu(hTopMenu, 
 	"timer_mapzones_remove",
@@ -234,7 +234,7 @@ public OnAdminMenuReady(Handle:topmenu)
 	AdminMenu_RemoveMapZone,
 	oMapZoneMenu,
 	"timer_mapzones_remove",
-	ADMFLAG_RCON);
+	ADMFLAG_ROOT);
 
 	AddToTopMenu(hTopMenu, 
 	"timer_mapzones_remove_all",
@@ -242,7 +242,7 @@ public OnAdminMenuReady(Handle:topmenu)
 	AdminMenu_RemoveAllMapZones,
 	oMapZoneMenu,
 	"timer_mapzones_remove_all",
-	ADMFLAG_RCON);
+	ADMFLAG_ROOT);
 
 }
 
