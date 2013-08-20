@@ -941,13 +941,18 @@ ParseColor(const String:color[], result[])
 
 StopPrespeed(client)
 {
-	new Float:vVelocity[3];
+	new Float:vVelocity[3], Float:flMaxspeed;
 	GetEntPropVector(client, Prop_Data, "m_vecVelocity", vVelocity);
+	flMaxspeed = GetEntPropFloat(client, Prop_Data, "m_flMaxspeed") * 1.115;
+	new Float:scale = FloatDiv(flMaxspeed, SquareRoot(FloatAdd(Pow(vVelocity[0], 2.0), Pow(vVelocity[1], 2.0))));
 	
-	if (SquareRoot(Pow(vVelocity[0], 2.0) + Pow(vVelocity[1], 2.0)) > (GetEntPropFloat(client, Prop_Data, "m_flMaxspeed") * 1.115 + 0.5))
+	if (scale < 1.0)
 	{
-		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, Float:{0.0, 0.0, 0.0});
-	}	
+		vVelocity[0] = FloatMul(vVelocity[0], scale);
+		vVelocity[1] = FloatMul(vVelocity[1], scale);
+
+		TeleportEntity(client, NULL_VECTOR, NULL_VECTOR, vVelocity);
+	}
 }
 
 stock SpawnTriggerMultipleInBox(iZoneIndex)
