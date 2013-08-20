@@ -27,6 +27,7 @@ new Handle:g_hCvarTimeByKills = INVALID_HANDLE;
 new Handle:g_hCvarJumpOrFlashbangssByDeaths = INVALID_HANDLE;
 new Handle:g_hCvarThreeAxisSpeed = INVALID_HANDLE;
 new Handle:g_hCvarUpdateTime = INVALID_HANDLE;
+new Handle:g_hCvarVoteProgressHintbox = INVALID_HANDLE;
 
 new bool:g_bShowSpeed = true;
 new bool:g_bShowJumps = true;
@@ -38,6 +39,7 @@ new bool:g_bShowName = true;
 new bool:g_bTimeByKills = false;
 new bool:g_bJumpsOrFlashbangsByDeaths = false;
 new bool:g_bThreeAxisSpeed = false;
+new bool:g_bVoteProgressHintbox = false;
 
 public Plugin:myinfo =
 {
@@ -65,6 +67,8 @@ public OnPluginStart()
 	g_hCvarThreeAxisSpeed = CreateConVar("timer_three_axis_speed", "0", "Whether or not Z-axis will be used in speed calculations.");
 	g_hCvarUpdateTime = CreateConVar("timer_hud_update_time", "0.25", "Delay between updating hud message. 0.25 means 4 times per sec, 1/0.25 = 4.", 0, true, 0.01);
 
+	g_hCvarVoteProgressHintbox = FindConVar("sm_vote_progress_hintbox");
+
 	HookConVarChange(g_hCvarShowSpeed, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarShowJumps, Action_OnSettingsChange);	
 	HookConVarChange(g_hCvarShowFlashbans, Action_OnSettingsChange);
@@ -75,6 +79,7 @@ public OnPluginStart()
 	HookConVarChange(g_hCvarTimeByKills, Action_OnSettingsChange);	
 	HookConVarChange(g_hCvarJumpOrFlashbangssByDeaths, Action_OnSettingsChange);
 	HookConVarChange(g_hCvarThreeAxisSpeed, Action_OnSettingsChange);
+	HookConVarChange(g_hCvarVoteProgressHintbox, Action_OnSettingsChange);
 	
 	AutoExecConfig(true, "timer-hud");
 	
@@ -88,6 +93,7 @@ public OnPluginStart()
 	g_bTimeByKills = GetConVarBool(g_hCvarTimeByKills);
 	g_bJumpsOrFlashbangsByDeaths = GetConVarBool(g_hCvarJumpOrFlashbangssByDeaths);
 	g_bThreeAxisSpeed = GetConVarBool(g_hCvarThreeAxisSpeed);
+	g_bVoteProgressHintbox = GetConVarBool(g_hCvarVoteProgressHintbox);
 	
 	if (LibraryExists("updater"))
 	{
@@ -167,11 +173,19 @@ public Action_OnSettingsChange(Handle:cvar, const String:oldvalue[], const Strin
 	{
 		g_bThreeAxisSpeed = bool:StringToInt(newvalue);
 	}
-
+	else if (cvar == g_hCvarVoteProgressHintbox)
+	{
+		g_bVoteProgressHintbox = bool:StringToInt(newvalue);
+	}
 }
 
 public Action:HUDTimer(Handle:timer)
 {
+	if (IsVoteInProgress() && g_bVoteProgressHintbox)
+	{
+		return Plugin_Continue;
+	}
+	
 	for (new client = 1; client <= MaxClients; client++)
 	{
 		if (client > 0 && IsClientInGame(client) && !IsClientSourceTV(client) && !IsClientReplay(client))
@@ -260,7 +274,7 @@ UpdateHUD(client)
 			new String:sTimeString[32];
 			Timer_SecondsToTime(fTime, sTimeString, sizeof(sTimeString), false);
 			
-			Format(sHintText, sizeof(sHintText), " %s%t: %s", sHintText, "Time", sTimeString);
+			Format(sHintText, sizeof(sHintText), " %s%T: %s", sHintText, "Time", client, sTimeString);
 		}	
 		
 		if (g_bShowJumps)
@@ -270,7 +284,7 @@ UpdateHUD(client)
 				Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 			}
 			
-			Format(sHintText, sizeof(sHintText), " %s%t: %d", sHintText, "Jumps", iJumps);
+			Format(sHintText, sizeof(sHintText), " %s%T: %d", sHintText, "Jumps", client, iJumps);
 		}
 		
 		if (g_bShowFlashbangs)
@@ -280,7 +294,7 @@ UpdateHUD(client)
 				Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 			}
 			
-			Format(sHintText, sizeof(sHintText), " %s%t: %d", sHintText, "Flashbangs", iFlashbangs);
+			Format(sHintText, sizeof(sHintText), " %s%T: %d", sHintText, "Flashbangs", client, iFlashbangs);
 		}
 	}
 	
@@ -294,7 +308,7 @@ UpdateHUD(client)
 			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(sHintText, sizeof(sHintText), " %s%t: %.02f u/s", sHintText, "HUD Speed", g_bThreeAxisSpeed
+		Format(sHintText, sizeof(sHintText), " %s%T: %.02f u/s", sHintText, "HUD Speed", client, g_bThreeAxisSpeed
 		? SquareRoot(Pow(fVelocity[0], 2.0) + Pow(fVelocity[1], 2.0) + Pow(fVelocity[2], 2.0))
 		: SquareRoot(Pow(fVelocity[0], 2.0) + Pow(fVelocity[1], 2.0)));
 	}
@@ -318,7 +332,7 @@ UpdateHUD(client)
 			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(sHintText, sizeof(sHintText), " %s%t: %s", sHintText, "HUD Best Times", sBuffer);
+		Format(sHintText, sizeof(sHintText), " %s%T: %s", sHintText, "HUD Best Times", client, sBuffer);
 	}
 	
 	if (g_bTimerPhysics && g_bShowDifficulty) 
@@ -331,7 +345,7 @@ UpdateHUD(client)
 			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(sHintText, sizeof(sHintText), " %s%t: %s", sHintText, "HUD Difficulty", sDifficulty);
+		Format(sHintText, sizeof(sHintText), " %s%T: %s", sHintText, "HUD Difficulty", client, sDifficulty);
 	}
 	
 	if (g_bShowName && target == t)
@@ -344,7 +358,7 @@ UpdateHUD(client)
 			Format(sHintText, sizeof(sHintText), "%s\n", sHintText);
 		}
 		
-		Format(sHintText, sizeof(sHintText), " %s%t: %s", sHintText, "Player", sName);
+		Format(sHintText, sizeof(sHintText), " %s%T: %s", sHintText, "Player", client, sName);
 	}
 	
 	PrintHintText(client, sHintText);
